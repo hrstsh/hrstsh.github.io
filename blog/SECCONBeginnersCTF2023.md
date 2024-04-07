@@ -142,8 +142,6 @@ b'ctf4b{SemiCIRCLErCanalsHaveBeenConqueredByTheCIRCLE!!!}'
 
 ## Forbidden
 
->You don't have permission to access /flag on this server.
-
 URLとソースコードが与えられている。  
 アクセスすると /flag へのリンクのみのページ。  
 そのまま /flag へいくと403。  
