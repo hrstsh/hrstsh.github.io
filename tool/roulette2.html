@@ -182,9 +182,16 @@
                 }
             });
 
-            $('.bi-person-fill-dash').click(function() {
+            var timer2;
+            // マイナス
+            var timer1;
+            $('.bi-person-fill-dash').on("mousedown touchstart",function(){
                 minus($(this));
-            })
+                timer1 = setTimeout(hold, 700, minus, $(this));
+            }).on("mouseup mouseleave touchend",function(){
+                clearTimeout(timer1);
+                clearInterval(timer2);
+            });
 
             // 重み設定（マイナス）
             function minus(dom) {
@@ -198,10 +205,14 @@
                 }
             }
 
-            // 重み設定（プラス）
-            $('.bi-person-fill-add').click(function() {
+            // プラス
+            $('.bi-person-fill-add').on("mousedown touchstart",function(){
                 plus($(this));
-            })
+                timer1 = setTimeout(hold, 700, plus, $(this));
+            }).on("mouseup mouseleave touchend",function(){
+                clearTimeout(timer1);
+                clearInterval(timer2);
+            });
 
             // 重み設定（プラス）
             function plus(dom) {
@@ -215,6 +226,10 @@
                 }
             }
 
+            // 長押し
+            function hold(func, arg) {
+                timer2 = setInterval(func, 100, arg);
+            }
             // 設定更新
             function update(){
                 // メンバー
