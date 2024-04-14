@@ -98,13 +98,13 @@
                 <div class="float-end me-2">
                     <div class="row">
                         <div class="col mx-2 border rounded-circle d-flex align-items-center justify-content-center" style="width:10vw; height:10vw; max-width:70px; max-height:70px;">
-                            <i class="bi bi-person-fill-dash fs-1"></i>
+                            <i class="bi bi-person-fill-dash fs-1" style="touch-action: none; user-select: none;" oncontextmenu="return false;"></i>
                         </div>
                         <div class="col mx-2 d-flex align-items-center justify-content-center" style="width:10vw; height:10vw; max-width:70px; max-height:70px;">
                             ×<span class="fs-1" data-times="0">0</span>
                         </div>
                         <div class="col mx-2 border rounded-circle d-flex align-items-center justify-content-center" style="width:10vw; height:10vw; max-width:70px; max-height:70px;">
-                            <i class="bi bi-person-fill-add fs-1"></i>
+                            <i class="bi bi-person-fill-add fs-1" style="touch-action: none; user-select: none;" oncontextmenu="return false;"></i>
                         </div>
                     </div>
                 </div>
@@ -182,9 +182,13 @@
                 }
             });
 
-            // 重み設定（マイナス）
             $('.bi-person-fill-dash').click(function() {
-                var d = $(this).parent().nextAll('div').children('span');
+                minus($(this));
+            })
+
+            // 重み設定（マイナス）
+            function minus(dom) {
+                var d = dom.parent().nextAll('div').children('span');
                 var prev = Number(d.text());
                 var times = Number(d.text()) - 1;
                 times = times > 0 ? times : 0;
@@ -192,11 +196,16 @@
                     d.text(times);
                     d.attr('data-times', times);
                 }
-            })
+            }
 
             // 重み設定（プラス）
             $('.bi-person-fill-add').click(function() {
-                var d = $(this).parent().prevAll('div').children('span');
+                plus($(this));
+            })
+
+            // 重み設定（プラス）
+            function plus(dom) {
+                var d = dom.parent().prevAll('div').children('span');
                 var prev = Number(d.text());
                 var times = Number(d.text()) + 1;
                 times = times < 100 ? times : 100; 
@@ -204,10 +213,11 @@
                     d.text(times);
                     d.attr('data-times', times);
                 }
-            })
+            }
 
             // 設定更新
             function update(){
+                // メンバー
                 var list = [];
                 for (let i = 0; i < images.length; i++) {
                     var times = Number($(`li[data-list="${i}"] span[data-times]`).attr('data-times'));
@@ -215,10 +225,27 @@
                         list.push(i);
                     }
                 }
-                console.log(list);
+                
+                // 画像入れ替え
+                $('div.roulette').html('');
+                if (list.length == 0){
+                    // メンバー0人の場合は全員とする
+                    $.each(images,function(index, image){
+                        $('div.roulette').append(`<img src="${image}" class="rounded-circle"/>`);
+                    });[]
+                }else {
+                    // 選択メンバーのみ表示対象
+                    $.each(images,function(index, image){
+                        if (list.includes(index)){
+                            $('div.roulette').append(`<img src="${image}" class="rounded-circle"/>`);
+                        } 
+                    });[]
+                }
+                
+                // 設定済みのオブジェクトを削除->再設定
+                rouletter.data('plugin_roulette', null);
                 option['stopImageNumber'] = list[Math.floor(Math.random() * list.length)];
-                console.log(option['stopImageNumber']);
-                rouletter.roulette('option', option);	
+                rouletter.roulette(option);	
             }
         });
     </script>
