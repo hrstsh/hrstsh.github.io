@@ -182,16 +182,20 @@
                 }
             });
 
-            var timer2;
-            // マイナス
             var timer1;
+            var timer2;
+            var isProcessing = false;
+            // マイナス
             $('.bi-person-fill-dash').on("mousedown touchstart",function(e){
                 e.preventDefault(); //2重発火を防ぐ
-                minus($(this));
-                timer1 = setTimeout(hold, 700, minus, $(this));
+                if(!isProcessing){
+                    minus($(this));
+                    timer1 = setTimeout(hold, 700, minus, $(this));
+                }
             }).on("mouseup mouseleave touchend",function(){
                 clearInterval(timer2);
                 clearTimeout(timer1);
+                isProcessing = false;
             });
 
             // 重み設定（マイナス）
@@ -209,11 +213,14 @@
             // プラス
             $('.bi-person-fill-add').on("mousedown touchstart",function(e){
                 e.preventDefault();
-                plus($(this));
-                timer1 = setTimeout(hold, 700, plus, $(this));
+                if(!isProcessing){
+                    plus($(this));
+                    timer1 = setTimeout(hold, 700, plus, $(this));
+                }
             }).on("mouseup mouseleave touchend",function(){
                 clearInterval(timer2);
                 clearTimeout(timer1);
+                isProcessing = false;
             });
 
             // 重み設定（プラス）
