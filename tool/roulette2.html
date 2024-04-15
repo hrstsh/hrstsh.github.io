@@ -98,13 +98,13 @@
                 <div class="float-end me-2">
                     <div class="row">
                         <div class="col mx-2 border rounded-circle d-flex align-items-center justify-content-center" style="width:10vw; height:10vw; max-width:70px; max-height:70px;">
-                            <i class="bi bi-person-fill-dash fs-1" style="touch-action: none; user-select: none;" oncontextmenu="return false;"></i>
+                            <i class="bi bi-person-fill-dash fs-1" style="user-select: none;" oncontextmenu="return false;"></i>
                         </div>
                         <div class="col mx-2 d-flex align-items-center justify-content-center" style="width:10vw; height:10vw; max-width:70px; max-height:70px;">
                             ×<span class="fs-1" data-times="0">0</span>
                         </div>
                         <div class="col mx-2 border rounded-circle d-flex align-items-center justify-content-center" style="width:10vw; height:10vw; max-width:70px; max-height:70px;">
-                            <i class="bi bi-person-fill-add fs-1" style="touch-action: none; user-select: none;" oncontextmenu="return false;"></i>
+                            <i class="bi bi-person-fill-add fs-1" style="user-select: none;" oncontextmenu="return false;"></i>
                         </div>
                     </div>
                 </div>
@@ -118,6 +118,15 @@
         $(function(){
             // 初期表示が終わるまでスクロール禁止
             $('body').css('overflow', 'hidden');
+
+            // PC/SPの判定
+            var clickstart;
+            var ua = navigator.userAgent;
+            if (ua.includes('iPhone') || ua.includes('Android') || ua.includes('iPad')) {
+                clickstart = "touchstart"
+            } else {
+                clickstart = "mousedown"
+            }
 
             // 画像定義
             images = [
@@ -184,15 +193,11 @@
 
             var timer1;
             var timer2;
-            var isProcessing = false;
             // マイナス
-            $('.bi-person-fill-dash').on("mousedown touchstart",function(e){
-                e.preventDefault(); //2重発火を防ぐ
-                if(!isProcessing){
-                    minus($(this));
-                    timer1 = setTimeout(hold, 700, minus, $(this));
-                }
-            }).on("mouseup mouseleave touchend",function(){
+            $('.bi-person-fill-dash').on(clickstart, function(e){
+                minus($(this));
+                timer1 = setTimeout(hold, 700, minus, $(this));
+            }).on("mouseup mouseleave touchend", function(){
                 clearInterval(timer2);
                 clearTimeout(timer1);
                 isProcessing = false;
@@ -211,13 +216,10 @@
             }
 
             // プラス
-            $('.bi-person-fill-add').on("mousedown touchstart",function(e){
-                e.preventDefault();
-                if(!isProcessing){
-                    plus($(this));
-                    timer1 = setTimeout(hold, 700, plus, $(this));
-                }
-            }).on("mouseup mouseleave touchend",function(){
+            $('.bi-person-fill-add').on(clickstart, function(e){
+                plus($(this));
+                timer1 = setTimeout(hold, 700, plus, $(this));
+            }).on("mouseup mouseleave touchend", function(){
                 clearInterval(timer2);
                 clearTimeout(timer1);
                 isProcessing = false;
