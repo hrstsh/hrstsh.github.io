@@ -70,8 +70,13 @@
 
         <hr/>
 
-        <div class="p-2">
-            <span class="fw-bold">履歴</span>
+        <div style="height: 50px;">
+            <div class="float-start ms-2">
+                <span class="fw-bold">履歴</span>
+            </div>
+            <div class="float-end me-2">
+                <button id="delete" class="btn btn-sm border" type="button">履歴を削除</button>
+            </div>
         </div>
         <div class="mb-2">
             <ul id="history" class="list-group">
@@ -88,6 +93,11 @@
                 show_next(c);
                 add_history(c);
             });
+
+            $('#delete').on('click', function() {
+                $.removeCookie('history');
+                $('#history').html('');
+            })
         });
         
         function show_next(letter){
