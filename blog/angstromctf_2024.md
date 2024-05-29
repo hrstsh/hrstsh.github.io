@@ -246,7 +246,7 @@ def unshuffle_with_seed(shuffled_ls, seed):
   return [a for (a, b) in ls]
 ```
 
-`gcinfo}{{}`と入力すると`{{config}}`と出力される。
+`gcinfo}{​{}`と入力すると`{{config}}`と出力される。
 
 <img src="./img/angstrom/winds3.png">
 
