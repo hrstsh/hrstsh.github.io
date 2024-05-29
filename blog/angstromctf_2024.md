@@ -5,11 +5,11 @@
 以下のようなWebページ。  
 submitすると入力した内容が含まれたページが生成される。
 
-<img src="./img/angstrom/markdown1.png" width="500px">
-<img src="./img/angstrom/markdown2.png" width="500px">
+<img src="./img/angstrom/markdown1.png">
+<img src="./img/angstrom/markdown2.png">
 
 また管理者ユーザのアクセスを再現するAdminBotページも用意されている。
-<img src="./img/angstrom/markdown3.png" width="500px">
+<img src="./img/angstrom/markdown3.png">
 
 ソースは与えられている。
 ```
