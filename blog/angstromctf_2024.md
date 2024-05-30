@@ -1,3 +1,12 @@
+---
+layout: default
+title:  "angstrom CTF 2024 Writeup (Web)"
+date:   2024-05-30 00:00:00 +0900
+categories: blog
+index: true
+follow: true
+---
+
 # angstrom CTF 2024 Writeup
 
 とりあえずWebの一部だけ。
