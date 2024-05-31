@@ -2,6 +2,7 @@ remote_theme: pages-themes/midnight@v0.2.0 #https://github.com/pages-themes/midn
 plugins:
 - jekyll-remote-theme
 - jekyll-sitemap
+- jekyll-seo-tag
 
 title: Hrstsh Page 
 #description: [A short description of your site's purpose]
