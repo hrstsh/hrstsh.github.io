@@ -7,9 +7,8 @@ index: true
 follow: true
 ---
 
-# 一覧
 
-{% assign doclist = site.pages | sort: 'date', 'last' %}
+{% assign doclist = site.pages | sort: 'date' | reverse %}
 {% for doc in doclist %}
 {% if doc.url contains 'blog/' and doc.url != '/blog/'%}
 - [{{ doc.title }}]({{ site.baseurl }}{{ doc.url }})
