@@ -7,6 +7,7 @@ index: true
 follow: true
 ---
 
+備忘録的なもの。
 
 {% assign doclist = site.pages | sort: 'date' | reverse %}
 {% for doc in doclist %}
