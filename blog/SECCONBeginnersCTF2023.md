@@ -1,7 +1,7 @@
 ---
 layout: default
 title:  "SecconBeginnersCTF 2023 Writeup"
-date:   2024-05-30 00:00:00 +0900
+date:   2023-06-30 00:00:00 +0900
 categories: blog
 index: true
 follow: true

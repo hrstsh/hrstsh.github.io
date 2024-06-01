@@ -9,9 +9,9 @@ follow: true
 
 # 一覧
 
-{% assign doclist = site.pages | sort: 'url'  %}
+{% assign doclist = site.pages | sort: 'date'  %}
 {% for doc in doclist %}
-{% if doc.url contains 'blog/' %}
-- [{{ doc.name }}]({{ site.baseurl }}{{ doc.url }})
+{% if doc.url contains 'blog/' and doc.url != 'blog/'%}
+- [{{ doc.title }}]({{ site.baseurl }}{{ doc.url }})
 {% endif %}
 {% endfor %}

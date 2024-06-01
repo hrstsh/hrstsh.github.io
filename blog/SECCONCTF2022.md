@@ -1,7 +1,7 @@
 ---
 layout: default
 title:  "SECCON CTF 2022 Writeup"
-date:   2024-05-30 00:00:00 +0900
+date:   2022-11-30 00:00:00 +0900
 categories: blog
 index: true
 follow: true
