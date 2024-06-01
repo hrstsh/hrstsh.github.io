@@ -11,7 +11,7 @@ follow: true
 
 {% assign doclist = site.pages | sort: 'url'  %}
 {% for doc in doclist %}
-	{& if doc.url contains 'blog/' &}
--   	[{{ doc.name }}]({{ site.baseurl }}{{ doc.url }})
-	{& endif &}
+{% if doc.url contains 'blog/' %}
+- [{{ doc.name }}]({{ site.baseurl }}{{ doc.url }})
+{% endif %}
 {% endfor %}
