@@ -1,3 +1,12 @@
+---
+layout: default
+title:  "ブックマークレットにアイコン(favicon)をつける"
+date:   2024-05-30 00:00:00 +0900
+categories: blog
+index: true
+follow: true
+---
+
 # ブックマークレットにアイコン(favicon)をつける
 
 ## ブックマークレットにもアイコン(favicon)を表示させたい

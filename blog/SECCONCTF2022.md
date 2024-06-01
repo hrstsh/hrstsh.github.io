@@ -1,3 +1,12 @@
+---
+layout: default
+title:  "SECCON CTF 2022 Writeup"
+date:   2024-05-30 00:00:00 +0900
+categories: blog
+index: true
+follow: true
+---
+
 # SECCON CTF 2022
 
 - 開催期間：2022/11/12 - 2022/11/13
