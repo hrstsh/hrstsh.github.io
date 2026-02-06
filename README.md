@@ -17,8 +17,12 @@ https://hrstsh.github.io/
 ├── / ...................... Home (トップページ)
 │   https://hrstsh.github.io/
 │
-└── /about ................. About (プロフィール)
-    https://hrstsh.github.io/about
+├── /about ................. About (プロフィール)
+│   https://hrstsh.github.io/about
+│
+└── /tools/ ................ Tools (ツール)
+    └── /git-cheatsheet .... Gitコマンドチートシート
+        https://hrstsh.github.io/tools/git-cheatsheet
 ```
 
 ## Tech Stack
@@ -92,7 +96,9 @@ You can also trigger deployment manually:
 │   │   └── Layout.astro    # Base layout component
 │   ├── pages/
 │   │   ├── index.astro     # Home page
-│   │   └── about.astro     # About page
+│   │   ├── about.astro     # About page
+│   │   └── tools/          # Tools pages
+│   │       └── git-cheatsheet.astro  # Git command cheatsheet
 │   └── styles/
 │       └── global.css      # Global styles
 ├── public/                 # Static assets
