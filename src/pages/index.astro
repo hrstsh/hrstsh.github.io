@@ -21,6 +21,20 @@ import Layout from '../layouts/Layout.astro';
         <a href="https://github.com/hrstsh" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </section>
+
+    <section class="content">
+      <h2>Tools</h2>
+      <p>
+        実務で役立つツールやリファレンス資料を公開しています。
+      </p>
+      
+      <div class="tool-cards">
+        <a href="/tools/git-cheatsheet" class="tool-card">
+          <h3>Gitコマンドチートシート</h3>
+          <p>開発者向けの完全リファレンス - 基礎から応用まで</p>
+        </a>
+      </div>
+    </section>
   </main>
 </Layout>
 
@@ -85,5 +99,38 @@ import Layout from '../layouts/Layout.astro';
   .links a:hover {
     background: #764ba2;
     transform: translateY(-2px);
+  }
+
+  .tool-cards {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  .tool-card {
+    display: block;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .tool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .tool-card h3 {
+    font-size: 1.25rem;
+    color: #667eea;
+    margin-bottom: 0.5rem;
+  }
+
+  .tool-card p {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0;
   }
 </style>
