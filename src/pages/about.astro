@@ -1,0 +1,111 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="About - hrstsh">
+  <main>
+    <h1>About Me</h1>
+    
+    <section>
+      <h2>Profile</h2>
+      <p>
+        Software engineer working on web services in Tokyo.
+        Primarily focused on system development and operations.
+      </p>
+    </section>
+
+    <section>
+      <h2>Interests</h2>
+      <ul>
+        <li>Web Development</li>
+        <li>Anime & Manga</li>
+        <li>Gaming</li>
+        <li>Technology</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Links</h2>
+      <ul class="link-list">
+        <li><a href="https://github.com/hrstsh" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+    </section>
+
+    <div class="back-link">
+      <a href="/">← Back to Home</a>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  section {
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  p {
+    line-height: 1.6;
+    color: #444;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul li {
+    padding: 0.5rem 0;
+    color: #444;
+  }
+
+  ul li::before {
+    content: "▹ ";
+    color: #667eea;
+    font-weight: bold;
+  }
+
+  .link-list a {
+    color: #667eea;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .link-list a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+  }
+
+  .back-link {
+    margin-top: 3rem;
+  }
+
+  .back-link a {
+    color: #667eea;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .back-link a:hover {
+    color: #764ba2;
+  }
+</style>
