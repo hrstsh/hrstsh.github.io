@@ -1,0 +1,102 @@
+# AI Development Rules for hrstsh.github.io
+
+このファイルは、AIアシスタント（Cursor、Perplexity、その他のAIツール）がこのリポジトリで作業する際のガイドラインです。
+
+## プロジェクト概要
+
+- **目的**: GitHub Pages用の個人サイト
+- **技術スタック**: Astro 4.x, TypeScript
+- **デプロイ**: GitHub Actions (自動)
+- **URL**: https://hrstsh.github.io
+
+## 必須ルール
+
+### README.mdの更新
+
+**重要**: コードやプロジェクト構成に変更を加えた場合、必ずREADME.mdを最新の状態に更新すること。
+
+- 新しいページやコンポーネントを追加した場合
+- 依存関係（package.json）を変更した場合
+- ビルドやデプロイの手順が変わった場合
+- 新しい機能や設定を追加した場合
+- プロジェクト構成が変わった場合
+
+README.mdには以下を含めること：
+- プロジェクトの説明
+- セットアップ手順
+- 開発方法（ローカル実行、ビルド）
+- デプロイ方法
+- プロジェクト構成の説明
+
+### コード品質
+
+- TypeScriptの型定義を適切に使用する
+- Astroのベストプラクティスに従う
+- レスポンシブデザインを意識する
+- アクセシビリティを考慮する
+
+### ファイル構成
+
+```
+├── .github/
+│   └── workflows/     # GitHub Actions
+├── src/
+│   ├── layouts/       # 共通レイアウト
+│   ├── pages/         # ページ（ルーティング）
+│   ├── components/    # 再利用可能なコンポーネント
+│   └── styles/        # グローバルスタイル
+├── public/            # 静的ファイル
+├── .cursorrules       # このファイル
+├── astro.config.mjs   # Astro設定
+├── package.json       # 依存関係
+└── README.md          # プロジェクト説明（常に最新に保つ）
+```
+
+### スタイリング
+
+- コンポーネント内の `<style>` タグを使用（scoped styles）
+- グローバルスタイルは `src/styles/global.css` に記述
+- カラーテーマ: 紫系グラデーション（#667eea → #764ba2）を基調とする
+- レスポンシブ: モバイルファーストで設計
+
+### コミットメッセージ
+
+- 日本語または英語で明確に記述
+- 変更内容が分かる具体的な説明を含める
+- 例: "Add blog page", "Update README with new features", "Fix responsive layout on mobile"
+
+### Pull Request
+
+- 変更内容の概要を記述
+- 必要に応じてスクリーンショットを添付
+- README更新が必要な変更の場合、PRに含めること
+
+## 推奨事項
+
+### パフォーマンス
+
+- 画像は最適化してから追加
+- 不要な依存関係は追加しない
+- ビルドサイズを意識する
+
+### SEO
+
+- ページタイトルは適切に設定
+- メタディスクリプションを追加
+- セマンティックHTMLを使用
+
+### 開発フロー
+
+1. 新しいブランチを作成
+2. 変更を実装
+3. README.mdを更新（必要な場合）
+4. コミット
+5. Pull Requestを作成
+6. レビュー後、mainにマージ
+7. GitHub Actionsが自動デプロイ
+
+## 注意事項
+
+- mainブランチへの直接pushは避ける
+- GitHub Actionsのワークフローを変更する場合は慎重に
+- package.jsonを更新した場合、package-lock.jsonも含めることを検討
