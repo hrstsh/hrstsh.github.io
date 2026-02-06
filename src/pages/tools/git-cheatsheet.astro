@@ -259,6 +259,101 @@ git config --global core.fscache true</code></pre>
 git config --global init.defaultBranch main</code></pre>
         </div>
 
+        <h3>条件付き設定（includeIf）</h3>
+        <p>
+          ディレクトリごとに異なる設定を適用できます。仕事用と個人用でメールアドレスを切り替える場合などに便利です。
+        </p>
+        <div class="command-block">
+          <h4>~/.gitconfigの設定例</h4>
+          <pre><code># デフォルト設定（個人用）
+[user]
+    name = Your Name
+    email = personal@example.com
+
+# ~/work/以下のリポジトリでは仕事用設定を適用
+[includeIf "gitdir:~/work/"]
+    path = ~/.gitconfig-work
+
+# ~/personal/以下のリポジトリでは個人用設定を明示的に適用
+[includeIf "gitdir:~/personal/"]
+    path = ~/.gitconfig-personal</code></pre>
+
+          <h4>~/.gitconfig-workの内容例</h4>
+          <pre><code>[user]
+    name = Your Work Name
+    email = work@company.com
+    signingkey = WORK_GPG_KEY_ID
+
+[core]
+    sshCommand = ssh -i ~/.ssh/id_rsa_work</code></pre>
+        </div>
+
+        <h3>GPG署名付きコミットの設定</h3>
+        <p>
+          コミットにGPG署名を付けて、作成者の信頼性を高めることができます。GitHubでは署名付きコミットに"Verified"バッジが表示されます。
+        </p>
+        <div class="command-block">
+          <h4>GPGキーの生成と設定</h4>
+          <pre><code># GPGキーを生成（初回のみ）
+gpg --full-generate-key
+
+# 作成したGPGキーIDを確認
+gpg --list-secret-keys --keyid-format=long
+
+# GPGキーIDをGitに設定
+git config --global user.signingkey YOUR_GPG_KEY_ID
+
+# すべてのコミットに署名を付ける
+git config --global commit.gpgsign true
+
+# すべてのタグに署名を付ける
+git config --global tag.gpgsign true</code></pre>
+
+          <h4>署名付きコミットの作成</h4>
+          <pre><code># -Sオプションで署名付きコミット
+git commit -S -m "署名付きコミット"
+
+# グローバル設定でcommit.gpgsign=trueにしている場合は-S不要
+git commit -m "自動的に署名される"
+
+# 署名の確認
+git log --show-signature</code></pre>
+        </div>
+
+        <h3>プロキシ設定</h3>
+        <p>
+          企業環境などでプロキシ経由でGitを使用する場合の設定です。
+        </p>
+        <div class="command-block">
+          <pre><code># HTTPプロキシの設定
+git config --global http.proxy http://proxy.example.com:8080
+
+# HTTPSプロキシの設定
+git config --global https.proxy https://proxy.example.com:8080
+
+# 認証付きプロキシ
+git config --global http.proxy http://username:password@proxy.example.com:8080
+
+# 特定のドメインのみプロキシを使用
+git config --global http.https://github.com.proxy http://proxy.example.com:8080
+
+# プロキシ設定を削除
+git config --global --unset http.proxy
+git config --global --unset https.proxy</code></pre>
+        </div>
+
+        <h3>rerere（再利用可能なマージ解決）の設定</h3>
+        <p>
+          rerere（reuse recorded resolution）を有効にすると、一度解決したコンフリクトの解決方法を記憶し、同じコンフリクトが発生したときに自動的に適用します。
+        </p>
+        <div class="command-block">
+          <pre><code># rerereを有効化
+git config --global rerere.enabled true
+
+# rerereのキャッシュを自動更新
+git config --global rerere.autoupdate true</code></pre>
+        </div>
+
         <h3>設定レベルの優先順位</h3>
         <p>
           Gitの設定には3つのレベルがあり、以下の優先順位で適用されます：
@@ -271,6 +366,25 @@ git config --global init.defaultBranch main</code></pre>
         <p>
           同じ設定項目が複数のレベルで存在する場合、localが最も優先されます。
         </p>
+
+        <h3>設定ファイルの場所</h3>
+        <p>
+          各レベルの設定ファイルの場所を知っておくと、直接編集する際に便利です。
+        </p>
+        <div class="command-block">
+          <pre><code># Systemレベル（Linux/macOS）
+/etc/gitconfig
+
+# Globalレベル
+~/.gitconfig
+~/.config/git/config  # 代替場所
+
+# Localレベル（各リポジトリ内）
+.git/config
+
+# 設定ファイルの場所を確認
+git config --list --show-origin</code></pre>
+        </div>
       </section>
 
       <section id="init-clone">
