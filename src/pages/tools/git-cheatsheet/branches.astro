@@ -13,31 +13,579 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
     <Navigation currentPage="branches" />
 
     <article>
-      <section id="branch">
+      <section id="branch-basics">
         <h2>4. ブランチ操作</h2>
         <p>
-          Gitのブランチ機能は、並行開発や機能分離を可能にする重要な機能です。
-          ブランチの作成、切り替え、削除などの操作を学びます。
+          ブランチはGitの最も強力な機能の一つです。独立した開発ラインを作成し、
+          機能追加やバグ修正を本番コードに影響を与えずに進めることができます。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>ブランチとは</h3>
+        <p>
+          ブランチは、特定のコミットを指すポインタです。新しいコミットを作成すると、
+          現在のブランチポインタは自動的に新しいコミットを指すように移動します。
+        </p>
+        <div class="command-block">
+          <pre><code># 現在のブランチを確認
+git branch
+
+# 現在のブランチ名のみ表示
+git branch --show-current
+
+# すべてのブランチを表示（ローカル＋リモート）
+git branch -a
+git branch --all
+
+# リモートブランチのみ表示
+git branch -r
+git branch --remotes</code></pre>
+        </div>
+
+        <h3>ブランチの作成</h3>
+        <p>
+          新しいブランチを作成する方法です。ブランチ名は意味のある名前を付けましょう。
+        </p>
+        <div class="command-block">
+          <h4>基本的な作成</h4>
+          <pre><code># 新しいブランチを作成（切り替えはしない）
+git branch feature-login
+
+# ブランチを作成して切り替え（推奨）
+git checkout -b feature-login
+git switch -c feature-login  # 新しい方法
+
+# 特定のコミットからブランチを作成
+git branch feature-login abc123
+git checkout -b feature-login abc123
+
+# 特定のリモートブランチからローカルブランチを作成
+git checkout -b feature-login origin/feature-login
+git switch -c feature-login origin/feature-login</code></pre>
+
+          <h4>ブランチ命名規則の例</h4>
+          <pre><code># 機能開発
+feature/user-authentication
+feature/add-payment-gateway
+
+# バグ修正
+fix/login-error
+bugfix/null-pointer-exception
+
+# ホットフィックス
+hotfix/security-patch
+hotfix/critical-bug
+
+# リリース準備
+release/v1.0.0
+release/2024-q1
+
+# 実験的な変更
+experiment/new-algorithm
+spike/performance-test</code></pre>
+        </div>
+
+        <h3>ブランチの切り替え</h3>
+        <p>
+          異なるブランチ間を移動する方法です。作業ディレクトリの内容が切り替え先のブランチの状態に変わります。
+        </p>
+        <div class="command-block">
+          <pre><code># ブランチを切り替え（古い方法）
+git checkout main
+git checkout feature-login
+
+# ブランチを切り替え（新しい方法、Git 2.23以降）
+git switch main
+git switch feature-login
+
+# 直前のブランチに戻る
+git switch -
+git checkout -
+
+# 切り替え前に変更を自動的にstash
+git switch --discard-changes feature-login
+
+# リモートブランチをチェックアウト（追跡ブランチを自動作成）
+git checkout feature-login  # origin/feature-loginが存在する場合
+git switch feature-login</code></pre>
+        </div>
+
+        <h3>ブランチの削除</h3>
+        <p>
+          不要になったブランチを削除する方法です。マージ済みブランチとそうでないブランチで扱いが異なります。
+        </p>
+        <div class="command-block">
+          <h4>ローカルブランチの削除</h4>
+          <pre><code># マージ済みブランチを削除
+git branch -d feature-login
+git branch --delete feature-login
+
+# マージされていないブランチを強制削除
+git branch -D feature-login
+git branch --delete --force feature-login
+
+# 複数ブランチを一括削除
+git branch -d feature1 feature2 feature3
+
+# マージ済みの全ブランチを削除（mainとdevelopは除く）
+git branch --merged | grep -v "\*" | grep -v "main" | grep -v "develop" | xargs -n 1 git branch -d</code></pre>
+
+          <h4>リモートブランチの削除</h4>
+          <pre><code># リモートブランチを削除
+git push origin --delete feature-login
+git push origin :feature-login  # 古い書き方
+
+# 削除されたリモートブランチの参照をローカルから削除
+git fetch --prune
+git fetch -p
+git remote prune origin</code></pre>
+        </div>
+
+        <h3>ブランチの名前変更</h3>
+        <p>
+          既存のブランチ名を変更する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># 現在のブランチ名を変更
+git branch -m new-branch-name
+git branch --move new-branch-name
+
+# 別のブランチ名を変更
+git branch -m old-name new-name
+
+# リモートブランチの名前を変更（ローカルで変更してpush）
+git branch -m old-name new-name
+git push origin --delete old-name
+git push origin new-name
+git push origin -u new-name</code></pre>
+        </div>
+
+        <h3>ブランチの詳細情報</h3>
+        <p>
+          ブランチの状態や関連情報を確認する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># 各ブランチの最新コミットを表示
+git branch -v
+git branch --verbose
+
+# 各ブランチの最新コミットと追跡情報を表示
+git branch -vv
+
+# マージ済みのブランチを表示
+git branch --merged
+git branch --merged main
+
+# マージされていないブランチを表示
+git branch --no-merged
+git branch --no-merged main
+
+# ブランチをコミット日時順に表示
+git branch --sort=-committerdate
+git branch --sort=committerdate  # 昇順</code></pre>
+        </div>
       </section>
 
-      <section id="merge">
+      <section id="merging">
         <h2>5. マージと統合</h2>
         <p>
-          異なるブランチの変更を統合するマージ操作は、チーム開発において不可欠です。
-          コンフリクトの解決方法も含めて説明します。
+          ブランチでの作業が完了したら、その変更を別のブランチに統合します。
+          Gitには複数のマージ戦略があります。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>基本的なマージ</h3>
+        <p>
+          最も一般的なマージ方法です。現在のブランチに別のブランチの変更を統合します。
+        </p>
+        <div class="command-block">
+          <pre><code># mainブランチにfeature-loginをマージ
+git checkout main
+git merge feature-login
+
+# マージコミットメッセージを指定
+git merge feature-login -m "Merge feature-login into main"
+
+# マージを実行する前に確認（ドライラン）
+git merge --no-commit --no-ff feature-login
+git status
+git merge --abort  # 取り消す場合</code></pre>
+        </div>
+
+        <h3>Fast-forwardマージ</h3>
+        <p>
+          マージ先ブランチがマージ元ブランチの直接の祖先である場合、
+          ブランチポインタを前に進めるだけでマージが完了します。
+        </p>
+        <div class="command-block">
+          <pre><code># Fast-forwardマージ（デフォルト動作）
+git merge feature-login
+
+# Fast-forwardのみ許可（Fast-forward不可の場合は失敗）
+git merge --ff-only feature-login
+
+# Fast-forwardを禁止（必ずマージコミットを作成）
+git merge --no-ff feature-login</code></pre>
+        </div>
+
+        <h3>Squashマージ</h3>
+        <p>
+          ブランチの全コミットを1つにまとめてマージします。
+          履歴を整理したい場合に便利です。
+        </p>
+        <div class="command-block">
+          <pre><code># Squashマージ（コミットは自動で作成されない）
+git merge --squash feature-login
+git status  # 変更がステージングされている
+git commit -m "Add login feature"
+
+# Squashマージの利点
+# - 履歴がシンプルになる
+# - 作業中の細かいコミットを隠せる
+# - レビューが容易になる</code></pre>
+        </div>
+
+        <h3>マージの取り消し</h3>
+        <p>
+          マージを取り消す、またはやり直す方法です。
+        </p>
+        <div class="command-block">
+          <h4>マージ前に戻る（コンフリクト解決中）</h4>
+          <pre><code># マージを中断して元の状態に戻る
+git merge --abort
+
+# マージを続行（コンフリクト解決後）
+git merge --continue</code></pre>
+
+          <h4>マージ後に取り消す</h4>
+          <pre><code># 直前のマージを取り消す（コミット前）
+git reset --hard HEAD
+
+# マージコミットを取り消す（コミット後）
+git reset --hard HEAD~1
+
+# マージを打ち消す新しいコミットを作成
+git revert -m 1 HEAD
+# -m 1: 最初の親（マージ先）を保持</code></pre>
+        </div>
+
+        <h3>マージ戦略</h3>
+        <p>
+          特定の状況に適したマージ戦略を選択できます。
+        </p>
+        <div class="command-block">
+          <pre><code># デフォルトの再帰的マージ戦略
+git merge -s recursive feature-login
+
+# Octopusマージ（3つ以上のブランチを同時にマージ）
+git merge branch1 branch2 branch3
+
+# Oursマージ（自分の変更を優先）
+git merge -s ours feature-login
+
+# Theirsマージ（相手の変更を優先、-Xオプション）
+git merge -X theirs feature-login
+
+# サブツリーマージ（プロジェクトを別プロジェクトのサブディレクトリとして統合）
+git merge -s subtree feature-login</code></pre>
+        </div>
+
+        <h3>コンフリクト（競合）の解決</h3>
+        <p>
+          複数のブランチで同じファイルの同じ箇所が変更されている場合、
+          マージ時にコンフリクト（競合）が発生します。手動で解決する必要があります。
+        </p>
+
+        <h3>コンフリクトの確認</h3>
+        <p>
+          コンフリクトが発生したファイルを特定する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># コンフリクトが発生しているファイルを確認
+git status
+
+# コンフリクトの詳細を表示
+git diff
+
+# コンフリクトが発生しているファイルのみ表示
+git diff --name-only --diff-filter=U
+
+# マージの両側の差分を確認
+git log --merge --oneline</code></pre>
+        </div>
+
+        <h3>コンフリクトマーカー</h3>
+        <p>
+          コンフリクトが発生したファイルには、Gitが自動的にマーカーを挿入します。
+        </p>
+        <div class="command-block">
+          <h4>コンフリクトマーカーの構造</h4>
+          <pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+現在のブランチの内容
+=======
+マージしようとしているブランチの内容
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-login
+
+# &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD: 現在のブランチの変更開始
+# =======: 区切り
+# &gt;&gt;&gt;&gt;&gt;&gt;&gt;: マージ元ブランチの変更終了</code></pre>
+        </div>
+
+        <h3>手動でのコンフリクト解決</h3>
+        <p>
+          エディタでファイルを開き、コンフリクトマーカーを削除して適切な内容に修正します。
+        </p>
+        <div class="command-block">
+          <h4>解決の手順</h4>
+          <pre><code># 1. コンフリクトファイルを開いて編集
+# エディタでコンフリクトマーカーを削除し、適切な内容に修正
+
+# 2. 解決したファイルをステージング
+git add conflicted-file.txt
+
+# 3. すべてのコンフリクトを解決したらマージをコミット
+git commit
+# または
+git merge --continue
+
+# コンフリクト解決を中断する場合
+git merge --abort</code></pre>
+        </div>
+
+        <h3>マージツールを使用した解決</h3>
+        <p>
+          専用のマージツールを使用すると、視覚的にコンフリクトを解決できます。
+        </p>
+        <div class="command-block">
+          <pre><code># デフォルトのマージツールを起動
+git mergetool
+
+# 特定のマージツールを使用
+git mergetool --tool=vimdiff
+git mergetool --tool=vscode
+git mergetool --tool=meld
+
+# マージツールの設定
+git config --global merge.tool vscode
+git config --global mergetool.vscode.cmd 'code --wait --merge $REMOTE $LOCAL $BASE $MERGED'
+
+# マージツール実行後の.origファイルを残さない
+git config --global mergetool.keepBackup false</code></pre>
+        </div>
+
+        <h3>一方の変更を優先して解決</h3>
+        <p>
+          コンフリクトを自動的に解決する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># 現在のブランチの変更を優先（ours）
+git checkout --ours conflicted-file.txt
+git add conflicted-file.txt
+
+# マージ元ブランチの変更を優先（theirs）
+git checkout --theirs conflicted-file.txt
+git add conflicted-file.txt
+
+# すべてのコンフリクトで自分の変更を優先
+git merge -X ours feature-login
+
+# すべてのコンフリクトで相手の変更を優先
+git merge -X theirs feature-login</code></pre>
+        </div>
+
+        <h3>コンフリクトの予防</h3>
+        <p>
+          コンフリクトを減らすためのベストプラクティスです。
+        </p>
+        <div class="command-block">
+          <pre><code># 頻繁にmainブランチの変更を取り込む
+git checkout feature-login
+git merge main
+# または
+git rebase main
+
+# マージ前にmainを最新化
+git checkout main
+git pull
+git checkout feature-login
+git merge main
+
+# 小さく頻繁にコミット
+# コンフリクトの範囲を最小化
+
+# チームでのコミュニケーション
+# 同じファイルを同時編集する場合は連携</code></pre>
+        </div>
       </section>
 
       <section id="rebase">
         <h2>6. Rebase（履歴の書き換え）</h2>
         <p>
-          Rebaseはコミット履歴を綺麗に保つための強力な機能です。
-          インタラクティブRebaseを使えば、コミットの統合や並べ替えなども可能です。
+          Rebaseは、ブランチの基点を変更してコミット履歴を整理する強力な機能です。
+          マージと似ていますが、より直線的な履歴を作成します。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>Rebaseの基本</h3>
+        <p>
+          ブランチの基点を別のコミットに付け替える操作です。
+        </p>
+        <div class="command-block">
+          <pre><code># feature-loginブランチをmainの最新に付け替え
+git checkout feature-login
+git rebase main
+
+# 一行で実行
+git rebase main feature-login
+
+# Rebaseの仕組み
+# 1. feature-loginの独自コミットを一時保存
+# 2. feature-loginをmainの最新に移動
+# 3. 保存したコミットを順番に再適用</code></pre>
+        </div>
+
+        <h3>RebaseとMergeの違い</h3>
+        <p>
+          2つの統合方法の違いを理解することが重要です。
+        </p>
+        <div class="command-block">
+          <h4>Merge</h4>
+          <pre><code># マージコミットが作成される
+git checkout main
+git merge feature-login
+
+# 履歴:
+# * (main) Merge feature-login into main
+# |\  
+# | * (feature-login) Commit C
+# | * Commit B
+# * | Commit A
+# |/  
+# * Initial commit</code></pre>
+
+          <h4>Rebase</h4>
+          <pre><code># 直線的な履歴になる
+git checkout feature-login
+git rebase main
+git checkout main
+git merge feature-login  # Fast-forward
+
+# 履歴:
+# * (main, feature-login) Commit C
+# * Commit B
+# * Commit A
+# * Initial commit</code></pre>
+        </div>
+
+        <h3>インタラクティブRebase</h3>
+        <p>
+          コミット履歴を編集・整理する強力な機能です。
+        </p>
+        <div class="command-block">
+          <pre><code># 最新5コミットを編集
+git rebase -i HEAD~5
+git rebase --interactive HEAD~5
+
+# 特定のコミットから編集
+git rebase -i abc123
+
+# インタラクティブRebaseのコマンド
+# pick (p)   : コミットをそのまま使用
+# reword (r) : コミットメッセージを変更
+# edit (e)   : コミットを修正
+# squash (s) : 前のコミットに統合（メッセージも統合）
+# fixup (f)  : 前のコミットに統合（メッセージは破棄）
+# drop (d)   : コミットを削除
+# exec (x)   : シェルコマンドを実行</code></pre>
+
+          <h4>使用例</h4>
+          <pre><code># エディタが開いたら編集
+pick abc123 Commit 1
+squash def456 Commit 2  # Commit 1に統合
+reword ghi789 Commit 3  # メッセージ変更
+drop jkl012 Commit 4    # 削除
+pick mno345 Commit 5
+
+# 保存して閉じる
+# Gitが順番に処理を実行</code></pre>
+        </div>
+
+        <h3>Rebaseのコンフリクト解決</h3>
+        <p>
+          Rebase中にコンフリクトが発生した場合の対処法です。
+        </p>
+        <div class="command-block">
+          <pre><code># Rebase実行中にコンフリクトが発生
+git rebase main
+# CONFLICT...
+
+# 1. コンフリクトを解決
+# エディタで修正
+
+# 2. 解決したファイルをステージング
+git add conflicted-file.txt
+
+# 3. Rebaseを続行
+git rebase --continue
+
+# Rebaseを中断して元に戻す
+git rebase --abort
+
+# 現在のコミットをスキップ
+git rebase --skip</code></pre>
+        </div>
+
+        <h3>Rebaseの注意点</h3>
+        <p>
+          Rebaseは履歴を書き換えるため、使用には注意が必要です。
+        </p>
+        <div class="command-block">
+          <h4>ゴールデンルール</h4>
+          <pre><code># ❌ 公開済み（プッシュ済み）のコミットをRebaseしない
+# 他の人が作業している可能性がある
+
+# ✅ ローカルのみのコミットはRebase可能
+# まだプッシュしていない作業中のブランチ
+
+# どうしても公開済みをRebaseした場合
+git push --force-with-lease
+# --force-with-lease: 他の人の変更を上書きしないチェック付き強制push</code></pre>
+
+          <h4>いつRebaseを使うか</h4>
+          <pre><code># Rebaseが適切な場合
+# - ローカルでの作業整理
+# - プルリクエスト作成前のコミット整理
+# - mainブランチの最新を取り込む
+
+# Mergeが適切な場合
+# - チームで共有しているブランチの統合
+# - リリースブランチのマージ
+# - 履歴の保存が重要な場合</code></pre>
+        </div>
+
+        <h3>Rebaseの実践例</h3>
+        <p>
+          日常的な開発フローでのRebase使用例です。
+        </p>
+        <div class="command-block">
+          <pre><code># シナリオ: feature-loginの作業を続けながらmainの更新を取り込む
+
+# 1. 最新のmainを取得
+git checkout main
+git pull
+
+# 2. feature-loginをmainの最新にRebase
+git checkout feature-login
+git rebase main
+
+# 3. コンフリクトがあれば解決して続行
+# ... conflict resolution ...
+git add .
+git rebase --continue
+
+# 4. プッシュ（初回 or まだプッシュしていない場合）
+git push origin feature-login
+
+# 5. すでにプッシュ済みの場合（注意して使用）
+git push origin feature-login --force-with-lease</code></pre>
+        </div>
       </section>
     </article>
 
@@ -95,18 +643,54 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
     padding-top: 1rem;
   }
 
+  h3 {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #444;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0.5rem;
+  }
+
+  h4 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #555;
+  }
+
   p {
     margin-bottom: 1rem;
     color: #444;
   }
 
-  .note {
-    background: #fff3cd;
-    border-left: 4px solid #ffc107;
-    padding: 0.75rem 1rem;
+  .command-block {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .command-block h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #667eea;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
     margin: 1rem 0;
-    font-style: italic;
-    color: #856404;
+  }
+
+  code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
   .page-footer {

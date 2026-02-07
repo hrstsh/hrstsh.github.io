@@ -25,26 +25,8 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
       <section id="stash">
         <h2>8. 一時保存（Stash）</h2>
         <p>
-          作業中の変更を一時的に退避したい場合に便利なStash機能。
-          緊急のバグ修正やブランチ切り替え時に役立ちます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="log-history">
-        <h2>9. 履歴の確認</h2>
-        <p>
-          コミット履歴を追跡し、プロジェクトの変更を把握するためのコマンド群。
-          様々なフィルタリングや表示オプションを紹介します。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="undo">
-        <h2>10. 変更の取り消しと復元</h2>
-        <p>
-          間違った変更やコミットを元に戻す方法を学びます。
-          reset、revert、checkoutなど、状況に応じた適切なコマンドを選択できるようになりましょう。
+          作業中の変更を一時的に退避して、後で復元する機能です。
+          ブランチ切り替えやpull前に便利です。
         </p>
         <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
@@ -102,6 +84,15 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
     margin-bottom: 1rem;
     color: #333;
     padding-top: 1rem;
+  }
+
+  h3 {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #444;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0.5rem;
   }
 
   p {
