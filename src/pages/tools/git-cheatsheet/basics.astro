@@ -113,7 +113,7 @@ git config --global alias.unstage 'reset HEAD --'
 git config --global alias.prune-branches 'remote prune origin'
 
 # マージ済みローカルブランチを一括削除
-git config --global alias.delete-merged-branches '!git branch --merged | grep -v "\*" | grep -v "main" | grep -v "master" | xargs -n 1 git branch -d'</code></pre>
+git config --global alias.delete-merged-branches '!git branch --merged | grep -v \"\\*\" | grep -v \"main\" | grep -v \"master\" | xargs -n 1 git branch -d'</code></pre>
         </div>
 
         <h3>設定の確認と一覧表示</h3>
@@ -782,7 +782,7 @@ git add forgotten-file.txt
 git commit --amend --no-edit     # メッセージは変更しない
 
 # 作成者情報を変更
-git commit --amend --author="Name <email@example.com>"</code></pre>
+git commit --amend --author="Name &lt;email@example.com&gt;"</code></pre>
 
           <h4>空コミット</h4>
           <pre><code># 変更なしでコミット（CI/CDのトリガーなどに使用）
@@ -921,7 +921,7 @@ git rm -r --cached directory/
 
 # .gitignoreに追加し忘れたファイルを削除する場合
 git rm --cached secrets.env
-echo "secrets.env" >> .gitignore
+echo "secrets.env" &gt;&gt; .gitignore
 git add .gitignore
 git commit -m "Remove secrets.env from tracking"</code></pre>
 
@@ -1062,7 +1062,7 @@ dir/**/*.txt   # dirとサブディレクトリの全てのtxtファイル</code
 
           <h4>既に追跡されているファイルを無視する</h4>
           <pre><code># 1. .gitignoreに追加
-echo "file.txt" >> .gitignore
+echo "file.txt" &gt;&gt; .gitignore
 
 # 2. 追跡を解除（ファイルは残す）
 git rm --cached file.txt
