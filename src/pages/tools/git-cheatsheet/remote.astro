@@ -1,0 +1,137 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
+---
+
+<Layout title="リモート・一時保存編 - Gitコマンドチートシート">
+  <main>
+    <header class="page-header">
+      <h1>リモート・一時保存編</h1>
+      <p class="subtitle">リモートリポジトリ操作、Stash、履歴の確認、変更の取り消し</p>
+    </header>
+
+    <Navigation currentPage="remote" />
+
+    <article>
+      <section id="remote">
+        <h2>7. リモートリポジトリ操作</h2>
+        <p>
+          GitHubやGitLabなどのリモートリポジトリとの連携は、現代の開発フローにおいて必須です。
+          fetch、pull、pushなどのリモート操作を習得しましょう。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="stash">
+        <h2>8. 一時保存（Stash）</h2>
+        <p>
+          作業中の変更を一時的に退避したい場合に便利なStash機能。
+          緊急のバグ修正やブランチ切り替え時に役立ちます。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="log-history">
+        <h2>9. 履歴の確認</h2>
+        <p>
+          コミット履歴を追跡し、プロジェクトの変更を把握するためのコマンド群。
+          様々なフィルタリングや表示オプションを紹介します。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="undo">
+        <h2>10. 変更の取り消しと復元</h2>
+        <p>
+          間違った変更やコミットを元に戻す方法を学びます。
+          reset、revert、checkoutなど、状況に応じた適切なコマンドを選択できるようになりましょう。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+    </article>
+
+    <Navigation currentPage="remote" />
+
+    <footer class="page-footer">
+      <p><a href="/tools/git-cheatsheet">目次に戻る</a> | <a href="/">トップページに戻る</a></p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  article section {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  article section:last-of-type {
+    border-bottom: none;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #333;
+    padding-top: 1rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #856404;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
