@@ -1,0 +1,137 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
+---
+
+<Layout title="設定・Tips編 - Gitコマンドチートシート">
+  <main>
+    <header class="page-header">
+      <h1>設定・Tips編</h1>
+      <p class="subtitle">.gitignore、Git Hooks、実務で役立つTips、GitHub固有の操作</p>
+    </header>
+
+    <Navigation currentPage="tips" />
+
+    <article>
+      <section id="gitignore">
+        <h2>17. .gitignoreの設定</h2>
+        <p>
+          バージョン管理から除外するファイルを指定する.gitignoreファイルの設定方法。
+          言語やフレームワーク別の一般的なパターンも紹介します。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="hooks">
+        <h2>18. Git Hooks</h2>
+        <p>
+          特定のGitイベント発生時に自動実行されるスクリプト、Git Hooksの使い方。
+          コード品質の維持や自動化に役立ちます。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="practical-tips">
+        <h2>19. 実務で役立つTips</h2>
+        <p>
+          実際の開発現場で役立つベストプラクティスやトラブルシューティング。
+          コミットメッセージの書き方、ブランチ戦略などを紹介します。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="github">
+        <h2>20. GitHub固有の操作</h2>
+        <p>
+          GitHub CLIやPull Requestの作成など、GitHub固有の機能とGitコマンドの組み合わせ。
+          現代的な開発フローで必須の知識です。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+    </article>
+
+    <Navigation currentPage="tips" />
+
+    <footer class="page-footer">
+      <p><a href="/tools/git-cheatsheet">目次に戻る</a> | <a href="/">トップページに戻る</a></p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  article section {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  article section:last-of-type {
+    border-bottom: none;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #333;
+    padding-top: 1rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #856404;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>

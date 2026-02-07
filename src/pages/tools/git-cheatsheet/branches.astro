@@ -1,0 +1,128 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
+---
+
+<Layout title="ブランチ・マージ編 - Gitコマンドチートシート">
+  <main>
+    <header class="page-header">
+      <h1>ブランチ・マージ編</h1>
+      <p class="subtitle">ブランチ操作、マージ、Rebaseによる履歴管理</p>
+    </header>
+
+    <Navigation currentPage="branches" />
+
+    <article>
+      <section id="branch">
+        <h2>4. ブランチ操作</h2>
+        <p>
+          Gitのブランチ機能は、並行開発や機能分離を可能にする重要な機能です。
+          ブランチの作成、切り替え、削除などの操作を学びます。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="merge">
+        <h2>5. マージと統合</h2>
+        <p>
+          異なるブランチの変更を統合するマージ操作は、チーム開発において不可欠です。
+          コンフリクトの解決方法も含めて説明します。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+
+      <section id="rebase">
+        <h2>6. Rebase（履歴の書き換え）</h2>
+        <p>
+          Rebaseはコミット履歴を綺麗に保つための強力な機能です。
+          インタラクティブRebaseを使えば、コミットの統合や並べ替えなども可能です。
+        </p>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+      </section>
+    </article>
+
+    <Navigation currentPage="branches" />
+
+    <footer class="page-footer">
+      <p><a href="/tools/git-cheatsheet">目次に戻る</a> | <a href="/">トップページに戻る</a></p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  article section {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  article section:last-of-type {
+    border-bottom: none;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #333;
+    padding-top: 1rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #856404;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -1,0 +1,244 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="Gitコマンドチートシート - 開発者向け完全ガイド">
+  <main>
+    <header class="page-header">
+      <h1>Gitコマンドチートシート</h1>
+      <p class="subtitle">開発者向けの完全リファレンス - 基礎から応用まで</p>
+      <div class="meta">
+        <span>最終更新: 2026年2月7日</span>
+      </div>
+    </header>
+
+    <section class="intro">
+      <h2>このチートシートについて</h2>
+      <p>
+        Gitはバージョン管理システムとして、ソフトウェア開発において不可欠なツールです。
+        このチートシートでは、基本的なコマンドから高度な操作まで、
+        実務で役立つGitコマンドを網羅的に解説します。
+      </p>
+      <p>
+        初心者から上級者まで、日々の開発業務ですぐに参照できるよう、
+        カテゴリ別に整理されたコマンド一覧と具体例を提供します。
+      </p>
+    </section>
+
+    <section class="categories">
+      <h2>カテゴリ一覧</h2>
+      
+      <div class="category-grid">
+        <a href="/tools/git-cheatsheet/basics" class="category-card">
+          <h3>🚀 基礎編</h3>
+          <ul>
+            <li>初期設定と構成</li>
+            <li>リポジトリの作成とクローン</li>
+            <li>基本的なワークフロー</li>
+          </ul>
+          <span class="read-more">詳しく見る →</span>
+        </a>
+
+        <a href="/tools/git-cheatsheet/branches" class="category-card">
+          <h3>🌿 ブランチ・マージ編</h3>
+          <ul>
+            <li>ブランチ操作</li>
+            <li>マージと統合</li>
+            <li>Rebase（履歴の書き換え）</li>
+          </ul>
+          <span class="read-more">詳しく見る →</span>
+        </a>
+
+        <a href="/tools/git-cheatsheet/remote" class="category-card">
+          <h3>🌐 リモート・一時保存編</h3>
+          <ul>
+            <li>リモートリポジトリ操作</li>
+            <li>一時保存（Stash）</li>
+            <li>履歴の確認</li>
+            <li>変更の取り消しと復元</li>
+          </ul>
+          <span class="read-more">詳しく見る →</span>
+        </a>
+
+        <a href="/tools/git-cheatsheet/advanced" class="category-card">
+          <h3>⚡ タグ・高度な操作編</h3>
+          <ul>
+            <li>タグ管理</li>
+            <li>Cherry-pick</li>
+            <li>サブモジュール</li>
+            <li>ワークツリー</li>
+            <li>Bisect</li>
+            <li>高度な操作</li>
+          </ul>
+          <span class="read-more">詳しく見る →</span>
+        </a>
+
+        <a href="/tools/git-cheatsheet/tips" class="category-card">
+          <h3>💡 設定・Tips編</h3>
+          <ul>
+            <li>.gitignoreの設定</li>
+            <li>Git Hooks</li>
+            <li>実務で役立つTips</li>
+            <li>GitHub固有の操作</li>
+          </ul>
+          <span class="read-more">詳しく見る →</span>
+        </a>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <p>各カテゴリをクリックして、詳細なコマンドとその使い方をご覧ください。</p>
+      <p><a href="/">トップページに戻る</a></p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    color: #888;
+  }
+
+  .intro {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .intro p {
+    margin-bottom: 1rem;
+  }
+
+  .intro p:last-child {
+    margin-bottom: 0;
+  }
+
+  .categories {
+    margin-bottom: 3rem;
+  }
+
+  .categories h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .category-card {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .category-card:hover {
+    border-color: #667eea;
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  }
+
+  .category-card h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #667eea;
+    font-size: 1.3rem;
+  }
+
+  .category-card ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0 0 1rem 0;
+    flex-grow: 1;
+  }
+
+  .category-card ul li {
+    padding: 0.4rem 0;
+    color: #555;
+    font-size: 0.95rem;
+  }
+
+  .category-card ul li:before {
+    content: "▹ ";
+    color: #667eea;
+    font-weight: bold;
+  }
+
+  .read-more {
+    color: #667eea;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: auto;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .category-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

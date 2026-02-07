@@ -1,55 +1,16 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="Gitコマンドチートシート - 開発者向け完全ガイド">
+<Layout title="基礎編 - Gitコマンドチートシート">
   <main>
     <header class="page-header">
-      <h1>Gitコマンドチートシート</h1>
-      <p class="subtitle">開発者向けの完全リファレンス - 基礎から応用まで</p>
-      <div class="meta">
-        <span>最終更新: 2026年2月7日</span>
-      </div>
+      <h1>基礎編</h1>
+      <p class="subtitle">初期設定からリポジトリ作成、基本的なワークフローまで</p>
     </header>
 
-    <section class="intro">
-      <h2>このチートシートについて</h2>
-      <p>
-        Gitはバージョン管理システムとして、ソフトウェア開発において不可欠なツールです。
-        このチートシートでは、基本的なコマンドから高度な操作まで、
-        実務で役立つGitコマンドを網羅的に解説します。
-      </p>
-      <p>
-        初心者から上級者まで、日々の開発業務ですぐに参照できるよう、
-        カテゴリ別に整理されたコマンド一覧と具体例を提供します。
-      </p>
-    </section>
-
-    <nav class="toc">
-      <h2>目次</h2>
-      <ol>
-        <li><a href="#setup">初期設定と構成</a></li>
-        <li><a href="#init-clone">リポジトリの作成とクローン</a></li>
-        <li><a href="#basic-workflow">基本的なワークフロー</a></li>
-        <li><a href="#branch">ブランチ操作</a></li>
-        <li><a href="#merge">マージと統合</a></li>
-        <li><a href="#rebase">Rebase（履歴の書き換え）</a></li>
-        <li><a href="#remote">リモートリポジトリ操作</a></li>
-        <li><a href="#stash">一時保存（Stash）</a></li>
-        <li><a href="#log-history">履歴の確認</a></li>
-        <li><a href="#undo">変更の取り消しと復元</a></li>
-        <li><a href="#tag">タグ管理</a></li>
-        <li><a href="#cherry-pick">Cherry-pick（特定コミットの適用）</a></li>
-        <li><a href="#submodule">サブモジュール</a></li>
-        <li><a href="#worktree">ワークツリー</a></li>
-        <li><a href="#bisect">バグの特定（Bisect）</a></li>
-        <li><a href="#advanced">高度な操作</a></li>
-        <li><a href="#gitignore">.gitignoreの設定</a></li>
-        <li><a href="#hooks">Git Hooks</a></li>
-        <li><a href="#tips">実務で役立つTips</a></li>
-        <li><a href="#github">GitHub固有の操作</a></li>
-      </ol>
-    </nav>
+    <Navigation currentPage="basics" />
 
     <article>
       <section id="setup">
@@ -654,164 +615,12 @@ git clone https://username:password@github.com/username/repository.git</code></p
         </p>
         <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
-
-      <section id="branch">
-        <h2>4. ブランチ操作</h2>
-        <p>
-          Gitのブランチ機能は、並行開発や機能分離を可能にする重要な機能です。
-          ブランチの作成、切り替え、削除などの操作を学びます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="merge">
-        <h2>5. マージと統合</h2>
-        <p>
-          異なるブランチの変更を統合するマージ操作は、チーム開発において不可欠です。
-          コンフリクトの解決方法も含めて説明します。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="rebase">
-        <h2>6. Rebase（履歴の書き換え）</h2>
-        <p>
-          Rebaseはコミット履歴を綺麗に保つための強力な機能です。
-          インタラクティブRebaseを使えば、コミットの統合や並べ替えなども可能です。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="remote">
-        <h2>7. リモートリポジトリ操作</h2>
-        <p>
-          GitHubやGitLabなどのリモートリポジトリとの連携は、現代の開発フローにおいて必須です。
-          fetch、pull、pushなどのリモート操作を習得しましょう。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="stash">
-        <h2>8. 一時保存（Stash）</h2>
-        <p>
-          作業中の変更を一時的に退避したい場合に便利なStash機能。
-          緊急のバグ修正やブランチ切り替え時に役立ちます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="log-history">
-        <h2>9. 履歴の確認</h2>
-        <p>
-          コミット履歴を追跡し、プロジェクトの変更を把握するためのコマンド群。
-          様々なフィルタリングや表示オプションを紹介します。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="undo">
-        <h2>10. 変更の取り消しと復元</h2>
-        <p>
-          間違った変更やコミットを元に戻す方法を学びます。
-          reset、revert、checkoutなど、状況に応じた適切なコマンドを選択できるようになりましょう。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="tag">
-        <h2>11. タグ管理</h2>
-        <p>
-          リリースバージョンなど、特定のコミットに目印を付けるタグ機能。
-          軽量版タグと注釈付きタグの違いも解説します。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="cherry-pick">
-        <h2>12. Cherry-pick（特定コミットの適用）</h2>
-        <p>
-          他のブランチから特定のコミットだけを現在のブランチに取り込む機能。
-          バグ修正のバックポートなどに役立ちます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="submodule">
-        <h2>13. サブモジュール</h2>
-        <p>
-          他のGitリポジトリをプロジェクトに組み込むサブモジュール機能。
-          ライブラリ管理や共通コードの共有に便利です。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="worktree">
-        <h2>14. ワークツリー</h2>
-        <p>
-          同じリポジトリで複数のブランチを同時に操作できるワークツリー機能。
-          異なる機能を並行で開発する際に便利です。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="bisect">
-        <h2>15. バグの特定（Bisect）</h2>
-        <p>
-          バグが混入したコミットを二分探索で特定するBisect機能。
-          大規模なコミット履歴から効率的に問題箇所を見つけられます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="advanced">
-        <h2>16. 高度な操作</h2>
-        <p>
-          さらに高度なGitコマンドを紹介。
-          reflog、clean、blame、grepなど、特定の状況で役立つコマンドを学びます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="gitignore">
-        <h2>17. .gitignoreの設定</h2>
-        <p>
-          バージョン管理から除外するファイルを指定する.gitignoreファイルの設定方法。
-          言語やフレームワーク別の一般的なパターンも紹介します。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="hooks">
-        <h2>18. Git Hooks</h2>
-        <p>
-          特定のGitイベント発生時に自動実行されるスクリプト、Git Hooksの使い方。
-          コード品質の維持や自動化に役立ちます。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="tips">
-        <h2>19. 実務で役立つTips</h2>
-        <p>
-          実際の開発現場で役立つベストプラクティスやトラブルシューティング。
-          コミットメッセージの書き方、ブランチ戦略などを紹介します。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
-
-      <section id="github">
-        <h2>20. GitHub固有の操作</h2>
-        <p>
-          GitHub CLIやPull Requestの作成など、GitHub固有の機能とGitコマンドの組み合わせ。
-          現代的な開発フローで必須の知識です。
-        </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
-      </section>
     </article>
 
+    <Navigation currentPage="basics" />
+
     <footer class="page-footer">
-      <p>このチートシートは継続的に更新されます。各セクションの詳細なコマンド例や具体的な使用例は順次追加予定です。</p>
-      <p><a href="/">トップページに戻る</a></p>
+      <p><a href="/tools/git-cheatsheet">目次に戻る</a> | <a href="/">トップページに戻る</a></p>
     </footer>
   </main>
 </Layout>
@@ -826,8 +635,8 @@ git clone https://username:password@github.com/username/repository.git</code></p
 
   .page-header {
     text-align: center;
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
     border-bottom: 2px solid #667eea;
   }
 
@@ -843,69 +652,6 @@ git clone https://username:password@github.com/username/repository.git</code></p
   .subtitle {
     font-size: 1.1rem;
     color: #666;
-    margin-bottom: 1rem;
-  }
-
-  .meta {
-    font-size: 0.9rem;
-    color: #888;
-  }
-
-  .intro {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-  }
-
-  .intro p {
-    margin-bottom: 1rem;
-  }
-
-  .intro p:last-child {
-    margin-bottom: 0;
-  }
-
-  .toc {
-    background: #fff;
-    border: 2px solid #667eea;
-    border-radius: 8px;
-    padding: 2rem;
-    margin-bottom: 3rem;
-  }
-
-  .toc h2 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    color: #667eea;
-  }
-
-  .toc ol {
-    counter-reset: item;
-    list-style: none;
-    padding-left: 0;
-  }
-
-  .toc ol > li {
-    counter-increment: item;
-    margin-bottom: 0.75rem;
-  }
-
-  .toc ol > li:before {
-    content: counter(item) ". ";
-    font-weight: bold;
-    color: #667eea;
-  }
-
-  .toc ol li a {
-    color: #333;
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .toc ol li a:hover {
-    color: #667eea;
-    text-decoration: underline;
   }
 
   article section {
