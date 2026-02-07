@@ -3,18 +3,18 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="ブランチ編 - Gitコマンドチートシート">
+<Layout title="ブランチ・マージ編 - Gitコマンドチートシート">
   <main>
     <header class="page-header">
-      <h1>ブランチ編</h1>
-      <p class="subtitle">ブランチの作成・切り替え・マージ、競合解決まで</p>
+      <h1>ブランチ・マージ編</h1>
+      <p class="subtitle">ブランチ操作、マージ、Rebaseによる履歴管理</p>
     </header>
 
     <Navigation currentPage="branches" />
 
     <article>
       <section id="branch-basics">
-        <h2>1. ブランチの基本</h2>
+        <h2>4. ブランチ操作</h2>
         <p>
           ブランチはGitの最も強力な機能の一つです。独立した開発ラインを作成し、
           機能追加やバグ修正を本番コードに影響を与えずに進めることができます。
@@ -186,7 +186,7 @@ git branch --sort=committerdate  # 昇順</code></pre>
       </section>
 
       <section id="merging">
-        <h2>2. ブランチのマージ</h2>
+        <h2>5. マージと統合</h2>
         <p>
           ブランチでの作業が完了したら、その変更を別のブランチに統合します。
           Gitには複数のマージ戦略があります。
@@ -287,10 +287,8 @@ git merge -X theirs feature-login
 # サブツリーマージ（プロジェクトを別プロジェクトのサブディレクトリとして統合）
 git merge -s subtree feature-login</code></pre>
         </div>
-      </section>
 
-      <section id="conflicts">
-        <h2>3. コンフリクト（競合）の解決</h2>
+        <h3>コンフリクト（競合）の解決</h3>
         <p>
           複数のブランチで同じファイルの同じ箇所が変更されている場合、
           マージ時にコンフリクト（競合）が発生します。手動で解決する必要があります。
@@ -419,7 +417,7 @@ git merge main
       </section>
 
       <section id="rebase">
-        <h2>4. Rebase（リベース）</h2>
+        <h2>6. Rebase（履歴の書き換え）</h2>
         <p>
           Rebaseは、ブランチの基点を変更してコミット履歴を整理する強力な機能です。
           マージと似ていますが、より直線的な履歴を作成します。

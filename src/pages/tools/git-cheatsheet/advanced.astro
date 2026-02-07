@@ -3,716 +3,68 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="応用編 - Gitコマンドチートシート">
+<Layout title="タグ・高度な操作編 - Gitコマンドチートシート">
   <main>
     <header class="page-header">
-      <h1>応用編</h1>
-      <p class="subtitle">高度なGit機能とトラブルシューティング</p>
+      <h1>タグ・高度な操作編</h1>
+      <p class="subtitle">タグ管理、Cherry-pick、サブモジュール、ワークツリー、Bisect、高度な操作</p>
     </header>
 
     <Navigation currentPage="advanced" />
 
     <article>
-      <section id="history">
-        <h2>1. 履歴の操作と参照</h2>
+      <section id="tag">
+        <h2>11. タグ管理</h2>
         <p>
-          Gitの履歴を効果的に操作・参照する高度なテクニックです。
+          リリースバージョンなど、特定のコミットに目印を付けるタグ機能。
+          軽量版タグと注釈付きタグの違いも解説します。
         </p>
-
-        <h3>コミット履歴の検索</h3>
-        <p>
-          過去のコミットから特定の情報を見つける方法です。
-        </p>
-        <div class="command-block">
-          <h4>コミットメッセージで検索</h4>
-          <pre><code># メッセージに特定の文字列を含むコミットを検索
-git log --grep="bug fix"
-git log --grep="feature" --grep="update" --all-match
-
-# 大文字小文字を区別しない検索
-git log --grep="BUG" -i
-
-# 正規表現で検索
-git log --grep="^fix:" --regexp-ignore-case
-
-# 特定の作成者のコミットを検索
-git log --author="John Doe"
-git log --author="john@example.com"</code></pre>
-
-          <h4>コード変更で検索</h4>
-          <pre><code># 特定の文字列を追加/削除したコミットを検索
-git log -S"function_name"
-git log -G"regex_pattern"
-
-# 特定のファイルの変更履歴
-git log -- path/to/file.txt
-git log -p -- path/to/file.txt  # 差分も表示
-
-# ファイルの各行の最終変更コミットを表示
-git blame file.txt
-git blame -L 10,20 file.txt  # 10〜20行目のみ</code></pre>
-
-          <h4>期間や範囲での検索</h4>
-          <pre><code># 日付範囲で検索
-git log --since="2 weeks ago"
-git log --after="2024-01-01" --before="2024-12-31"
-git log --since="2024-01-01" --until="2024-06-30"
-
-# コミット範囲で検索
-git log main..feature-branch
-git log feature-branch..main
-git log main...feature-branch  # 共通祖先以降の差分</code></pre>
-        </div>
-
-        <h3>Reflog（リファレンスログ）</h3>
-        <p>
-          HEADや各ブランチの移動履歴を記録するログです。
-          誤って削除したコミットを復元する際などに役立ちます。
-        </p>
-        <div class="command-block">
-          <pre><code># Reflogを表示
-git reflog
-git reflog show HEAD
-
-# 特定のブランチのreflog
-git reflog show main
-
-# 詳細なreflog
-git reflog show --all
-
-# 誤って削除したコミットを復元
-git reflog
-# abc123 HEAD@{1}: commit: Important work
-git checkout abc123
-git branch recovered-work
-
-# 誤ってresetした場合の復元
-git reset --hard HEAD@{1}
-
-# Reflogの有効期限
-# デフォルト: 90日間保持
-git config --global gc.reflogExpire "90 days"</code></pre>
-        </div>
-
-        <h3>Bisect（バイナリサーチ）</h3>
-        <p>
-          バグが混入したコミットを効率的に特定する機能です。
-        </p>
-        <div class="command-block">
-          <pre><code># Bisectを開始
-git bisect start
-
-# 現在のコミット（バグあり）をbadとマーク
-git bisect bad
-
-# 正常に動作していたコミットをgoodとマーク
-git bisect good abc123
-
-# Gitが自動的に中間のコミットをチェックアウト
-# テストして結果を報告
-git bisect good  # または git bisect bad
-
-# 繰り返すと原因のコミットが特定される
-# xyz789 is the first bad commit
-
-# Bisectを終了
-git bisect reset
-
-# 自動化
-git bisect start HEAD abc123
-git bisect run npm test
-# テストコマンドの終了コードで自動判定</code></pre>
-        </div>
-
-        <h3>Cherry-pick</h3>
-        <p>
-          特定のコミットを別のブランチに適用する機能です。
-        </p>
-        <div class="command-block">
-          <pre><code># 特定のコミットを現在のブランチに適用
-git cherry-pick abc123
-
-# 複数のコミットを適用
-git cherry-pick abc123 def456 ghi789
-
-# コミット範囲を適用
-git cherry-pick abc123..def456
-
-# コミットせずにステージングのみ
-git cherry-pick --no-commit abc123
-git cherry-pick -n abc123
-
-# コンフリクトが発生した場合
-git cherry-pick abc123
-# CONFLICT...
-# 解決して
-git add .
-git cherry-pick --continue
-
-# Cherry-pickを中断
-git cherry-pick --abort
-
-# メッセージを編集
-git cherry-pick -e abc123
-git cherry-pick --edit abc123</code></pre>
-        </div>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
 
-      <section id="stash">
-        <h2>2. Stash（一時保存）</h2>
+      <section id="cherry-pick">
+        <h2>12. Cherry-pick（特定コミットの適用）</h2>
         <p>
-          作業中の変更を一時的に退避して、後で復元する機能です。
-          ブランチ切り替えやpull前に便利です。
+          他のブランチから特定のコミットだけを現在のブランチに取り込む機能。
+          バグ修正のバックポートなどに役立ちます。
         </p>
-
-        <h3>基本的なStash</h3>
-        <p>
-          変更を保存して作業ディレクトリをクリーンにする方法です。
-        </p>
-        <div class="command-block">
-          <pre><code># 変更をstash
-git stash
-git stash save  # 古い書き方
-
-# メッセージ付きでstash
-git stash save "WIP: working on feature"
-git stash push -m "WIP: working on feature"  # 新しい書き方
-
-# 未追跡ファイルも含めてstash
-git stash -u
-git stash --include-untracked
-
-# すべて（.gitignoreのファイルも）含めてstash
-git stash -a
-git stash --all
-
-# 特定のファイルのみstash
-git stash push -m "Partial stash" path/to/file.txt
-git stash push -- file1.txt file2.txt</code></pre>
-        </div>
-
-        <h3>Stashの確認と適用</h3>
-        <p>
-          保存したstashを確認・復元する方法です。
-        </p>
-        <div class="command-block">
-          <pre><code># Stashの一覧
-git stash list
-
-# Stashの内容を確認
-git stash show
-git stash show stash@{0}
-git stash show -p  # 差分も表示
-
-# 最新のstashを適用（stashは残る）
-git stash apply
-
-# 特定のstashを適用
-git stash apply stash@{2}
-
-# 最新のstashを適用して削除
-git stash pop
-
-# 特定のstashをpop
-git stash pop stash@{1}</code></pre>
-        </div>
-
-        <h3>Stashの管理</h3>
-        <p>
-          stashを削除したり、整理する方法です。
-        </p>
-        <div class="command-block">
-          <pre><code># 最新のstashを削除
-git stash drop
-
-# 特定のstashを削除
-git stash drop stash@{1}
-
-# すべてのstashを削除
-git stash clear
-
-# Stashからブランチを作成
-git stash branch new-branch-name
-git stash branch new-branch stash@{1}</code></pre>
-        </div>
-
-        <h3>Stashの高度な使い方</h3>
-        <p>
-          より柔軟なstash操作です。
-        </p>
-        <div class="command-block">
-          <pre><code># ステージングを保持してstash
-git stash --keep-index
-
-# パッチモードでstash（対話的に選択）
-git stash -p
-git stash --patch
-
-# Stashの内容を新しいコミットとして作成
-git stash show -p | git apply --reverse
-
-# Stashを別のブランチに適用
-git checkout other-branch
-git stash apply stash@{0}</code></pre>
-        </div>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
 
-      <section id="reset-revert">
-        <h2>3. Reset と Revert</h2>
+      <section id="submodule">
+        <h2>13. サブモジュール</h2>
         <p>
-          変更を取り消す2つの方法です。それぞれ異なる特性があります。
+          他のGitリポジトリをプロジェクトに組み込むサブモジュール機能。
+          ライブラリ管理や共通コードの共有に便利です。
         </p>
-
-        <h3>Reset</h3>
-        <p>
-          ブランチのHEADを過去のコミットに戻します。
-          履歴を書き換えるため、公開済みコミットには使用を避けてください。
-        </p>
-        <div class="command-block">
-          <h4>3つのモード</h4>
-          <pre><code># --soft: HEADのみ移動（変更はステージング状態）
-git reset --soft HEAD~1
-# コミットを取り消すが、変更は保持してステージング
-# git commit で再コミット可能
-
-# --mixed: HEADとインデックスを移動（デフォルト）
-git reset HEAD~1
-git reset --mixed HEAD~1
-# コミットとステージングを取り消し
-# 変更は作業ディレクトリに残る
-
-# --hard: すべてを移動（変更を完全に破棄）
-git reset --hard HEAD~1
-# コミット、ステージング、作業ディレクトリの変更をすべて破棄
-# ⚠️ 警告: 変更は完全に失われる</code></pre>
-
-          <h4>実用例</h4>
-          <pre><code># 直前のコミットを取り消し（変更は保持）
-git reset HEAD~1
-
-# 特定のコミットまで戻る
-git reset abc123
-git reset --hard abc123
-
-# ステージングを取り消し（作業ディレクトリは変更なし）
-git reset HEAD file.txt
-git reset -- file.txt
-
-# すべてのステージングを取り消し
-git reset HEAD
-
-# 直前のresetを取り消し（reflog使用）
-git reset --hard HEAD@{1}</code></pre>
-        </div>
-
-        <h3>Revert</h3>
-        <p>
-          特定のコミットを打ち消す新しいコミットを作成します。
-          履歴を残すため、公開済みコミットの取り消しに適しています。
-        </p>
-        <div class="command-block">
-          <pre><code># 特定のコミットを打ち消すコミットを作成
-git revert abc123
-
-# 複数のコミットをrevert
-git revert abc123 def456
-
-# コミット範囲をrevert
-git revert abc123..def456
-
-# マージコミットをrevert
-git revert -m 1 abc123
-# -m 1: 最初の親（マージ先）を保持
-# -m 2: 2番目の親（マージ元）を保持
-
-# コミットせずにrevert（手動でコミット）
-git revert --no-commit abc123
-git revert -n abc123
-
-# Revertを中断
-git revert --abort
-
-# Revertを続行（コンフリクト解決後）
-git revert --continue</code></pre>
-        </div>
-
-        <h3>ResetとRevertの使い分け</h3>
-        <p>
-          どちらを使うべきか判断する基準です。
-        </p>
-        <div class="command-block">
-          <pre><code># Resetを使う場合（履歴の書き換え）
-# ✅ ローカルのみのコミット
-# ✅ まだpushしていない変更
-# ✅ 個人ブランチ
-# ✅ 実験的な変更の取り消し
-
-git reset --hard HEAD~3
-
-# Revertを使う場合（履歴を保持）
-# ✅ 公開済み（push済み）のコミット
-# ✅ 共有ブランチ（main、developなど）
-# ✅ チームメンバーが使用中のブランチ
-# ✅ 監査証跡が必要な場合
-
-git revert abc123</code></pre>
-        </div>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
 
-      <section id="submodules">
-        <h2>4. サブモジュールとサブツリー</h2>
+      <section id="worktree">
+        <h2>14. ワークツリー</h2>
         <p>
-          他のGitリポジトリをプロジェクト内に含める方法です。
+          同じリポジトリで複数のブランチを同時に操作できるワークツリー機能。
+          異なる機能を並行で開発する際に便利です。
         </p>
-
-        <h3>サブモジュール（Submodule）</h3>
-        <p>
-          外部リポジトリを特定のコミットに固定して含めます。
-        </p>
-        <div class="command-block">
-          <h4>追加と初期化</h4>
-          <pre><code># サブモジュールを追加
-git submodule add https://github.com/user/repo.git path/to/submodule
-
-# 特定のブランチを追跡
-git submodule add -b main https://github.com/user/repo.git path/to/submodule
-
-# サブモジュールを含むリポジトリをクローン
-git clone --recurse-submodules https://github.com/user/main-repo.git
-
-# 既にクローン済みの場合
-git submodule init
-git submodule update
-# または一行で
-git submodule update --init --recursive</code></pre>
-
-          <h4>更新と操作</h4>
-          <pre><code># サブモジュールを更新
-git submodule update --remote
-
-# 特定のサブモジュールを更新
-git submodule update --remote path/to/submodule
-
-# サブモジュールの状態を確認
-git submodule status
-
-# サブモジュール内で作業
-cd path/to/submodule
-git checkout main
-git pull
-cd ../..
-git add path/to/submodule
-git commit -m "Update submodule"
-
-# すべてのサブモジュールでコマンドを実行
-git submodule foreach 'git pull origin main'</code></pre>
-
-          <h4>削除</h4>
-          <pre><code># サブモジュールを削除
-git submodule deinit path/to/submodule
-git rm path/to/submodule
-git commit -m "Remove submodule"
-
-# .git/modulesも削除する場合
-rm -rf .git/modules/path/to/submodule</code></pre>
-        </div>
-
-        <h3>サブツリー（Subtree）</h3>
-        <p>
-          外部リポジトリをメインリポジトリの履歴に統合します。
-          サブモジュールより簡単ですが、履歴が複雑になります。
-        </p>
-        <div class="command-block">
-          <pre><code># リモートを追加
-git remote add -f subtree-origin https://github.com/user/library.git
-
-# サブツリーとして追加
-git subtree add --prefix=lib/library subtree-origin main --squash
-
-# サブツリーを更新（pull）
-git subtree pull --prefix=lib/library subtree-origin main --squash
-
-# サブツリーへの変更をpush
-git subtree push --prefix=lib/library subtree-origin main</code></pre>
-        </div>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
 
-      <section id="troubleshooting">
-        <h2>5. トラブルシューティング</h2>
+      <section id="bisect">
+        <h2>15. バグの特定（Bisect）</h2>
         <p>
-          よくある問題と解決方法です。
+          バグが混入したコミットを二分探索で特定するBisect機能。
+          大規模なコミット履歴から効率的に問題箇所を見つけられます。
         </p>
-
-        <h3>間違ったコミットの修正</h3>
-        <div class="command-block">
-          <pre><code># コミットメッセージの修正
-git commit --amend -m "Correct message"
-
-# ファイルを追加してコミット修正
-git add forgotten-file.txt
-git commit --amend --no-edit
-
-# 作成者情報の修正
-git commit --amend --author="Name &lt;email@example.com&gt;"
-
-# 複数のコミットを修正（インタラクティブrebase）
-git rebase -i HEAD~3</code></pre>
-        </div>
-
-        <h3>間違ったブランチでの作業</h3>
-        <div class="command-block">
-          <pre><code># まだコミットしていない場合
-git stash
-git checkout correct-branch
-git stash pop
-
-# コミット済みの場合
-# 1. 正しいブランチを作成
-git branch correct-branch
-git checkout correct-branch
-
-# 2. 間違ったブランチをリセット
-git checkout wrong-branch
-git reset --hard HEAD~1  # コミット数に応じて調整</code></pre>
-        </div>
-
-        <h3>誤ってファイルを削除</h3>
-        <div class="command-block">
-          <pre><code># 作業ディレクトリから削除（まだコミットしていない）
-git checkout HEAD file.txt
-git restore file.txt
-
-# コミット後に削除を取り消し
-git revert HEAD
-
-# 特定のコミットからファイルを復元
-git checkout abc123 -- file.txt</code></pre>
-        </div>
-
-        <h3>大きなファイルの問題</h3>
-        <div class="command-block">
-          <pre><code># 大きなファイルが誤ってコミットされた場合
-
-# 1. 履歴から完全に削除（BFG Repo-Cleaner使用）
-bfg --delete-files large-file.dat
-git reflog expire --expire=now --all
-git gc --prune=now --aggressive
-
-# 2. filter-branchを使用（古い方法）
-git filter-branch --force --index-filter \
-  'git rm --cached --ignore-unmatch path/to/large-file' \
-  --prune-empty --tag-name-filter cat -- --all
-
-# 3. Git LFSに移行
-git lfs install
-git lfs track "*.psd"
-git lfs track "*.zip"
-git add .gitattributes
-git add large-file.psd
-git commit -m "Move to Git LFS"</code></pre>
-        </div>
-
-        <h3>リポジトリの修復</h3>
-        <div class="command-block">
-          <pre><code># リポジトリの整合性チェック
-git fsck
-git fsck --full
-
-# 破損したオブジェクトの修復
-git fsck --full
-# 別のクローンから .git/objects をコピー
-
-# ガベージコレクション
-git gc
-git gc --aggressive --prune=now
-
-# リポジトリのサイズを削減
-git repack -a -d --depth=250 --window=250
-
-# reflogの期限切れエントリを削除
-git reflog expire --expire=now --all</code></pre>
-        </div>
-
-        <h3>認証・接続の問題</h3>
-        <div class="command-block">
-          <pre><code># SSH接続のテスト
-ssh -T git@github.com
-
-# SSH鍵の追加
-ssh-add ~/.ssh/id_rsa
-
-# HTTPSからSSHへ変更
-git remote set-url origin git@github.com:user/repo.git
-
-# プロキシ設定
-git config --global http.proxy http://proxy.company.com:8080
-git config --global https.proxy https://proxy.company.com:8080
-
-# プロキシ解除
-git config --global --unset http.proxy
-git config --global --unset https.proxy
-
-# SSL証明書の検証を無効化（一時的）
-git config --global http.sslVerify false</code></pre>
-        </div>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
 
-      <section id="hooks">
-        <h2>6. Git Hooks</h2>
+      <section id="advanced-ops">
+        <h2>16. 高度な操作</h2>
         <p>
-          特定のGitアクションの前後に自動実行されるスクリプトです。
-          コード品質の維持やワークフローの自動化に役立ちます。
+          さらに高度なGitコマンドを紹介。
+          reflog、clean、blame、grepなど、特定の状況で役立つコマンドを学びます。
         </p>
-
-        <h3>Hooksの種類</h3>
-        <p>
-          主要なHooksとその用途です。
-        </p>
-        <div class="command-block">
-          <pre><code># クライアント側フック（.git/hooks/）
-pre-commit       # コミット前に実行（lint、テストなど）
-prepare-commit-msg # コミットメッセージ準備時
-commit-msg       # コミットメッセージ検証
-post-commit      # コミット後に実行
-pre-push         # push前に実行
-post-merge       # マージ後に実行
-pre-rebase       # rebase前に実行
-
-# サーバー側フック
-pre-receive      # push受信前
-update          # ブランチ更新時
-post-receive    # push受信後</code></pre>
-        </div>
-
-        <h3>Hooksの作成例</h3>
-        <div class="command-block">
-          <h4>pre-commit hook（コミット前のチェック）</h4>
-          <pre><code># .git/hooks/pre-commit
-#!/bin/sh
-
-# ESLintでコードをチェック
-npm run lint
-if [ $? -ne 0 ]; then
-  echo "ESLint failed. Commit aborted."
-  exit 1
-fi
-
-# テストを実行
-npm test
-if [ $? -ne 0 ]; then
-  echo "Tests failed. Commit aborted."
-  exit 1
-fi
-
-exit 0</code></pre>
-
-          <h4>commit-msg hook（コミットメッセージ検証）</h4>
-          <pre><code># .git/hooks/commit-msg
-#!/bin/sh
-
-# Conventional Commits形式を強制
-MSG_FILE=$1
-PATTERN='^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .{1,50}'
-
-if ! grep -qE "$PATTERN" "$MSG_FILE"; then
-  echo "Error: Commit message doesn't follow Conventional Commits"
-  echo "Format: type(scope): description"
-  echo "Types: feat, fix, docs, style, refactor, test, chore"
-  exit 1
-fi
-
-exit 0</code></pre>
-
-          <h4>pre-push hook（push前のチェック）</h4>
-          <pre><code># .git/hooks/pre-push
-#!/bin/sh
-
-# mainブランチへの直接pushを禁止
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
-if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
-  echo "Error: Direct push to $BRANCH is not allowed"
-  echo "Please create a feature branch and open a PR"
-  exit 1
-fi
-
-exit 0</code></pre>
-        </div>
-
-        <h3>Hooksの有効化</h3>
-        <div class="command-block">
-          <pre><code># Hookスクリプトを作成
-touch .git/hooks/pre-commit
-
-# 実行権限を付与
-chmod +x .git/hooks/pre-commit
-
-# Hookをテスト
-.git/hooks/pre-commit
-
-# Hookをスキップしてコミット（緊急時のみ）
-git commit --no-verify
-git commit -n</code></pre>
-        </div>
-
-        <h3>チーム全体でHooksを共有</h3>
-        <p>
-          .git/hooks/は共有されないため、リポジトリに含める方法です。
-        </p>
-        <div class="command-block">
-          <pre><code># 1. プロジェクトルートにhooksディレクトリを作成
-mkdir .githooks
-
-# 2. Hooksスクリプトを配置
-# .githooks/pre-commit
-# .githooks/commit-msg など
-
-# 3. Gitにhooksディレクトリを設定
-git config core.hooksPath .githooks
-
-# 4. チームメンバーも同じ設定を実行
-# または setup.sh スクリプトを作成
-#!/bin/sh
-git config core.hooksPath .githooks
-chmod +x .githooks/*</code></pre>
-        </div>
-
-        <h3>Huskyを使用したHooks管理</h3>
-        <p>
-          Node.jsプロジェクトでHooksを簡単に管理するツールです。
-        </p>
-        <div class="command-block">
-          <pre><code># Huskyのインストール
-npm install --save-dev husky
-npx husky init
-
-# pre-commitフックを追加
-npx husky add .husky/pre-commit "npm test"
-
-# package.jsonに設定
-{
-  "scripts": {
-    "prepare": "husky install"
-  }
-}
-
-# lint-stagedと組み合わせ
-npm install --save-dev lint-staged
-
-# .husky/pre-commit
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-npx lint-staged
-
-# package.json
-{
-  "lint-staged": {
-    "*.js": ["eslint --fix", "git add"],
-    "*.css": ["prettier --write", "git add"]
-  }
-}</code></pre>
-        </div>
+        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
       </section>
     </article>
 
@@ -770,54 +122,18 @@ npx lint-staged
     padding-top: 1rem;
   }
 
-  h3 {
-    font-size: 1.4rem;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    color: #444;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 0.5rem;
-  }
-
-  h4 {
-    font-size: 1.1rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    color: #555;
-  }
-
   p {
     margin-bottom: 1rem;
     color: #444;
   }
 
-  .command-block {
-    background: #f8f9fa;
-    border-left: 4px solid #667eea;
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-    border-radius: 4px;
-  }
-
-  .command-block h4 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    color: #667eea;
-  }
-
-  pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
+  .note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0.75rem 1rem;
     margin: 1rem 0;
-  }
-
-  code {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-style: italic;
+    color: #856404;
   }
 
   .page-footer {
