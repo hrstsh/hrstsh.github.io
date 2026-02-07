@@ -613,7 +613,532 @@ git clone https://username:password@github.com/username/repository.git</code></p
           ファイルの状態確認、変更のステージング、コミットの作成など、
           基本的なワークフローをマスターしましょう。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>Gitの3つの領域</h3>
+        <p>
+          Gitでは、ファイルの変更を管理するために3つの主要な領域があります：
+        </p>
+        <ol class="priority-list">
+          <li><strong>作業ディレクトリ（Working Directory）</strong>: ファイルを編集する実際のディレクトリ</li>
+          <li><strong>ステージングエリア（Staging Area / Index）</strong>: 次のコミットに含める変更を準備する領域</li>
+          <li><strong>リポジトリ（Repository）</strong>: コミットされた変更の履歴が保存される領域</li>
+        </ol>
+
+        <h3>作業状態の確認（git status）</h3>
+        <p>
+          リポジトリの現在の状態を確認するために最も頻繁に使用するコマンドです。
+          変更されたファイル、ステージングされたファイル、未追跡のファイルなどを表示します。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># 詳細な状態表示（デフォルト）
+git status
+
+# 簡潔な状態表示
+git status -s
+git status --short
+
+# ブランチ情報も含めて簡潔に表示
+git status -sb</code></pre>
+
+          <h4>出力の見方</h4>
+          <pre><code># 簡潔表示（-s）の記号の意味
+??  # 未追跡（Untracked）
+A   # 追加（Added）
+M   # 変更（Modified）
+D   # 削除（Deleted）
+R   # リネーム（Renamed）
+C   # コピー（Copied）
+U   # 更新未マージ（Updated but unmerged）
+
+# 左側の列: ステージングエリアの状態
+# 右側の列: 作業ディレクトリの状態
+
+# 例
+ M file.txt    # ステージング済み、作業ディレクトリは変更なし
+ M file.txt    # ステージングされていない変更
+MM file.txt    # ステージング後、さらに作業ディレクトリで変更</code></pre>
+
+          <h4>その他のオプション</h4>
+          <pre><code># 無視されたファイルも表示
+git status --ignored
+
+# 未追跡ファイルを表示しない
+git status -uno
+git status --untracked-files=no
+
+# すべての未追跡ファイルを表示（サブディレクトリ含む）
+git status -uall</code></pre>
+        </div>
+
+        <h3>変更のステージング（git add）</h3>
+        <p>
+          作業ディレクトリの変更をステージングエリアに追加します。
+          ステージングされた変更は、次のコミットに含まれます。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># 特定のファイルをステージング
+git add file.txt
+
+# 複数のファイルをステージング
+git add file1.txt file2.txt file3.txt
+
+# カレントディレクトリの全ファイルをステージング
+git add .
+
+# リポジトリ全体の全ファイルをステージング（削除も含む）
+git add -A
+git add --all
+
+# 変更と削除のみステージング（新規ファイルは除外）
+git add -u
+git add --update</code></pre>
+
+          <h4>パターンマッチング</h4>
+          <pre><code># ワイルドカードを使用
+git add *.txt          # 全てのtxtファイル
+git add src/*.js       # srcディレクトリの全てのjsファイル
+git add "*.txt"        # サブディレクトリを含む全てのtxtファイル
+
+# 特定のディレクトリ全体
+git add src/
+git add docs/</code></pre>
+
+          <h4>インタラクティブモード</h4>
+          <pre><code># インタラクティブモードで対話的にステージング
+git add -i
+git add --interactive
+
+# パッチモード（変更の一部のみをステージング）
+git add -p
+git add --patch
+
+# パッチモードの操作
+# y - このハンクをステージング
+# n - このハンクをスキップ
+# q - 終了
+# a - このファイルの残り全てをステージング
+# d - このファイルの残り全てをスキップ
+# s - ハンクを分割
+# e - 手動で編集</code></pre>
+
+          <h4>強制追加</h4>
+          <pre><code># .gitignoreで無視されているファイルも強制的に追加
+git add -f ignored-file.txt
+git add --force ignored-file.txt</code></pre>
+
+          <h4>ドライラン</h4>
+          <pre><code># 実際には追加せず、何が追加されるか確認
+git add -n .
+git add --dry-run .</code></pre>
+        </div>
+
+        <h3>コミットの作成（git commit）</h3>
+        <p>
+          ステージングエリアの変更をリポジトリに永続的に記録します。
+          コミットには説明的なメッセージを付けることが重要です。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># エディタを開いてコミットメッセージを入力
+git commit
+
+# コマンドラインでメッセージを指定
+git commit -m "コミットメッセージ"
+
+# 複数行のメッセージ
+git commit -m "要約行" -m "詳細な説明"
+
+# ステージングとコミットを同時実行（追跡済みファイルのみ）
+git commit -a -m "メッセージ"
+git commit -am "メッセージ"</code></pre>
+
+          <h4>コミットメッセージのベストプラクティス</h4>
+          <pre><code># 推奨される形式
+# 1行目: 50文字以内の要約（命令形で記述）
+# 2行目: 空行
+# 3行目以降: 詳細な説明（必要に応じて）
+
+# 良い例
+git commit -m "Add user authentication feature"
+git commit -m "Fix null pointer exception in login handler"
+git commit -m "Refactor database connection logic"
+
+# 悪い例（避けるべき）
+git commit -m "update"           # 不明確
+git commit -m "bug fix"          # 何のバグか不明
+git commit -m "アップデート"     # 詳細不明</code></pre>
+
+          <h4>コミットの修正</h4>
+          <pre><code># 最後のコミットを修正（メッセージや内容を変更）
+git commit --amend
+
+# メッセージのみを修正
+git commit --amend -m "新しいメッセージ"
+
+# ファイルを追加して直前のコミットに含める
+git add forgotten-file.txt
+git commit --amend --no-edit     # メッセージは変更しない
+
+# 作成者情報を変更
+git commit --amend --author="Name <email@example.com>"</code></pre>
+
+          <h4>空コミット</h4>
+          <pre><code># 変更なしでコミット（CI/CDのトリガーなどに使用）
+git commit --allow-empty -m "Trigger CI build"
+
+# 空のマージコミット
+git commit --allow-empty-message -m ""</code></pre>
+
+          <h4>その他のオプション</h4>
+          <pre><code># 詳細な差分を表示しながらコミット
+git commit -v
+git commit --verbose
+
+# コミット前にステージングエリアを確認
+git commit --dry-run
+
+# GPG署名付きコミット
+git commit -S -m "署名付きコミット"
+git commit --gpg-sign -m "署名付きコミット"
+
+# コミット日時を指定
+git commit --date="2026-01-01 12:00:00" -m "メッセージ"</code></pre>
+        </div>
+
+        <h3>差分の確認（git diff）</h3>
+        <p>
+          ファイルの変更内容を詳細に確認するコマンドです。
+          何が変更されたかを把握してからコミットすることが重要です。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># 作業ディレクトリとステージングエリアの差分
+git diff
+
+# ステージングエリアと最後のコミットの差分
+git diff --staged
+git diff --cached
+
+# 作業ディレクトリと最後のコミットの差分
+git diff HEAD
+
+# 特定のファイルの差分
+git diff file.txt
+git diff --staged file.txt</code></pre>
+
+          <h4>コミット間の差分</h4>
+          <pre><code># 2つのコミット間の差分
+git diff commit1 commit2
+git diff abc123 def456
+
+# 最新のコミットと1つ前のコミット
+git diff HEAD HEAD~1
+git diff HEAD~1 HEAD
+
+# ブランチ間の差分
+git diff main develop
+git diff main..develop    # 同じ意味
+
+# 共通の祖先からの差分
+git diff main...develop</code></pre>
+
+          <h4>差分の表示形式</h4>
+          <pre><code># 統計情報のみ表示
+git diff --stat
+
+# ファイル名のみ表示
+git diff --name-only
+
+# ファイル名と変更タイプを表示
+git diff --name-status
+
+# 行ごとの変更を色分けして表示（デフォルト）
+git diff --color
+
+# 単語単位で差分を表示
+git diff --word-diff
+
+# 変更の前後n行を表示（デフォルトは3行）
+git diff -U5
+git diff --unified=5</code></pre>
+
+          <h4>外部ツールで差分表示</h4>
+          <pre><code># 設定した外部diffツールで表示
+git difftool
+git difftool --staged
+
+# 特定のツールを指定
+git difftool --tool=vimdiff
+git difftool --tool=vscode</code></pre>
+
+          <h4>その他の便利なオプション</h4>
+          <pre><code># 空白の変更を無視
+git diff -w
+git diff --ignore-all-space
+
+# 行末の空白のみ無視
+git diff --ignore-space-at-eol
+
+# バイナリファイルの差分
+git diff --binary
+
+# サブモジュールの変更も表示
+git diff --submodule
+
+# 移動・コピーの検出
+git diff -M    # リネーム検出
+git diff -C    # コピー検出</code></pre>
+        </div>
+
+        <h3>ファイルの削除（git rm）</h3>
+        <p>
+          Gitの追跡対象からファイルを削除します。
+          作業ディレクトリからも削除するか、追跡のみ解除するかを選択できます。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># ファイルを削除（作業ディレクトリとGitから両方削除）
+git rm file.txt
+
+# 複数ファイルを削除
+git rm file1.txt file2.txt
+
+# ディレクトリごと削除
+git rm -r directory/
+
+# パターンマッチで削除
+git rm '*.log'
+git rm 'temp/*.tmp'</code></pre>
+
+          <h4>追跡のみ解除</h4>
+          <pre><code># ファイルは残して、Gitの追跡のみ解除
+git rm --cached file.txt
+
+# ディレクトリを追跡解除（ファイルは残す）
+git rm -r --cached directory/
+
+# .gitignoreに追加し忘れたファイルを削除する場合
+git rm --cached secrets.env
+echo "secrets.env" >> .gitignore
+git add .gitignore
+git commit -m "Remove secrets.env from tracking"</code></pre>
+
+          <h4>強制削除</h4>
+          <pre><code># 変更があるファイルを強制削除
+git rm -f file.txt
+git rm --force file.txt
+
+# ステージング済みの変更があるファイルを強制削除
+git rm -f modified-file.txt</code></pre>
+
+          <h4>ドライラン</h4>
+          <pre><code># 実際には削除せず、何が削除されるか確認
+git rm -n file.txt
+git rm --dry-run file.txt</code></pre>
+        </div>
+
+        <h3>ファイルの移動・リネーム（git mv）</h3>
+        <p>
+          ファイルを移動したりリネームしたりする場合に使用します。
+          履歴を保持したまま操作できます。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># ファイルをリネーム
+git mv old-name.txt new-name.txt
+
+# ファイルを移動
+git mv file.txt directory/
+
+# ファイルを移動してリネーム
+git mv src/old.txt dest/new.txt</code></pre>
+
+          <h4>git mvの等価な操作</h4>
+          <pre><code># 以下の3つのコマンドと等価
+mv old.txt new.txt
+git rm old.txt
+git add new.txt
+
+# つまり、手動で移動してもGitは自動的に検出可能
+mv file.txt directory/
+git add -A                 # Gitがリネームを検出</code></pre>
+
+          <h4>強制移動</h4>
+          <pre><code># 移動先に同名ファイルがある場合、強制上書き
+git mv -f source.txt destination.txt
+git mv --force source.txt destination.txt</code></pre>
+
+          <h4>ドライラン</h4>
+          <pre><code># 実際には移動せず、何が起こるか確認
+git mv -n old.txt new.txt
+git mv --dry-run old.txt new.txt</code></pre>
+        </div>
+
+        <h3>作業を元に戻す</h3>
+        <p>
+          誤って変更してしまった場合や、ステージングを取り消したい場合の方法です。
+        </p>
+        <div class="command-block">
+          <h4>ステージングの取り消し</h4>
+          <pre><code># 特定のファイルのステージングを取り消し
+git restore --staged file.txt
+git reset HEAD file.txt              # 古い方法
+
+# 全ファイルのステージングを取り消し
+git restore --staged .
+git reset HEAD .</code></pre>
+
+          <h4>作業ディレクトリの変更を破棄</h4>
+          <pre><code># 特定のファイルの変更を破棄（最後のコミット状態に戻す）
+git restore file.txt
+git checkout -- file.txt             # 古い方法
+
+# 全ファイルの変更を破棄
+git restore .
+git checkout -- .
+
+# 特定のコミット状態に復元
+git restore --source=HEAD~1 file.txt
+git restore --source=abc123 file.txt</code></pre>
+
+          <h4>注意事項</h4>
+          <p class="note">
+            <strong>警告：</strong> <code>git restore</code>や<code>git checkout --</code>で変更を破棄すると、
+            作業ディレクトリの変更は完全に失われます。実行前に必ず確認してください。
+          </p>
+        </div>
+
+        <h3>ファイルの無視（.gitignore）</h3>
+        <p>
+          特定のファイルやディレクトリをGitの追跡対象から除外する方法です。
+        </p>
+        <div class="command-block">
+          <h4>.gitignoreファイルの作成</h4>
+          <pre><code># .gitignoreファイルを作成
+touch .gitignore
+
+# 基本的なパターン
+# 特定のファイル
+secrets.env
+config.local.js
+
+# 特定の拡張子
+*.log
+*.tmp
+*.swp
+
+# ディレクトリ全体
+node_modules/
+dist/
+build/
+
+# 特定のディレクトリ内のファイル
+logs/*.log
+
+# 例外（!で無視を解除）
+*.log
+!important.log</code></pre>
+
+          <h4>.gitignoreのパターン</h4>
+          <pre><code># コメント行
+# これはコメントです
+
+# 空行は無視される
+
+# ワイルドカード
+*.txt          # 全てのtxtファイル
+temp*          # tempで始まる全てのファイル
+**/foo         # 全てのディレクトリのfoo
+
+# ディレクトリ
+dir/           # dirディレクトリとその中身全て
+
+# 特定の場所のみ
+/file.txt      # ルートディレクトリのfile.txtのみ
+dir/*.txt      # dirの直下のtxtファイルのみ（サブディレクトリは除外）
+dir/**/*.txt   # dirとサブディレクトリの全てのtxtファイル</code></pre>
+
+          <h4>既に追跡されているファイルを無視する</h4>
+          <pre><code># 1. .gitignoreに追加
+echo "file.txt" >> .gitignore
+
+# 2. 追跡を解除（ファイルは残す）
+git rm --cached file.txt
+
+# 3. コミット
+git add .gitignore
+git commit -m "Stop tracking file.txt"</code></pre>
+
+          <h4>グローバル.gitignore</h4>
+          <pre><code># 全リポジトリで共通して無視するファイルを設定
+git config --global core.excludesfile ~/.gitignore_global
+
+# ~/.gitignore_globalに記述
+# OS固有のファイル
+.DS_Store      # macOS
+Thumbs.db      # Windows
+*~             # Linux
+
+# エディタ固有のファイル
+.vscode/
+.idea/
+*.swp
+*.swo</code></pre>
+        </div>
+
+        <h3>作業フローのベストプラクティス</h3>
+        <p>
+          効率的で安全な作業フローのための推奨事項です。
+        </p>
+        <div class="command-block">
+          <h4>推奨される作業フロー</h4>
+          <pre><code># 1. 作業開始前に状態確認
+git status
+
+# 2. 最新の変更を取得（リモートブランチがある場合）
+git pull
+
+# 3. ファイルを編集
+# ... 作業 ...
+
+# 4. 変更内容を確認
+git status
+git diff
+
+# 5. 変更をステージング
+git add -p                    # 部分的にステージング
+# または
+git add file1.txt file2.txt   # 特定ファイルをステージング
+
+# 6. ステージング内容を確認
+git diff --staged
+
+# 7. コミット
+git commit -m "適切なメッセージ"
+
+# 8. リモートにプッシュ（必要に応じて）
+git push</code></pre>
+
+          <h4>コミット前のチェックリスト</h4>
+          <pre><code># ✓ git statusで状態確認
+# ✓ git diffで変更内容を確認
+# ✓ 意図した変更のみがステージングされているか確認
+# ✓ コミットメッセージは明確か
+# ✓ 1つのコミットに1つの論理的な変更が含まれているか
+# ✓ デバッグ用のコードやコメントが残っていないか
+# ✓ 機密情報（パスワード、APIキーなど）が含まれていないか</code></pre>
+
+          <h4>頻繁にコミットする</h4>
+          <pre><code># 推奨: 小さく頻繁にコミット
+git commit -m "Add user model"
+git commit -m "Add user validation"
+git commit -m "Add user tests"
+
+# 非推奨: 大きな変更を1つにまとめる
+git commit -m "Add user feature" # 100ファイルの変更</code></pre>
+        </div>
       </section>
     </article>
 
