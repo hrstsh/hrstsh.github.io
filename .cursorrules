@@ -83,6 +83,7 @@ README.mdには以下を含めること：
 ```
 ├── .github/
 │   └── workflows/     # GitHub Actions
+├── scripts/           # Git 操作などのシェルスクリプト
 ├── src/
 │   ├── layouts/       # 共通レイアウト
 │   ├── pages/         # ページ（ルーティング）
@@ -94,6 +95,21 @@ README.mdには以下を含めること：
 ├── package.json       # 依存関係
 └── README.md          # プロジェクト説明（常に最新に保つ）
 ```
+
+### Git 操作（Cursor が行う場合）
+
+ユーザーから「ブランチを切り替えて」「コミットして push して」など依頼されたときは、次のスクリプトを使うこと。リポジトリルートで実行する。
+
+1. **作業ブランチへチェックアウト**
+   - `./scripts/checkout-latest-branch.sh`
+   - 説明: リモートを fetch し、main/master を除く「一番最近更新された」リモートブランチにチェックアウトする。feature ブランチで作業する前に実行する。
+
+2. **変更をコミットして push**
+   - `./scripts/commit-and-push.sh "<コミットメッセージ>"`
+   - 説明: 全変更をステージし、指定メッセージでコミットしてから `git push origin HEAD` する。コミットメッセージはユーザー指示や変更内容に合わせて Cursor が具体的に指定する（日本語・英語どちらでも可）。
+   - 例: `./scripts/commit-and-push.sh "レビュー反映: 〇〇の修正"`
+
+直接 `git checkout` / `git commit` / `git push` を並べる代わりに、上記スクリプトを優先して使うこと。
 
 ### スタイリング
 

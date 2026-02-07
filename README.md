@@ -65,6 +65,15 @@ The site will be available at `http://localhost:4321`
 | `npm run preview` | Preview production build locally |
 | `npm run astro` | Run Astro CLI commands |
 
+### Scripts (optional)
+
+Helper scripts for Git workflow (run from repository root):
+
+| Script | Description |
+|--------|-------------|
+| `./scripts/checkout-latest-branch.sh` | Fetch remote and checkout the most recently updated branch (excluding main/master) |
+| `./scripts/commit-and-push.sh "<message>"` | Stage all changes, commit with the given message, and push to origin |
+
 ## Deployment
 
 The site is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
@@ -91,6 +100,7 @@ You can also trigger deployment manually:
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml      # GitHub Actions deployment config
+├── scripts/                # Shell scripts (e.g. Git helpers)
 ├── src/
 │   ├── layouts/
 │   │   └── Layout.astro    # Base layout component
