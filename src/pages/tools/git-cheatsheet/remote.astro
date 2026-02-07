@@ -19,7 +19,226 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
           GitHubやGitLabなどのリモートリポジトリとの連携は、現代の開発フローにおいて必須です。
           fetch、pull、pushなどのリモート操作を習得しましょう。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>リモートリポジトリの基本</h3>
+        <p>
+          リモートリポジトリは、ネットワーク上（GitHub、GitLabなど）やローカルネットワーク上に存在するGitリポジトリです。
+          チーム開発では、リモートリポジトリを介してコードを共有します。
+        </p>
+        <div class="command-block">
+          <h4>リモートの確認と追加</h4>
+          <pre><code># リモートリポジトリの一覧表示
+git remote
+
+# リモートリポジトリの詳細情報（URL含む）
+git remote -v
+git remote --verbose
+
+# リモートリポジトリを追加
+git remote add origin https://github.com/username/repository.git
+
+# 複数のリモートを追加（フォーク元など）
+git remote add upstream https://github.com/original/repository.git
+
+# SSH でリモートを追加（推奨）
+git remote add origin git@github.com:username/repository.git
+
+# 特定のリモートの詳細情報
+git remote show origin</code></pre>
+
+          <h4>リモートの変更と削除</h4>
+          <pre><code># リモートのURLを変更
+git remote set-url origin https://github.com/username/new-repository.git
+
+# HTTPSからSSHに変更
+git remote set-url origin git@github.com:username/repository.git
+
+# リモートの名前を変更
+git remote rename origin upstream
+
+# リモートを削除
+git remote remove origin
+git remote rm origin</code></pre>
+        </div>
+
+        <h3>Fetch（フェッチ）</h3>
+        <p>
+          リモートの変更を取得しますが、ローカルブランチには自動でマージしません。
+          安全に変更内容を確認してからマージできます。
+        </p>
+        <div class="command-block">
+          <pre><code># デフォルトリモート（origin）から取得
+git fetch
+
+# 特定のリモートから取得
+git fetch origin
+git fetch upstream
+
+# 特定のブランチのみ取得
+git fetch origin main
+
+# すべてのリモートから取得
+git fetch --all
+
+# タグも含めて取得
+git fetch --tags
+
+# 削除されたリモートブランチの参照も削除
+git fetch --prune
+git fetch -p
+
+# Fetch後の確認とマージ
+git log HEAD..origin/main  # リモートの変更を確認
+git diff HEAD..origin/main  # 差分を確認
+git merge origin/main       # 問題なければマージ</code></pre>
+        </div>
+
+        <h3>Pull（プル）</h3>
+        <p>
+          FetchとMergeを組み合わせたコマンドです。
+          リモートの変更を取得して、現在のブランチに自動的にマージします。
+        </p>
+        <div class="command-block">
+          <pre><code># 現在のブランチにpull（fetch + merge）
+git pull
+
+# 特定のリモート・ブランチからpull
+git pull origin main
+
+# Rebaseでpull（fetch + rebase）
+git pull --rebase
+git pull -r
+
+# Fast-forwardのみ許可
+git pull --ff-only
+
+# すべてのサブモジュールも更新
+git pull --recurse-submodules
+
+# Pullの設定
+git config --global pull.rebase true  # デフォルトでRebase
+git config --global pull.ff only      # Fast-forwardのみ許可</code></pre>
+        </div>
+
+        <h3>Push（プッシュ）</h3>
+        <p>
+          ローカルの変更をリモートリポジトリに送信します。
+          チームメンバーと作業を共有するための重要なコマンドです。
+        </p>
+        <div class="command-block">
+          <pre><code># 現在のブランチをpush
+git push
+
+# 特定のリモート・ブランチにpush
+git push origin main
+
+# 初回push時に上流ブランチを設定
+git push -u origin feature-login
+git push --set-upstream origin feature-login
+
+# すべてのブランチをpush
+git push --all origin
+
+# すべてのタグをpush
+git push --tags origin
+
+# リモートブランチを削除
+git push origin --delete feature-branch
+git push origin :feature-branch  # 古い書き方
+
+# 強制push（注意！）
+git push --force origin main
+git push -f origin main
+
+# 安全な強制push（推奨）
+git push --force-with-lease origin main</code></pre>
+        </div>
+
+        <h3>クローンとフォーク</h3>
+        <p>
+          リモートリポジトリをローカルにコピーする操作です。
+        </p>
+        <div class="command-block">
+          <pre><code># リポジトリをクローン
+git clone https://github.com/username/repository.git
+
+# 特定のブランチをクローン
+git clone -b develop https://github.com/username/repository.git
+
+# 浅いクローン（履歴の一部のみ）
+git clone --depth 1 https://github.com/username/repository.git
+
+# サブモジュールも含めてクローン
+git clone --recurse-submodules https://github.com/username/repository.git
+
+# フォークベースのワークフロー
+# 1. GitHubでフォーク
+# 2. フォークをクローン
+git clone https://github.com/your-username/repository.git
+cd repository
+
+# 3. 元のリポジトリをupstreamとして追加
+git remote add upstream https://github.com/original/repository.git
+
+# 4. upstreamの最新を取得
+git fetch upstream
+git checkout main
+git merge upstream/main</code></pre>
+        </div>
+
+        <h3>リモートブランチの操作</h3>
+        <p>
+          リモートブランチを確認・管理する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># リモートブランチの一覧
+git branch -r
+
+# すべてのブランチ（ローカル+リモート）
+git branch -a
+
+# リモートブランチをチェックアウト（追跡ブランチを自動作成）
+git checkout feature-login  # origin/feature-loginが存在する場合
+git switch feature-login
+
+# リモートブランチから新しいブランチを作成
+git checkout -b feature-login origin/feature-login
+git switch -c feature-login origin/feature-login
+
+# 削除されたリモートブランチの参照を削除
+git remote prune origin
+git fetch --prune</code></pre>
+        </div>
+
+        <h3>トラブルシューティング</h3>
+        <p>
+          よくある問題と解決方法です。
+        </p>
+        <div class="command-block">
+          <h4>non-fast-forwardエラー</h4>
+          <pre><code># エラー: Updates were rejected because the tip of your current branch is behind
+
+# 解決方法1: Pullしてからpush
+git pull origin main
+git push origin main
+
+# 解決方法2: Rebaseしてからpush
+git pull --rebase origin main
+git push origin main
+
+# 解決方法3: 強制push（注意！）
+git push --force-with-lease origin main</code></pre>
+
+          <h4>認証エラー</h4>
+          <pre><code># SSH接続のテスト
+ssh -T git@github.com
+
+# SSH鍵を追加
+ssh-add ~/.ssh/id_rsa
+
+# HTTPSからSSHへ変更
+git remote set-url origin git@github.com:user/repo.git</code></pre>
+        </div>
       </section>
 
       <section id="stash">
@@ -28,7 +247,171 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
           作業中の変更を一時的に退避して、後で復元する機能です。
           ブランチ切り替えやpull前に便利です。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>基本的なStash</h3>
+        <p>
+          変更を保存して作業ディレクトリをクリーンにする方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># 変更をstash
+git stash
+git stash save  # 古い書き方
+
+# メッセージ付きでstash
+git stash save "WIP: working on feature"
+git stash push -m "WIP: working on feature"  # 新しい書き方
+
+# 未追跡ファイルも含めてstash
+git stash -u
+git stash --include-untracked
+
+# すべて（.gitignoreのファイルも）含めてstash
+git stash -a
+git stash --all
+
+# 特定のファイルのみstash
+git stash push -m "Partial stash" path/to/file.txt
+git stash push -- file1.txt file2.txt</code></pre>
+        </div>
+
+        <h3>Stashの確認と適用</h3>
+        <p>
+          保存したstashを確認・復元する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># Stashの一覧
+git stash list
+
+# Stashの内容を確認
+git stash show
+git stash show stash@{0}
+git stash show -p  # 差分も表示
+git stash show -p stash@{1}
+
+# 最新のstashを適用（stashは残る）
+git stash apply
+
+# 特定のstashを適用
+git stash apply stash@{2}
+
+# 最新のstashを適用して削除
+git stash pop
+
+# 特定のstashをpop
+git stash pop stash@{1}</code></pre>
+        </div>
+
+        <h3>Stashの管理</h3>
+        <p>
+          stashを削除したり、整理する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># 最新のstashを削除
+git stash drop
+
+# 特定のstashを削除
+git stash drop stash@{1}
+
+# すべてのstashを削除
+git stash clear
+
+# Stashからブランチを作成
+git stash branch new-branch-name
+git stash branch new-branch stash@{1}
+
+# Stashの説明を変更することはできないので、
+# 新しく作り直す必要がある</code></pre>
+        </div>
+
+        <h3>Stashの高度な使い方</h3>
+        <p>
+          より柔軟なstash操作です。
+        </p>
+        <div class="command-block">
+          <pre><code># ステージングを保持してstash
+git stash --keep-index
+
+# パッチモードでstash（対話的に選択）
+git stash -p
+git stash --patch
+
+# Stashを別のブランチに適用
+git checkout other-branch
+git stash apply stash@{0}
+
+# Stashの内容を新しいコミットとして作成
+git stash show -p | git apply --reverse
+
+# コンフリクトが発生した場合
+git stash apply
+# CONFLICT...
+# 解決して
+git add .
+# stashは自動的に削除されないので手動で削除
+git stash drop</code></pre>
+        </div>
+
+        <h3>実用例</h3>
+        <p>
+          日常的な開発での使用例です。
+        </p>
+        <div class="command-block">
+          <h4>ブランチ切り替え前に変更を退避</h4>
+          <pre><code># 作業中に別のブランチに切り替える必要が出た
+git stash save "WIP: feature A"
+git checkout other-branch
+# 作業...
+git checkout feature-a
+git stash pop</code></pre>
+
+          <h4>Pull前に変更を退避</h4>
+          <pre><code># 未コミットの変更がある状態でpullする
+git stash
+git pull origin main
+git stash pop
+# コンフリクトがあれば解決</code></pre>
+
+          <h4>間違ったブランチで作業してしまった</h4>
+          <pre><code># 間違ったブランチで作業していたことに気づいた
+git stash
+git checkout correct-branch
+git stash pop
+git add .
+git commit -m "Correct branch commit"</code></pre>
+
+          <h4>複数の作業を切り替える</h4>
+          <pre><code># 作業Aを一時保存
+git stash save "WIP: feature A"
+
+# 作業Bを開始
+# ...
+
+# 作業Bも一時保存
+git stash save "WIP: feature B"
+
+# 作業Aに戻る
+git stash list
+# stash@{0}: WIP: feature B
+# stash@{1}: WIP: feature A
+git stash apply stash@{1}</code></pre>
+        </div>
+
+        <h3>Stashの注意点</h3>
+        <div class="command-block">
+          <pre><code># Stashは90日間保持される（デフォルト）
+# それ以降は自動的に削除される可能性がある
+
+# Stashは個人のローカル環境のみ
+# リモートリポジトリには送信されない
+
+# Stashが多くなると管理が大変
+# 定期的に整理することを推奨
+git stash list
+git stash clear  # 不要なものを削除
+
+# 重要な変更は stash よりもコミットを推奨
+# stashは一時的な退避用途に限定する</code></pre>
+        </div>
       </section>
     </article>
 
@@ -95,9 +478,45 @@ import Navigation from '../../../components/git-cheatsheet/Navigation.astro';
     padding-bottom: 0.5rem;
   }
 
+  h4 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: #555;
+  }
+
   p {
     margin-bottom: 1rem;
     color: #444;
+  }
+
+  .command-block {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .command-block h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #667eea;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
   .note {
