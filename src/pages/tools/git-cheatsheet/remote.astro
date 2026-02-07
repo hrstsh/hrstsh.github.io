@@ -40,7 +40,7 @@ git remote add origin https://github.com/username/repository.git
 # 複数のリモートを追加（フォーク元など）
 git remote add upstream https://github.com/original/repository.git
 
-# SSH でリモートを追加（推奨）
+# SSHでリモートを追加（推奨）
 git remote add origin git@github.com:username/repository.git
 
 # 特定のリモートの詳細情報
@@ -194,7 +194,7 @@ git merge upstream/main</code></pre>
           <pre><code># リモートブランチの一覧
 git branch -r
 
-# すべてのブランチ（ローカル+リモート）
+# すべてのブランチ（ローカル＋リモート）
 git branch -a
 
 # リモートブランチをチェックアウト（追跡ブランチを自動作成）
@@ -339,8 +339,10 @@ git stash --patch
 git checkout other-branch
 git stash apply stash@{0}
 
-# Stashの内容を新しいコミットとして作成
-git stash show -p | git apply --reverse
+# Stashの内容を作業ツリーに適用してからコミット
+git stash show -p | git apply
+git add .
+git commit -m "Apply stashed changes"
 
 # コンフリクトが発生した場合
 git stash apply
@@ -397,6 +399,9 @@ git stash apply stash@{1}</code></pre>
         </div>
 
         <h3>Stashの注意点</h3>
+        <p>
+          Stashの仕様と運用上の注意です。
+        </p>
         <div class="command-block">
           <pre><code># Stashは90日間保持される（デフォルト）
 # それ以降は自動的に削除される可能性がある
