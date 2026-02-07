@@ -393,7 +393,256 @@ git config --list --show-origin</code></pre>
           Gitリポジトリを新規作成するか、既存のリモートリポジトリをクローンする方法を解説します。
           プロジェクトを始める際の最初のステップです。
         </p>
-        <p class="note">※ 詳細なコマンド例は次の更新で追加されます。</p>
+
+        <h3>新規リポジトリの作成（git init）</h3>
+        <p>
+          既存のディレクトリをGitリポジトリとして初期化したり、新しいディレクトリを作成してリポジトリ化します。
+        </p>
+        <div class="command-block">
+          <h4>基本的な使い方</h4>
+          <pre><code># 現在のディレクトリをGitリポジトリとして初期化
+git init
+
+# 新しいディレクトリを作成してGitリポジトリとして初期化
+git init my-project
+
+# 特定のブランチ名で初期化（mainブランチで開始）
+git init --initial-branch=main
+git init -b main  # 短縮形</code></pre>
+
+          <h4>ベアリポジトリの作成</h4>
+          <pre><code># ベアリポジトリを作成（作業ツリーなし、サーバー用）
+git init --bare my-repo.git
+
+# 共有リポジトリとして作成（グループで共有する場合）
+git init --bare --shared=group my-repo.git</code></pre>
+        </div>
+
+        <h3>リポジトリのクローン（git clone）</h3>
+        <p>
+          リモートリポジトリをローカルにコピーします。GitHubなどのホスティングサービスからプロジェクトを取得する際に使用します。
+        </p>
+        <div class="command-block">
+          <h4>基本的なクローン</h4>
+          <pre><code># HTTPSでクローン
+git clone https://github.com/username/repository.git
+
+# SSHでクローン（推奨）
+git clone git@github.com:username/repository.git
+
+# 特定のディレクトリ名でクローン
+git clone https://github.com/username/repository.git my-project
+
+# カレントディレクトリにクローン（ディレクトリ名を付けない）
+git clone https://github.com/username/repository.git .</code></pre>
+
+          <h4>特定のブランチをクローン</h4>
+          <pre><code># 特定のブランチのみをクローン
+git clone -b develop https://github.com/username/repository.git
+
+# 特定のタグをクローン
+git clone -b v1.0.0 https://github.com/username/repository.git</code></pre>
+        </div>
+
+        <h3>シャロークローン（Shallow Clone）</h3>
+        <p>
+          履歴の一部のみを取得することで、クローンを高速化し、ディスク容量を節約できます。
+          大規模リポジトリや CI/CD 環境で有用です。
+        </p>
+        <div class="command-block">
+          <pre><code># 最新の1コミットのみをクローン（最も高速）
+git clone --depth 1 https://github.com/username/repository.git
+
+# 最新の10コミットのみをクローン
+git clone --depth 10 https://github.com/username/repository.git
+
+# 特定のブランチをシャロークローン
+git clone --depth 1 -b main https://github.com/username/repository.git
+
+# シャロークローンを通常のクローンに変換（全履歴を取得）
+git fetch --unshallow</code></pre>
+        </div>
+
+        <h3>部分クローン（Partial Clone）</h3>
+        <p>
+          Git 2.19以降で利用可能な機能で、必要なオブジェクトのみを取得します。
+          大規模なバイナリファイルを含むリポジトリで有用です。
+        </p>
+        <div class="command-block">
+          <pre><code># blobsを除外してクローン（ファイルの内容は必要時に取得）
+git clone --filter=blob:none https://github.com/username/repository.git
+
+# 大きなblobsを除外（例：1MB以上）
+git clone --filter=blob:limit=1m https://github.com/username/repository.git
+
+# treeオブジェクトのみ取得（ファイルとblobsは必要時に取得）
+git clone --filter=tree:0 https://github.com/username/repository.git</code></pre>
+        </div>
+
+        <h3>サブモジュールを含むクローン</h3>
+        <p>
+          リポジトリがサブモジュールを含む場合の取得方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># サブモジュールを含めてクローン
+git clone --recurse-submodules https://github.com/username/repository.git
+
+# サブモジュールも浅くクローン
+git clone --recurse-submodules --shallow-submodules https://github.com/username/repository.git
+
+# クローン後にサブモジュールを初期化・更新
+git clone https://github.com/username/repository.git
+cd repository
+git submodule update --init --recursive</code></pre>
+        </div>
+
+        <h3>クローンのオプション</h3>
+        <p>
+          その他の便利なクローンオプションです。
+        </p>
+        <div class="command-block">
+          <pre><code># ミラークローン（全てのブランチとタグを取得）
+git clone --mirror https://github.com/username/repository.git
+
+# ベアリポジトリとしてクローン
+git clone --bare https://github.com/username/repository.git
+
+# 静かにクローン（進捗を表示しない）
+git clone --quiet https://github.com/username/repository.git
+
+# 詳細な進捗を表示
+git clone --verbose https://github.com/username/repository.git
+
+# 特定のリモート名でクローン（デフォルトはorigin）
+git clone --origin upstream https://github.com/username/repository.git</code></pre>
+        </div>
+
+        <h3>既存のリポジトリから新規リポジトリを作成</h3>
+        <p>
+          既存のリポジトリをベースに、履歴を保持したまま新しいリポジトリを作成する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># 既存リポジトリをクローンして新リポジトリを作成
+git clone https://github.com/username/old-repo.git new-repo
+cd new-repo
+
+# リモートを削除して新しいリモートを設定
+git remote remove origin
+git remote add origin https://github.com/username/new-repo.git
+
+# 最初のプッシュ
+git push -u origin main</code></pre>
+        </div>
+
+        <h3>.gitディレクトリの構造</h3>
+        <p>
+          git initまたはgit cloneを実行すると、.gitディレクトリが作成されます。
+          このディレクトリにはリポジトリの全情報が格納されています。
+        </p>
+        <div class="command-block">
+          <pre><code># .gitディレクトリの主な構造
+.git/
+├── config           # リポジトリ固有の設定
+├── description      # リポジトリの説明
+├── HEAD             # 現在のブランチへの参照
+├── hooks/           # Git Hooksスクリプト
+├── info/            # 除外ファイルなど
+│   └── exclude      # .gitignoreの代替
+├── objects/         # 全オブジェクト（commits, trees, blobs）
+├── refs/            # ブランチとタグの参照
+│   ├── heads/       # ローカルブランチ
+│   ├── remotes/     # リモートブランチ
+│   └── tags/        # タグ
+├── logs/            # 参照ログ（reflog）
+└── index            # ステージングエリア</code></pre>
+        </div>
+
+        <h3>リポジトリの状態確認</h3>
+        <p>
+          リポジトリが正しく初期化・クローンされたか確認する方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># Gitリポジトリかどうか確認
+git rev-parse --is-inside-work-tree
+
+# リポジトリのルートディレクトリを表示
+git rev-parse --show-toplevel
+
+# .gitディレクトリの場所を表示
+git rev-parse --git-dir
+
+# 現在のブランチを確認
+git branch --show-current
+
+# リモートリポジトリの情報を確認
+git remote -v
+
+# リポジトリの設定を確認
+git config --local --list</code></pre>
+        </div>
+
+        <h3>リポジトリの移行とバックアップ</h3>
+        <p>
+          リポジトリを別の場所に移動したり、バックアップを作成する方法です。
+        </p>
+        <div class="command-block">
+          <h4>完全バックアップの作成</h4>
+          <pre><code># ミラークローンでバックアップ（全ブランチ・タグ・設定を含む）
+git clone --mirror https://github.com/username/repository.git repository-backup.git
+
+# バックアップから復元
+git clone repository-backup.git restored-repository</code></pre>
+
+          <h4>リポジトリのアーカイブ</h4>
+          <pre><code># 特定のコミット時点のファイルをアーカイブ
+git archive --format=zip --output=backup.zip HEAD
+
+# 特定のブランチをアーカイブ
+git archive --format=tar.gz --output=backup.tar.gz main
+
+# 特定のタグをアーカイブ
+git archive --format=zip --output=v1.0.0.zip v1.0.0</code></pre>
+        </div>
+
+        <h3>テンプレートを使用したリポジトリ初期化</h3>
+        <p>
+          カスタムテンプレートを使用してリポジトリを初期化できます。
+          チーム全体で統一されたGit設定を適用する際に便利です。
+        </p>
+        <div class="command-block">
+          <pre><code># テンプレートディレクトリを指定して初期化
+git init --template=/path/to/template my-project
+
+# グローバルなテンプレートディレクトリを設定
+git config --global init.templateDir /path/to/template
+
+# テンプレートディレクトリの構造例
+/path/to/template/
+├── hooks/
+│   ├── pre-commit
+│   └── post-merge
+├── info/
+│   └── exclude
+└── description</code></pre>
+        </div>
+
+        <h3>クローン時のトラブルシューティング</h3>
+        <p>
+          クローン時によくある問題と解決方法です。
+        </p>
+        <div class="command-block">
+          <pre><code># SSL証明書の検証エラー（一時的な回避策）
+git -c http.sslVerify=false clone https://github.com/username/repository.git
+
+# タイムアウト時間を延長
+git clone --config http.postBuffer=524288000 https://github.com/username/repository.git
+
+# プロキシ経由でクローン
+git clone --config http.proxy=http://proxy:port https://github.com/username/repository.git
+
+# 認証情報を含むURL（非推奨、セキュリティリスクあり）
+git clone https://username:password@github.com/username/repository.git</code></pre>
+        </div>
       </section>
 
       <section id="basic-workflow">
