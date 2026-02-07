@@ -130,6 +130,9 @@ git log v1.0.0..v1.1.0</code></pre>
         </div>
 
         <h3>タグのベストプラクティス</h3>
+        <p>
+          リリース運用で推奨されるタグの付け方です。
+        </p>
         <div class="command-block">
           <pre><code># タグ命名規則の例
 v1.0.0        # Semantic Versioning
@@ -188,9 +191,6 @@ git cherry-pick --edit abc123
 
 # 元のコミット者情報を保持（デフォルト）
 git cherry-pick abc123
-
-# 自分がコミット者になる
-git cherry-pick --no-ff abc123
 
 # 空のコミットも適用
 git cherry-pick --allow-empty abc123</code></pre>
@@ -255,6 +255,9 @@ git cherry-pick abc123 def456</code></pre>
         </div>
 
         <h3>注意点</h3>
+        <p>
+          Cherry-pickの使いどころと注意事項です。
+        </p>
         <div class="command-block">
           <pre><code># Cherry-pickの注意点
 
@@ -380,6 +383,9 @@ git commit -m "Remove library submodule"</code></pre>
         </div>
 
         <h3>サブモジュールの注意点</h3>
+        <p>
+          サブモジュールの利点と運用上の注意です。
+        </p>
         <div class="command-block">
           <pre><code># サブモジュールの特徴
 
@@ -529,6 +535,9 @@ git worktree remove ../project-review</code></pre>
         </div>
 
         <h3>ワークツリーの利点</h3>
+        <p>
+          ブランチ切り替えとの違いと、運用時の注意点です。
+        </p>
         <div class="command-block">
           <pre><code># ワークツリー vs ブランチ切り替え
 
@@ -613,8 +622,8 @@ git bisect run ./test.sh</code></pre>
           より柔軟なBisect操作です。
         </p>
         <div class="command-block">
-          <pre><code># 特定のパスだけをテスト
-git bisect start -- path/to/file.js
+          <pre><code># 特定のパスを変更したコミットだけを対象にテスト
+git bisect start HEAD abc123 -- path/to/file.js
 
 # コミットをスキップ
 git bisect skip
@@ -645,14 +654,11 @@ git bisect bad def456  # 再開</code></pre>
           <h4>パフォーマンス問題の特定</h4>
           <pre><code># シナリオ: いつからかパフォーマンスが悪化した
 
-# ベンチマークスクリプトを作成
+# ベンチマークスクリプトを作成（終了コード 0=good, 非0=bad）
 # benchmark.sh
 #!/bin/bash
-time npm run benchmark
-if [ $(bc <<< "$SECONDS > 5") -eq 1 ]; then
-  exit 1  # 5秒以上はbad
-fi
-exit 0
+npm run benchmark
+exit $?
 
 # Bisectで原因を特定
 git bisect start HEAD v1.0.0
@@ -666,6 +672,9 @@ git bisect run sh -c "npm install && npm run build"</code></pre>
         </div>
 
         <h3>Bisectのベストプラクティス</h3>
+        <p>
+          効率的にBisectを行うためのヒントです。
+        </p>
         <div class="command-block">
           <pre><code># 効果的なBisectのためのヒント
 
@@ -744,8 +753,8 @@ git clean -fdx
 git clean -i
 git clean --interactive
 
-# 特定のパターンのみ削除
-git clean -f "*.log"</code></pre>
+# 特定のパターンを除外して削除
+git clean -fdx -e '*.log'  # *.log 以外の未追跡ファイルを削除</code></pre>
         </div>
 
         <h3>Blame（各行の最終変更者）</h3>
