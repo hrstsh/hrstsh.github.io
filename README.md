@@ -74,6 +74,11 @@ Helper scripts for Git workflow (run from repository root):
 | `./scripts/checkout-latest-branch.sh` | Fetch remote and checkout the most recently updated branch (excluding main/master) |
 | `./scripts/commit-and-push.sh "<message>"` | Stage all changes, commit with the given message, and push to origin |
 
+## SEO
+
+- **Sitemap**: Generated at build time by `@astrojs/sitemap` (output: `/sitemap-index.xml`).
+- **robots.txt**: `public/robots.txt` allows all crawlers and points to the sitemap.
+
 ## Deployment
 
 The site is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
