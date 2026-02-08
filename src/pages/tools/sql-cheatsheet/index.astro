@@ -1,0 +1,278 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
+---
+
+<Layout title="SQL基本コマンド集">
+  <main>
+    <header class="hero">
+      <h1>SQL基本コマンド集</h1>
+      <p class="subtitle">データベース操作の実用的なリファレンス</p>
+    </header>
+
+    <Navigation currentPage="index" />
+
+    <section class="intro">
+      <h2>このチートシートについて</h2>
+      <p>
+        SQL（Structured Query Language）の基本から応用まで、実務で使えるコマンドを網羅したリファレンスです。
+        初心者から中級者まで、構文を忘れた時にサッと確認できるようまとめています。
+      </p>
+      <div class="note">
+        <strong>注意</strong>: このチートシートは主にMySQL/PostgreSQLを対象としていますが、
+        多くの構文は他のデータベースでも共通です。DBMS固有の機能にはその旨を明記しています。
+      </div>
+    </section>
+
+    <section class="toc">
+      <h2>目次</h2>
+      
+      <div class="toc-section">
+        <h3><a href="/tools/sql-cheatsheet/basics">基礎・データ取得編</a></h3>
+        <ul>
+          <li><a href="/tools/sql-cheatsheet/basics#sql-basics">1. SQLの基本</a></li>
+          <li><a href="/tools/sql-cheatsheet/basics#select-basics">2. SELECT文の基礎</a></li>
+          <li><a href="/tools/sql-cheatsheet/basics#sorting-limiting">3. データの並び替えと制限</a></li>
+          <li><a href="/tools/sql-cheatsheet/basics#aggregation">4. 集計関数</a></li>
+        </ul>
+      </div>
+
+      <div class="toc-section">
+        <h3><a href="/tools/sql-cheatsheet/joins">結合・サブクエリ編</a></h3>
+        <ul>
+          <li><a href="/tools/sql-cheatsheet/joins#joins">5. テーブル結合（JOIN）</a></li>
+          <li><a href="/tools/sql-cheatsheet/joins#subqueries">6. サブクエリ</a></li>
+          <li><a href="/tools/sql-cheatsheet/joins#set-operations">7. 集合演算</a></li>
+        </ul>
+      </div>
+
+      <div class="toc-section">
+        <h3><a href="/tools/sql-cheatsheet/manipulation">データ操作編</a></h3>
+        <ul>
+          <li><a href="/tools/sql-cheatsheet/manipulation#insert">8. データ挿入（INSERT）</a></li>
+          <li><a href="/tools/sql-cheatsheet/manipulation#update">9. データ更新（UPDATE）</a></li>
+          <li><a href="/tools/sql-cheatsheet/manipulation#delete">10. データ削除（DELETE）</a></li>
+          <li><a href="/tools/sql-cheatsheet/manipulation#transactions">11. トランザクション</a></li>
+        </ul>
+      </div>
+
+      <div class="toc-section">
+        <h3><a href="/tools/sql-cheatsheet/advanced">テーブル操作・応用編</a></h3>
+        <ul>
+          <li><a href="/tools/sql-cheatsheet/advanced#ddl">12. テーブル作成・変更（DDL）</a></li>
+          <li><a href="/tools/sql-cheatsheet/advanced#indexes">13. インデックス</a></li>
+          <li><a href="/tools/sql-cheatsheet/advanced#views">14. ビュー</a></li>
+          <li><a href="/tools/sql-cheatsheet/advanced#functions">15. 便利な関数</a></li>
+          <li><a href="/tools/sql-cheatsheet/advanced#window-functions">16. ウィンドウ関数</a></li>
+          <li><a href="/tools/sql-cheatsheet/advanced#practical-tips">17. 実務Tips</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="sample-data">
+      <h2>サンプルデータ</h2>
+      <p>このチートシート全体で使用する共通のテーブル構造です。</p>
+      
+      <div class="code-block">
+        <pre><code>-- usersテーブル（ユーザー情報）
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  name VARCHAR(50),
+  email VARCHAR(100),
+  age INT,
+  created_at DATETIME
+);
+
+-- ordersテーブル（注文情報）
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  user_id INT,
+  amount DECIMAL(10, 2),
+  status VARCHAR(20),
+  order_date DATE,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- productsテーブル（商品情報）
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  name VARCHAR(100),
+  price DECIMAL(10, 2),
+  category VARCHAR(50),
+  stock INT
+);</code></pre>
+      </div>
+    </section>
+
+    <Navigation currentPage="index" />
+
+    <footer class="page-footer">
+      <p><a href="/">トップページに戻る</a></p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  .intro {
+    margin-bottom: 3rem;
+  }
+
+  .intro h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .intro p {
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  .note {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .note strong {
+    color: #856404;
+  }
+
+  .toc {
+    margin-bottom: 3rem;
+  }
+
+  .toc h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+
+  .toc-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .toc-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .toc-section h3 a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .toc-section h3 a:hover {
+    text-decoration: underline;
+  }
+
+  .toc-section ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .toc-section li {
+    margin: 0.5rem 0;
+  }
+
+  .toc-section li a {
+    color: #444;
+    text-decoration: none;
+    padding: 0.25rem 0;
+    display: inline-block;
+  }
+
+  .toc-section li a:hover {
+    color: #667eea;
+    text-decoration: underline;
+  }
+
+  .sample-data {
+    margin-bottom: 3rem;
+  }
+
+  .sample-data h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .sample-data p {
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  .code-block {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  .code-block pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .code-block code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>

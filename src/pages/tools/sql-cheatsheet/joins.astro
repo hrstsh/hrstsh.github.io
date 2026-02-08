@@ -1,0 +1,361 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
+---
+
+<Layout title="SQL基本コマンド集 - 結合・サブクエリ編">
+  <main>
+    <header class="hero">
+      <h1>SQL基本コマンド集</h1>
+      <p class="subtitle">結合・サブクエリ編</p>
+    </header>
+
+    <Navigation currentPage="joins" />
+
+    <section id="joins">
+      <h2>5. テーブル結合（JOIN）</h2>
+
+      <h3>INNER JOIN（内部結合）</h3>
+      <p>両方のテーブルに一致するデータのみを取得</p>
+      <div class="code-block">
+        <pre><code>-- ユーザーとその注文を取得
+SELECT users.name, orders.amount, orders.order_date
+FROM users
+INNER JOIN orders ON users.id = orders.user_id;
+
+-- テーブル別名を使う（推奨）
+SELECT u.name, o.amount, o.order_date
+FROM users AS u
+INNER JOIN orders AS o ON u.id = o.user_id;
+
+-- JOINとだけ書いてもINNER JOINと同じ
+SELECT u.name, o.amount
+FROM users u
+JOIN orders o ON u.id = o.user_id;</code></pre>
+      </div>
+
+      <h3>LEFT JOIN（左外部結合）</h3>
+      <p>左テーブルの全データと、右テーブルの一致するデータを取得（一致しない場合はNULL）</p>
+      <div class="code-block">
+        <pre><code>-- 全ユーザーとその注文（注文がないユーザーも含む）
+SELECT u.name, o.amount, o.order_date
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id;
+
+-- 注文していないユーザーを抜き出す
+SELECT u.name
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id
+WHERE o.id IS NULL;
+
+-- LEFT OUTER JOINと書いても同じ
+SELECT u.name, o.amount
+FROM users u
+LEFT OUTER JOIN orders o ON u.id = o.user_id;</code></pre>
+      </div>
+
+      <h3>RIGHT JOIN（右外部結合）</h3>
+      <p>右テーブルの全データと、左テーブルの一致するデータを取得</p>
+      <div class="code-block">
+        <pre><code>-- 全注文とそのユーザー情報
+SELECT u.name, o.amount, o.order_date
+FROM users u
+RIGHT JOIN orders o ON u.id = o.user_id;
+
+-- 注: LEFT JOINでテーブル順を逆にしても同じ結果
+SELECT u.name, o.amount, o.order_date
+FROM orders o
+LEFT JOIN users u ON o.user_id = u.id;</code></pre>
+      </div>
+
+      <h3>FULL OUTER JOIN（完全外部結合）</h3>
+      <p>両方のテーブルの全データを取得（PostgreSQL、SQL Serverで対応、MySQLは未対応）</p>
+      <div class="code-block">
+        <pre><code>-- PostgreSQLの場合
+SELECT u.name, o.amount
+FROM users u
+FULL OUTER JOIN orders o ON u.id = o.user_id;
+
+-- MySQLで代替手段（UNIONを使用）
+SELECT u.name, o.amount FROM users u LEFT JOIN orders o ON u.id = o.user_id
+UNION
+SELECT u.name, o.amount FROM users u RIGHT JOIN orders o ON u.id = o.user_id;</code></pre>
+      </div>
+
+      <h3>CROSS JOIN（クロス結合）</h3>
+      <p>両方のテーブルの全組み合わせ（直積）</p>
+      <div class="code-block">
+        <pre><code>-- 全ユーザーと全商品の組み合わせ
+SELECT u.name, p.name AS product_name
+FROM users u
+CROSS JOIN products p;
+
+-- 注意: 結果行数 = usersの行数 × productsの行数</code></pre>
+      </div>
+
+      <h3>自己結合（Self Join）</h3>
+      <p>同じテーブルを結合する</p>
+      <div class="code-block">
+        <pre><code>-- 例: 社員とその上司を表示する
+SELECT 
+  e1.name AS employee_name,
+  e2.name AS manager_name
+FROM employees e1
+LEFT JOIN employees e2 ON e1.manager_id = e2.id;</code></pre>
+      </div>
+
+      <h3>複数テーブルの結合</h3>
+      <div class="code-block">
+        <pre><code>-- 3つのテーブルを結合
+SELECT 
+  u.name,
+  o.order_date,
+  p.name AS product_name,
+  p.price
+FROM users u
+JOIN orders o ON u.id = o.user_id
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id;</code></pre>
+      </div>
+    </section>
+
+    <section id="subqueries">
+      <h2>6. サブクエリ</h2>
+
+      <h3>WHERE句でのサブクエリ</h3>
+      <div class="code-block">
+        <pre><code>-- 平均価格以上の商品
+SELECT * FROM products
+WHERE price >= (SELECT AVG(price) FROM products);
+
+-- 注文があるユーザー
+SELECT * FROM users
+WHERE id IN (SELECT DISTINCT user_id FROM orders);
+
+-- 注文がないユーザー
+SELECT * FROM users
+WHERE id NOT IN (SELECT DISTINCT user_id FROM orders WHERE user_id IS NOT NULL);</code></pre>
+      </div>
+
+      <h3>FROM句でのサブクエリ（派生テーブル）</h3>
+      <div class="code-block">
+        <pre><code>-- ユーザー別の注文合計を取得し、それを並び替え
+SELECT *
+FROM (
+  SELECT user_id, SUM(amount) AS total_amount
+  FROM orders
+  GROUP BY user_id
+) AS user_totals
+WHERE total_amount >= 10000
+ORDER BY total_amount DESC;
+
+-- 必ず別名（AS）が必要</code></pre>
+      </div>
+
+      <h3>SELECT句でのサブクエリ</h3>
+      <div class="code-block">
+        <pre><code>-- 各ユーザーの注文合計を並べて表示
+SELECT 
+  u.name,
+  u.email,
+  (SELECT SUM(amount) FROM orders WHERE user_id = u.id) AS total_amount
+FROM users u;
+
+-- 注意: パフォーマンスが悪い場合がJOINを使う方が良い</code></pre>
+      </div>
+
+      <h3>EXISTS / NOT EXISTS</h3>
+      <div class="code-block">
+        <pre><code>-- 注文があるユーザー
+SELECT * FROM users u
+WHERE EXISTS (
+  SELECT 1 FROM orders o WHERE o.user_id = u.id
+);
+
+-- 注文がないユーザー
+SELECT * FROM users u
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o WHERE o.user_id = u.id
+);
+
+-- INよりEXISTSの方が高速な場合が多い</code></pre>
+      </div>
+
+      <h3>相関サブクエリ</h3>
+      <div class="code-block">
+        <pre><code>-- 各カテゴリ内で最高価格の商品
+SELECT p1.*
+FROM products p1
+WHERE p1.price = (
+  SELECT MAX(p2.price)
+  FROM products p2
+  WHERE p2.category = p1.category
+);</code></pre>
+      </div>
+    </section>
+
+    <section id="set-operations">
+      <h2>7. 集合演算</h2>
+
+      <h3>UNION（和集合）</h3>
+      <p>複数のSELECT結果を結合（重複を除く）</p>
+      <div class="code-block">
+        <pre><code>-- 2つのテーブルのユーザーを統合
+SELECT name, email FROM active_users
+UNION
+SELECT name, email FROM inactive_users;
+
+-- 注意:
+-- - カラム数と型が一致している必要がある
+-- - 自動的に重複が除かれる
+-- - ORDER BYは最後のクエリの後にのみ記述可能</code></pre>
+      </div>
+
+      <h3>UNION ALL</h3>
+      <p>重複を含めて結合</p>
+      <div class="code-block">
+        <pre><code>-- 重複も含めて全て取得
+SELECT name FROM users
+UNION ALL
+SELECT name FROM customers;
+
+-- UNIONより高速（重複チェックがないため）</code></pre>
+      </div>
+
+      <h3>INTERSECT（積集合）</h3>
+      <p>両方に共通するデータ（MySQLは未対応、PostgreSQL、SQL Serverで対応）</p>
+      <div class="code-block">
+        <pre><code>-- PostgreSQLの場合
+SELECT email FROM users
+INTERSECT
+SELECT email FROM customers;
+
+-- MySQLでの代替手段
+SELECT DISTINCT u.email
+FROM users u
+INNER JOIN customers c ON u.email = c.email;</code></pre>
+      </div>
+
+      <h3>EXCEPT / MINUS（差集合）</h3>
+      <p>最初のクエリにはあるが、2番目にはないデータ（MySQLは未対応）</p>
+      <div class="code-block">
+        <pre><code>-- PostgreSQLの場合（EXCEPT）
+SELECT email FROM users
+EXCEPT
+SELECT email FROM customers;
+
+-- Oracleの場合（MINUS）
+SELECT email FROM users
+MINUS
+SELECT email FROM customers;
+
+-- MySQLでの代替手段
+SELECT u.email
+FROM users u
+LEFT JOIN customers c ON u.email = c.email
+WHERE c.email IS NULL;</code></pre>
+      </div>
+    </section>
+
+    <Navigation currentPage="joins" />
+
+    <footer class="page-footer">
+      <p>
+        <a href="/tools/sql-cheatsheet/basics">前: 基礎・データ取得編</a> |
+        <a href="/tools/sql-cheatsheet">目次に戻る</a> |
+        <a href="/tools/sql-cheatsheet/manipulation">次: データ操作編</a>
+      </p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    margin: 2rem 0 1rem;
+    color: #667eea;
+  }
+
+  p {
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  .code-block {
+    margin: 1.5rem 0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .code-block pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .code-block code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    margin: 0 0.5rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>

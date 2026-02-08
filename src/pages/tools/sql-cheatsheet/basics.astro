@@ -1,0 +1,423 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
+---
+
+<Layout title="SQL基本コマンド集 - 基礎・データ取得編">
+  <main>
+    <header class="hero">
+      <h1>SQL基本コマンド集</h1>
+      <p class="subtitle">基礎・データ取得編</p>
+    </header>
+
+    <Navigation currentPage="basics" />
+
+    <section id="sql-basics">
+      <h2>1. SQLの基本</h2>
+      
+      <h3>SQLとは</h3>
+      <p>
+        SQL（Structured Query Language）は、リレーショナルデータベースを操作するための言語です。
+        データの検索、挿入、更新、削除などを行うことができます。
+      </p>
+
+      <h3>基本概念</h3>
+      <ul>
+        <li><strong>テーブル</strong>: データを格納する表（例: users, orders）</li>
+        <li><strong>カラム（列）</strong>: テーブルの各項目（例: id, name, email）</li>
+        <li><strong>行（レコード）</strong>: テーブルの各データの組</li>
+        <li><strong>主キー</strong>: 各行を一意に識別するカラム</li>
+      </ul>
+
+      <h3>主なデータ型</h3>
+      <div class="code-block">
+        <pre><code>-- 数値型
+INT          -- 整数
+DECIMAL(10,2) -- 小数（全体10桁、小数点2桁）
+FLOAT        -- 浮動小数点数
+
+-- 文字列型
+VARCHAR(100) -- 可変長文字列（最大100文字）
+CHAR(10)     -- 固定長文字列（10文字）
+TEXT         -- 長いテキスト
+
+-- 日付・時刻型
+DATE         -- 日付（YYYY-MM-DD）
+DATETIME     -- 日付と時刻
+TIMESTAMP    -- タイムスタンプ
+
+-- 論理型
+BOOLEAN      -- 真偽値（TRUE/FALSE）</code></pre>
+      </div>
+    </section>
+
+    <section id="select-basics">
+      <h2>2. SELECT文の基礎</h2>
+
+      <h3>基本的なSELECT</h3>
+      <div class="code-block">
+        <pre><code>-- 全テカラムを取得
+SELECT * FROM users;
+
+-- 特定のカラムを取得
+SELECT name, email FROM users;
+
+-- 別名をつける
+SELECT name AS 名前, email AS メール FROM users;
+SELECT name user_name, email user_email FROM users;  -- ASは省略可</code></pre>
+      </div>
+
+      <h3>WHERE句（条件指定）</h3>
+      <div class="code-block">
+        <pre><code>-- 基本的な条件
+SELECT * FROM users WHERE age >= 20;
+
+-- 複数条件（AND）
+SELECT * FROM users WHERE age >= 20 AND age < 30;
+
+-- 複数条件（OR）
+SELECT * FROM users WHERE age < 20 OR age >= 65;
+
+-- NOTで否定
+SELECT * FROM users WHERE NOT age >= 20;
+SELECT * FROM users WHERE age != 20;  -- 同じ意味</code></pre>
+      </div>
+
+      <h3>比較演算子</h3>
+      <div class="code-block">
+        <pre><code>-- 等しい
+SELECT * FROM products WHERE price = 1000;
+
+-- 等しくない
+SELECT * FROM products WHERE price != 1000;
+SELECT * FROM products WHERE price &lt;> 1000;  -- 同じ意味
+
+-- 大小関係
+SELECT * FROM products WHERE price > 1000;   -- より大きい
+SELECT * FROM products WHERE price >= 1000;  -- 以上
+SELECT * FROM products WHERE price < 1000;   -- より小さい
+SELECT * FROM products WHERE price <= 1000;  -- 以下</code></pre>
+      </div>
+
+      <h3>LIKE（パターンマッチング）</h3>
+      <div class="code-block">
+        <pre><code>-- %: 0文字以上の任意の文字列
+-- _: 1文字の任意の文字
+
+-- 「Tanaka」で始まる
+SELECT * FROM users WHERE name LIKE 'Tanaka%';
+
+-- 「Tanaka」で終わる
+SELECT * FROM users WHERE name LIKE '%Tanaka';
+
+-- 「Tanaka」を含む
+SELECT * FROM users WHERE name LIKE '%Tanaka%';
+
+-- 2文字目が「a」
+SELECT * FROM users WHERE name LIKE '_a%';
+
+-- 大文字小文字を区別しない（MySQL）
+SELECT * FROM users WHERE name LIKE '%tanaka%';
+
+-- 大文字小文字を区別しない（PostgreSQL）
+SELECT * FROM users WHERE name ILIKE '%tanaka%';</code></pre>
+      </div>
+
+      <h3>IN（複数値のマッチ）</h3>
+      <div class="code-block">
+        <pre><code>-- いずれかに一致
+SELECT * FROM orders WHERE status IN ('pending', 'processing', 'shipped');
+
+-- どれとも一致しない
+SELECT * FROM orders WHERE status NOT IN ('cancelled', 'returned');</code></pre>
+      </div>
+
+      <h3>BETWEEN（範囲指定）</h3>
+      <div class="code-block">
+        <pre><code>-- 数値の範囲
+SELECT * FROM products WHERE price BETWEEN 1000 AND 5000;
+-- 上記は以下と同じ
+SELECT * FROM products WHERE price >= 1000 AND price <= 5000;
+
+-- 日付の範囲
+SELECT * FROM orders WHERE order_date BETWEEN '2026-01-01' AND '2026-01-31';
+
+-- 範囲外
+SELECT * FROM products WHERE price NOT BETWEEN 1000 AND 5000;</code></pre>
+      </div>
+
+      <h3>IS NULL / IS NOT NULL</h3>
+      <div class="code-block">
+        <pre><code>-- NULL（値がない）
+SELECT * FROM users WHERE email IS NULL;
+
+-- NULLではない
+SELECT * FROM users WHERE email IS NOT NULL;
+
+-- 注意: = NULL は使えない（常にFALSEになる）
+SELECT * FROM users WHERE email = NULL;  -- ✕ 間違い</code></pre>
+      </div>
+    </section>
+
+    <section id="sorting-limiting">
+      <h2>3. データの並び替えと制限</h2>
+
+      <h3>ORDER BY（並び替え）</h3>
+      <div class="code-block">
+        <pre><code>-- 昇順（ASC）
+SELECT * FROM products ORDER BY price ASC;
+SELECT * FROM products ORDER BY price;  -- ASCは省略可
+
+-- 降順（DESC）
+SELECT * FROM products ORDER BY price DESC;
+
+-- 複数カラムで並び替え
+SELECT * FROM products ORDER BY category ASC, price DESC;
+
+-- カラム番号で指定（非推奨）
+SELECT name, price FROM products ORDER BY 2 DESC;  -- 2番目のカラム（price）</code></pre>
+      </div>
+
+      <h3>LIMIT / OFFSET（件数制限）</h3>
+      <div class="code-block">
+        <pre><code>-- 上位10件を取得
+SELECT * FROM products ORDER BY price DESC LIMIT 10;
+
+-- 11件目から10件を取得（ページネーション）
+SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 10;
+
+-- 同じこと（MySQLの略記法）
+SELECT * FROM products ORDER BY price DESC LIMIT 10, 10;  -- OFFSET, LIMIT
+
+-- PostgreSQLの場合
+SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 10;</code></pre>
+      </div>
+
+      <h3>DISTINCT（重複排除）</h3>
+      <div class="code-block">
+        <pre><code>-- 重複を除いて取得
+SELECT DISTINCT category FROM products;
+
+-- 複数カラムの組み合わせで重複排除
+SELECT DISTINCT category, price FROM products;
+
+-- 重複を含む件数をカウント
+SELECT COUNT(*) FROM products;
+-- 重複を除いた件数をカウント
+SELECT COUNT(DISTINCT category) FROM products;</code></pre>
+      </div>
+    </section>
+
+    <section id="aggregation">
+      <h2>4. 集計関数</h2>
+
+      <h3>基本的な集計関数</h3>
+      <div class="code-block">
+        <pre><code>-- 件数をカウント
+SELECT COUNT(*) FROM users;              -- 全行数
+SELECT COUNT(email) FROM users;          -- emailがNULLでない行数
+SELECT COUNT(DISTINCT age) FROM users;   -- ageの種類数
+
+-- 合計
+SELECT SUM(amount) FROM orders;          -- amountの合計
+SELECT SUM(amount) AS total FROM orders; -- 別名をつける
+
+-- 平均
+SELECT AVG(price) FROM products;         -- priceの平均
+SELECT AVG(amount) FROM orders;
+
+-- 最大値・最小値
+SELECT MAX(price) FROM products;         -- 最高価格
+SELECT MIN(price) FROM products;         -- 最低価格
+SELECT MAX(order_date) FROM orders;      -- 最新の注文日</code></pre>
+      </div>
+
+      <h3>GROUP BY（グループ化）</h3>
+      <div class="code-block">
+        <pre><code>-- カテゴリ別の商品数
+SELECT category, COUNT(*) FROM products
+GROUP BY category;
+
+-- カテゴリ別の平均価格
+SELECT category, AVG(price) AS avg_price FROM products
+GROUP BY category
+ORDER BY avg_price DESC;
+
+-- ユーザー別の注文合計金額
+SELECT user_id, SUM(amount) AS total_amount FROM orders
+GROUP BY user_id;
+
+-- 複数カラムでグループ化
+SELECT user_id, status, COUNT(*) AS order_count FROM orders
+GROUP BY user_id, status;</code></pre>
+      </div>
+
+      <h3>HAVING（集計結果の絞り込み）</h3>
+      <div class="code-block">
+        <pre><code>-- 商品数3個以上のカテゴリ
+SELECT category, COUNT(*) AS product_count FROM products
+GROUP BY category
+HAVING COUNT(*) >= 3;
+
+-- 平均価格つ1000円以上のカテゴリ
+SELECT category, AVG(price) AS avg_price FROM products
+GROUP BY category
+HAVING AVG(price) >= 1000;
+
+-- 注文合計が10000円以上のユーザー
+SELECT user_id, SUM(amount) AS total_amount FROM orders
+GROUP BY user_id
+HAVING SUM(amount) >= 10000
+ORDER BY total_amount DESC;
+
+-- WHEREとHAVINGの組み合わせ
+SELECT category, AVG(price) AS avg_price FROM products
+WHERE stock > 0                    -- 在庫ありの商品だけ
+GROUP BY category
+HAVING AVG(price) >= 1000;         -- 平均価格1000円以上</code></pre>
+      </div>
+
+      <div class="tip">
+        <strong>WHEREとHAVINGの違い</strong>
+        <ul>
+          <li><strong>WHERE</strong>: グループ化前の行を絞り込む</li>
+          <li><strong>HAVING</strong>: グループ化後の結果を絞り込む</li>
+          <li>WHEREでは集計関数を使えないが、HAVINGでは使える</li>
+        </ul>
+      </div>
+    </section>
+
+    <Navigation currentPage="basics" />
+
+    <footer class="page-footer">
+      <p>
+        <a href="/tools/sql-cheatsheet">目次に戻る</a> |
+        <a href="/tools/sql-cheatsheet/joins">次: 結合・サブクエリ編</a>
+      </p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    margin: 2rem 0 1rem;
+    color: #667eea;
+  }
+
+  p {
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    margin: 1rem 0;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin: 0.5rem 0;
+    color: #444;
+  }
+
+  .code-block {
+    margin: 1.5rem 0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .code-block pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .code-block code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .tip {
+    background: #e7f3ff;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .tip strong {
+    color: #1976d2;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .tip ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.5rem;
+  }
+
+  .tip li {
+    margin: 0.25rem 0;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    margin: 0 0.5rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>

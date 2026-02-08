@@ -1,0 +1,746 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
+---
+
+<Layout title="SQL基本コマンド集 - テーブル操作・応用編">
+  <main>
+    <header class="hero">
+      <h1>SQL基本コマンド集</h1>
+      <p class="subtitle">テーブル操作・応用編</p>
+    </header>
+
+    <Navigation currentPage="advanced" />
+
+    <section id="ddl">
+      <h2>12. テーブル作成・変更（DDL）</h2>
+
+      <h3>CREATE TABLE（テーブル作成）</h3>
+      <div class="code-block">
+        <pre><code>-- 基本的なテーブル作成
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  email VARCHAR(100) UNIQUE,
+  age INT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- AUTO_INCREMENT（MySQL）
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL
+);
+
+-- SERIAL（PostgreSQL）
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL
+);
+
+-- 複合主キー
+CREATE TABLE order_details (
+  order_id INT,
+  product_id INT,
+  quantity INT,
+  PRIMARY KEY (order_id, product_id)
+);</code></pre>
+      </div>
+
+      <h3>制約（Constraints）</h3>
+      <div class="code-block">
+        <pre><code>CREATE TABLE products (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,           -- 必須
+  price DECIMAL(10,2) CHECK (price > 0), -- 正の値のみ
+  category VARCHAR(50) DEFAULT 'Other',  -- デフォルト値
+  sku VARCHAR(50) UNIQUE,                -- 一意
+  created_at DATETIME NOT NULL
+);
+
+-- 外部キー制約
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  user_id INT NOT NULL,
+  amount DECIMAL(10,2),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 外部キーの動作を指定
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  user_id INT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+    ON DELETE CASCADE      -- 親削除時に子も削除
+    ON UPDATE CASCADE      -- 親更新時に子も更新
+);
+
+-- 制約に名前をつける
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  user_id INT NOT NULL,
+  amount DECIMAL(10,2),
+  CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
+  CONSTRAINT chk_amount CHECK (amount >= 0)
+);</code></pre>
+      </div>
+
+      <h3>ALTER TABLE（テーブル変更）</h3>
+      <div class="code-block">
+        <pre><code>-- カラム追加
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+ALTER TABLE users ADD COLUMN address TEXT DEFAULT '';
+
+-- カラム削除
+ALTER TABLE users DROP COLUMN phone;
+
+-- カラム名変更
+ALTER TABLE users RENAME COLUMN old_name TO new_name;  -- PostgreSQL, SQLite
+ALTER TABLE users CHANGE old_name new_name VARCHAR(50); -- MySQL
+
+-- カラムのデータ型変更
+ALTER TABLE users MODIFY COLUMN age BIGINT;            -- MySQL
+ALTER TABLE users ALTER COLUMN age TYPE BIGINT;        -- PostgreSQL
+
+-- 制約の追加
+ALTER TABLE users ADD CONSTRAINT uk_email UNIQUE (email);
+ALTER TABLE orders ADD CONSTRAINT fk_user 
+  FOREIGN KEY (user_id) REFERENCES users(id);
+
+-- 制約の削除
+ALTER TABLE users DROP CONSTRAINT uk_email;
+ALTER TABLE users DROP INDEX uk_email;  -- MySQL</code></pre>
+      </div>
+
+      <h3>DROP TABLE（テーブル削除）</h3>
+      <div class="code-block">
+        <pre><code>-- テーブル削除
+DROP TABLE products;
+
+-- 存在する場合のみ削除（エラー回避）
+DROP TABLE IF EXISTS products;
+
+-- 全データ削除（テーブル構造は残す）
+TRUNCATE TABLE products;
+
+-- TRUNCATE と DELETE の違い
+-- TRUNCATE: 高速、ロールバック不可、AUTO_INCREMENTリセット
+-- DELETE:   低速、ロールバック可、AUTO_INCREMENT継続</code></pre>
+      </div>
+    </section>
+
+    <section id="indexes">
+      <h2>13. インデックス</h2>
+
+      <h3>インデックスとは</h3>
+      <p>
+        インデックスは、データベースの検索速度を向上させるための仕組みです。
+        本の索引のように、特定のデータを素早く見つけることができます。
+      </p>
+
+      <h3>CREATE INDEX（インデックス作成）</h3>
+      <div class="code-block">
+        <pre><code>-- 単一カラムのインデックス
+CREATE INDEX idx_email ON users(email);
+
+-- 複合インデックス（複数カラム）
+CREATE INDEX idx_name_age ON users(name, age);
+
+-- ユニークインデックス
+CREATE UNIQUE INDEX idx_unique_email ON users(email);
+
+-- 部分インデックス（PostgreSQL）
+CREATE INDEX idx_active_users ON users(name) WHERE active = true;
+
+-- 降順インデックス
+CREATE INDEX idx_created_desc ON orders(created_at DESC);</code></pre>
+      </div>
+
+      <h3>DROP INDEX（インデックス削除）</h3>
+      <div class="code-block">
+        <pre><code>-- インデックス削除
+DROP INDEX idx_email;                    -- PostgreSQL, SQLite
+DROP INDEX idx_email ON users;           -- MySQL
+
+-- 存在する場合のみ削除
+DROP INDEX IF EXISTS idx_email;</code></pre>
+      </div>
+
+      <h3>インデックス使用の注意点</h3>
+      <div class="tip">
+        <strong>インデックスのメリット・デメリット</strong>
+        <ul>
+          <li><strong>メリット</strong>: SELECT（検索）が高速化</li>
+          <li><strong>デメリット</strong>: INSERT/UPDATE/DELETEが低速化、ストレージ容量増加</li>
+        </ul>
+        <strong>インデックスを作るべきカラム</strong>
+        <ul>
+          <li>WHERE句で頻繁に使用するカラム</li>
+          <li>JOIN条件に使用するカラム</li>
+          <li>ORDER BYで使用するカラム</li>
+        </ul>
+        <strong>インデックスが不要なケース</strong>
+        <ul>
+          <li>データ量が少ないテーブル</li>
+          <li>更新が頻繁なカラム</li>
+          <li>カーディナリティが低いカラム（例: 性別など値の種類が少ない）</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="views">
+      <h2>14. ビュー</h2>
+
+      <h3>ビューとは</h3>
+      <p>
+        ビューは、SELECT文の結果に名前を付けて保存する仮想的なテーブルです。
+        複雑なクエリを単純化したり、セキュリティのために必要なカラムのみを公開したりできます。
+      </p>
+
+      <h3>CREATE VIEW（ビュー作成）</h3>
+      <div class="code-block">
+        <pre><code>-- 基本的なビュー
+CREATE VIEW active_users AS
+SELECT id, name, email FROM users
+WHERE active = true;
+
+-- ビューの使用
+SELECT * FROM active_users;
+
+-- 複雑なクエリをビュー化
+CREATE VIEW order_summary AS
+SELECT 
+  u.name AS user_name,
+  COUNT(o.id) AS order_count,
+  SUM(o.amount) AS total_amount
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id
+GROUP BY u.id, u.name;
+
+-- JOINを含むビュー
+CREATE VIEW product_details AS
+SELECT 
+  p.id,
+  p.name,
+  p.price,
+  c.name AS category_name
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id;</code></pre>
+      </div>
+
+      <h3>ビューの更新・削除</h3>
+      <div class="code-block">
+        <pre><code>-- ビューの置き換え（存在する場合は上書き）
+CREATE OR REPLACE VIEW active_users AS
+SELECT id, name, email, created_at FROM users
+WHERE active = true;
+
+-- ビューの削除
+DROP VIEW active_users;
+DROP VIEW IF EXISTS active_users;</code></pre>
+      </div>
+
+      <div class="tip">
+        <strong>ビューの利点</strong>
+        <ul>
+          <li>複雑なクエリを簡潔に記述できる</li>
+          <li>頻繁に使用するクエリを再利用できる</li>
+          <li>セキュリティ: 必要なカラムのみを公開</li>
+          <li>論理的なデータ構造を提供</li>
+        </ul>
+        <strong>注意点</strong>
+        <ul>
+          <li>ビューに対するINSERT/UPDATEは制限がある</li>
+          <li>複雑なビューはパフォーマンスに影響する可能性</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="functions">
+      <h2>15. 便利な関数</h2>
+
+      <h3>文字列関数</h3>
+      <div class="code-block">
+        <pre><code>-- 結合
+SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM users;
+SELECT first_name || ' ' || last_name AS full_name FROM users;  -- PostgreSQL
+
+-- 部分文字列
+SELECT SUBSTRING(name, 1, 5) FROM products;  -- 1文字目から5文字
+SELECT LEFT(name, 5) FROM products;          -- 左から5文字
+SELECT RIGHT(name, 5) FROM products;         -- 右から5文字
+
+-- 大文字・小文字変換
+SELECT UPPER(name) FROM users;  -- 大文字
+SELECT LOWER(name) FROM users;  -- 小文字
+
+-- 空白削除
+SELECT TRIM(name) FROM users;       -- 両端の空白削除
+SELECT LTRIM(name) FROM users;      -- 左の空白削除
+SELECT RTRIM(name) FROM users;      -- 右の空白削除
+
+-- 文字列長
+SELECT LENGTH(name) FROM users;
+SELECT CHAR_LENGTH(name) FROM users;  -- MySQL
+
+-- 文字列置換
+SELECT REPLACE(name, 'old', 'new') FROM products;</code></pre>
+      </div>
+
+      <h3>数値関数</h3>
+      <div class="code-block">
+        <pre><code>-- 四捨五入
+SELECT ROUND(price, 2) FROM products;     -- 小数点2桁
+SELECT ROUND(price) FROM products;        -- 整数に丸める
+
+-- 切り上げ・切り捨て
+SELECT CEIL(price) FROM products;         -- 切り上げ
+SELECT CEILING(price) FROM products;      -- 同上
+SELECT FLOOR(price) FROM products;        -- 切り捨て
+
+-- 絶対値
+SELECT ABS(amount) FROM transactions;
+
+-- 累乗・平方根
+SELECT POWER(2, 10);    -- 2の10乗
+SELECT SQRT(16);        -- 平方根
+
+-- 乱数
+SELECT RANDOM();        -- PostgreSQL: 0-1の乱数
+SELECT RAND();          -- MySQL: 0-1の乱数</code></pre>
+      </div>
+
+      <h3>日付関数</h3>
+      <div class="code-block">
+        <pre><code>-- 現在日時
+SELECT NOW();                    -- 日時
+SELECT CURRENT_DATE;             -- 日付のみ
+SELECT CURRENT_TIME;             -- 時刻のみ
+
+-- 日付の加算・減算
+SELECT DATE_ADD(order_date, INTERVAL 7 DAY) FROM orders;      -- MySQL
+SELECT order_date + INTERVAL '7 days' FROM orders;            -- PostgreSQL
+SELECT DATE(order_date, '+7 days') FROM orders;               -- SQLite
+
+-- 日付の差分
+SELECT DATEDIFF(NOW(), created_at) AS days_since FROM users;  -- MySQL
+SELECT NOW() - created_at AS interval FROM users;             -- PostgreSQL
+
+-- 日付フォーマット
+SELECT DATE_FORMAT(created_at, '%Y-%m-%d') FROM users;        -- MySQL
+SELECT TO_CHAR(created_at, 'YYYY-MM-DD') FROM users;          -- PostgreSQL
+SELECT STRFTIME('%Y-%m-%d', created_at) FROM users;           -- SQLite
+
+-- 年月日の抽出
+SELECT YEAR(created_at) FROM users;
+SELECT MONTH(created_at) FROM users;
+SELECT DAY(created_at) FROM users;
+SELECT EXTRACT(YEAR FROM created_at) FROM users;  -- PostgreSQL</code></pre>
+      </div>
+
+      <h3>条件関数</h3>
+      <div class="code-block">
+        <pre><code>-- CASE式（複数条件分岐）
+SELECT 
+  name,
+  CASE
+    WHEN price < 1000 THEN '安い'
+    WHEN price < 5000 THEN '普通'
+    ELSE '高い'
+  END AS price_level
+FROM products;
+
+-- 簡易CASE式
+SELECT 
+  name,
+  CASE status
+    WHEN 'pending' THEN '保留中'
+    WHEN 'shipped' THEN '発送済み'
+    WHEN 'delivered' THEN '配達完了'
+    ELSE '不明'
+  END AS status_jp
+FROM orders;
+
+-- COALESCE（最初のNULLでない値を返す）
+SELECT COALESCE(email, phone, 'No contact') FROM users;
+
+-- NULLIF（2つの値が等しい場合NULLを返す）
+SELECT NULLIF(stock, 0) FROM products;  -- 0をNULLに変換
+
+-- IFNULL / NVL（NULLを別の値に置換）
+SELECT IFNULL(email, 'N/A') FROM users;           -- MySQL
+SELECT COALESCE(email, 'N/A') FROM users;         -- 全DBMS対応
+SELECT NVL(email, 'N/A') FROM users;              -- Oracle</code></pre>
+      </div>
+    </section>
+
+    <section id="window-functions">
+      <h2>16. ウィンドウ関数</h2>
+
+      <h3>ウィンドウ関数とは</h3>
+      <p>
+        ウィンドウ関数は、グループ内の各行に対して集計や順位付けを行う高度な機能です。
+        GROUP BYと異なり、元の行数を保持したまま計算結果を追加できます。
+      </p>
+
+      <h3>ROW_NUMBER（連番）</h3>
+      <div class="code-block">
+        <pre><code>-- 全行に連番を付ける
+SELECT 
+  name, 
+  price,
+  ROW_NUMBER() OVER (ORDER BY price DESC) AS row_num
+FROM products;
+
+-- グループ内で連番
+SELECT 
+  category,
+  name,
+  price,
+  ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS rank_in_category
+FROM products;</code></pre>
+      </div>
+
+      <h3>RANK / DENSE_RANK（順位）</h3>
+      <div class="code-block">
+        <pre><code>-- RANK: 同順位があると次の順位が飛ぶ（1, 2, 2, 4）
+-- DENSE_RANK: 同順位があっても次の順位は連続（1, 2, 2, 3）
+
+SELECT 
+  name,
+  price,
+  RANK() OVER (ORDER BY price DESC) AS rank,
+  DENSE_RANK() OVER (ORDER BY price DESC) AS dense_rank
+FROM products;
+
+-- カテゴリ別の価格ランキング
+SELECT 
+  category,
+  name,
+  price,
+  RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rank_in_category
+FROM products;</code></pre>
+      </div>
+
+      <h3>LAG / LEAD（前後の行を参照）</h3>
+      <div class="code-block">
+        <pre><code>-- 前の行の値を取得
+SELECT 
+  order_date,
+  amount,
+  LAG(amount) OVER (ORDER BY order_date) AS prev_amount,
+  amount - LAG(amount) OVER (ORDER BY order_date) AS diff
+FROM orders;
+
+-- 次の行の値を取得
+SELECT 
+  order_date,
+  amount,
+  LEAD(amount) OVER (ORDER BY order_date) AS next_amount
+FROM orders;
+
+-- 2行前の値を取得
+SELECT 
+  order_date,
+  amount,
+  LAG(amount, 2) OVER (ORDER BY order_date) AS amount_2days_ago
+FROM orders;
+
+-- 前の値がない場合のデフォルト値
+SELECT 
+  order_date,
+  amount,
+  LAG(amount, 1, 0) OVER (ORDER BY order_date) AS prev_amount
+FROM orders;</code></pre>
+      </div>
+
+      <h3>集計ウィンドウ関数</h3>
+      <div class="code-block">
+        <pre><code>-- 累計
+SELECT 
+  order_date,
+  amount,
+  SUM(amount) OVER (ORDER BY order_date) AS cumulative_total
+FROM orders;
+
+-- 移動平均（直近3件）
+SELECT 
+  order_date,
+  amount,
+  AVG(amount) OVER (
+    ORDER BY order_date 
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+  ) AS moving_avg_3
+FROM orders;
+
+-- グループ内の合計（全体に対する比率を計算するため）
+SELECT 
+  category,
+  name,
+  price,
+  SUM(price) OVER (PARTITION BY category) AS category_total,
+  ROUND(price * 100.0 / SUM(price) OVER (PARTITION BY category), 2) AS percentage
+FROM products;</code></pre>
+      </div>
+    </section>
+
+    <section id="practical-tips">
+      <h2>17. 実務Tips</h2>
+
+      <h3>実行計画の確認（EXPLAIN）</h3>
+      <div class="code-block">
+        <pre><code>-- クエリの実行計画を表示
+EXPLAIN SELECT * FROM users WHERE email = 'test@example.com';
+
+-- より詳細な情報（MySQL）
+EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@example.com';
+
+-- より詳細な情報（PostgreSQL）
+EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM users WHERE email = 'test@example.com';</code></pre>
+      </div>
+
+      <h3>パフォーマンスチューニングの基本</h3>
+      <div class="tip">
+        <strong>遅いクエリを改善する方法</strong>
+        <ul>
+          <li>適切なインデックスを作成する</li>
+          <li>WHERE句で使用するカラムにインデックスを張る</li>
+          <li>SELECT *を避け、必要なカラムのみ取得</li>
+          <li>不要なJOINを避ける</li>
+          <li>サブクエリよりJOINを使う（ケースによる）</li>
+          <li>LIMITで取得件数を制限する</li>
+        </ul>
+      </div>
+
+      <h3>よくあるアンチパターン</h3>
+      <div class="code-block">
+        <pre><code>-- ❌ 悪い例: インデックスが効かない
+SELECT * FROM users WHERE YEAR(created_at) = 2026;
+
+-- ✅ 良い例: インデックスが効く
+SELECT * FROM users 
+WHERE created_at >= '2026-01-01' AND created_at < '2027-01-01';
+
+-- ❌ 悪い例: 関数でインデックスが効かない
+SELECT * FROM users WHERE LOWER(email) = 'test@example.com';
+
+-- ✅ 良い例: 直接比較（大文字小文字を区別しない照合順序を使用）
+SELECT * FROM users WHERE email = 'test@example.com';
+
+-- ❌ 悪い例: SELECT *で全カラム取得
+SELECT * FROM products WHERE category = 'Electronics';
+
+-- ✅ 良い例: 必要なカラムのみ取得
+SELECT id, name, price FROM products WHERE category = 'Electronics';</code></pre>
+      </div>
+
+      <h3>SQLインジェクション対策</h3>
+      <div class="tip">
+        <strong>セキュリティのベストプラクティス</strong>
+        <ul>
+          <li>❌ 文字列結合でSQLを組み立てない</li>
+          <li>✅ プリペアドステートメント（プレースホルダー）を使用</li>
+          <li>✅ ORMライブラリを活用する</li>
+          <li>✅ 入力値のバリデーションを行う</li>
+          <li>✅ 最小権限の原則（必要最低限の権限のみ付与）</li>
+        </ul>
+        
+        <pre><code>-- ❌ 危険: SQLインジェクションの可能性
+query = "SELECT * FROM users WHERE email = '" + user_input + "'";
+
+-- ✅ 安全: プレースホルダーを使用（言語により記法は異なる）
+query = "SELECT * FROM users WHERE email = ?"
+execute(query, [user_input])</code></pre>
+      </div>
+
+      <h3>データベース別の方言</h3>
+      <div class="code-block">
+        <pre><code>-- AUTO INCREMENT（自動連番）
+-- MySQL
+id INT AUTO_INCREMENT PRIMARY KEY
+
+-- PostgreSQL
+id SERIAL PRIMARY KEY
+-- または
+id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+
+-- SQLite
+id INTEGER PRIMARY KEY AUTOINCREMENT
+
+-- 文字列結合
+-- MySQL
+SELECT CONCAT(first_name, ' ', last_name) FROM users;
+
+-- PostgreSQL / SQLite
+SELECT first_name || ' ' || last_name FROM users;
+
+-- 日付の現在値
+-- MySQL
+NOW(), CURRENT_TIMESTAMP
+
+-- PostgreSQL
+NOW(), CURRENT_TIMESTAMP
+
+-- SQLite
+datetime('now')
+
+-- LIMIT / OFFSET
+-- MySQL / PostgreSQL / SQLite
+SELECT * FROM users LIMIT 10 OFFSET 20;
+
+-- SQL Server
+SELECT * FROM users 
+ORDER BY id 
+OFFSET 20 ROWS 
+FETCH NEXT 10 ROWS ONLY;</code></pre>
+      </div>
+    </section>
+
+    <Navigation currentPage="advanced" />
+
+    <footer class="page-footer">
+      <p>
+        <a href="/tools/sql-cheatsheet">目次に戻る</a> |
+        <a href="/tools/sql-cheatsheet/manipulation">前: データ操作編</a>
+      </p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    margin: 2rem 0 1rem;
+    color: #667eea;
+  }
+
+  p {
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    margin: 1rem 0;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin: 0.5rem 0;
+    color: #444;
+  }
+
+  .code-block {
+    margin: 1.5rem 0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .code-block pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .code-block code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .tip {
+    background: #e7f3ff;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .tip strong {
+    color: #1976d2;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .tip ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.5rem;
+  }
+
+  .tip li {
+    margin: 0.25rem 0;
+  }
+
+  .tip pre {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .tip code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #333;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    margin: 0 0.5rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
