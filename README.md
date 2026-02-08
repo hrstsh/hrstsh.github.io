@@ -76,8 +76,13 @@ Helper scripts for Git workflow (run from repository root):
 
 ## SEO
 
-- **Sitemap**: Generated at build time by `@astrojs/sitemap` (output: `/sitemap-index.xml`).
-- **robots.txt**: `public/robots.txt` allows all crawlers and points to the sitemap.
+- **Sitemap**: Generated at build time by `scripts/generate-sitemap.js` (output: `/sitemap.xml`). The script runs after `astro build` and scans `dist/` for pages.
+- **robots.txt**: `public/robots.txt` allows all crawlers and points to `https://hrstsh.github.io/sitemap.xml`.
+
+## Security
+
+- Run `npm audit` periodically to check for known vulnerabilities.
+- `npm audit fix` applies safe updates; use `npm audit fix --force` only if you plan to upgrade to Astro 5 (breaking change). This site is static-only, so production exposure to Astro dev-server/middleware issues is limited.
 
 ## Deployment
 
