@@ -1,0 +1,432 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
+---
+
+<Layout title="SQL基本コマンド集 - データ操作編">
+  <main>
+    <header class="hero">
+      <h1>SQL基本コマンド集</h1>
+      <p class="subtitle">データ操作編</p>
+    </header>
+
+    <Navigation currentPage="manipulation" />
+
+    <section id="insert">
+      <h2>8. データ挿入（INSERT）</h2>
+
+      <h3>基本的なINSERT</h3>
+      <div class="code-block">
+        <pre><code>-- 全カラムに値を指定
+INSERT INTO users VALUES (1, 'Tanaka', 'tanaka@example.com', 25, NOW());
+
+-- 特定のカラムに値を指定（推奨）
+INSERT INTO users (name, email, age)
+VALUES ('Tanaka', 'tanaka@example.com', 25);
+
+-- 一部のカラムのみ指定（他はNULLまたはデフォルト値）
+INSERT INTO users (name, email)
+VALUES ('Suzuki', 'suzuki@example.com');</code></pre>
+      </div>
+
+      <h3>複数行の一括挿入</h3>
+      <div class="code-block">
+        <pre><code>-- 複数行を同時に挿入
+INSERT INTO users (name, email, age) VALUES
+  ('Tanaka', 'tanaka@example.com', 25),
+  ('Suzuki', 'suzuki@example.com', 30),
+  ('Sato', 'sato@example.com', 28);
+
+-- パフォーマンスが良い（個別にINSERTするより高速）</code></pre>
+      </div>
+
+      <h3>SELECT結果からの挿入</h3>
+      <div class="code-block">
+        <pre><code>-- 別テーブルからデータをコピー
+INSERT INTO users_backup (name, email, age)
+SELECT name, email, age FROM users WHERE age >= 20;
+
+-- 集計結果を挿入
+INSERT INTO category_stats (category, product_count, avg_price)
+SELECT category, COUNT(*), AVG(price)
+FROM products
+GROUP BY category;</code></pre>
+      </div>
+
+      <h3>重複時の処理（MySQL）</h3>
+      <div class="code-block">
+        <pre><code>-- 重複していたら更新（MySQL）
+INSERT INTO users (id, name, email, age)
+VALUES (1, 'Tanaka', 'tanaka@example.com', 26)
+ON DUPLICATE KEY UPDATE
+  name = VALUES(name),
+  age = VALUES(age);
+
+-- 重複していたら無視
+INSERT IGNORE INTO users (id, name, email)
+VALUES (1, 'Tanaka', 'tanaka@example.com');</code></pre>
+      </div>
+
+      <h3>UPSERT（PostgreSQL）</h3>
+      <div class="code-block">
+        <pre><code>-- PostgreSQLの場合
+INSERT INTO users (id, name, email, age)
+VALUES (1, 'Tanaka', 'tanaka@example.com', 26)
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name,
+    age = EXCLUDED.age;
+
+-- 重複時は何もしない
+INSERT INTO users (id, name, email)
+VALUES (1, 'Tanaka', 'tanaka@example.com')
+ON CONFLICT (id) DO NOTHING;</code></pre>
+      </div>
+    </section>
+
+    <section id="update">
+      <h2>9. データ更新（UPDATE）</h2>
+
+      <h3>基本的なUPDATE</h3>
+      <div class="code-block">
+        <pre><code>-- 1つのカラムを更新
+UPDATE users
+SET age = 26
+WHERE id = 1;
+
+-- 複数のカラムを更新
+UPDATE users
+SET age = 26, email = 'newemail@example.com'
+WHERE id = 1;
+
+-- 警告: WHERE句を省略すると全行が更新される！
+UPDATE users SET age = 0;  -- 全ユーザーのageが0に！</code></pre>
+      </div>
+
+      <h3>条件付きUPDATE</h3>
+      <div class="code-block">
+        <pre><code>-- 複数条件
+UPDATE products
+SET price = price * 0.9
+WHERE category = 'electronics' AND stock > 10;
+
+-- 計算結果を使う
+UPDATE products
+SET price = price * 1.1
+WHERE category = 'books';
+
+-- 現在値を使った更新
+UPDATE products
+SET stock = stock - 1
+WHERE id = 100;</code></pre>
+      </div>
+
+      <h3>CASE式を使った条件分岐更新</h3>
+      <div class="code-block">
+        <pre><code>-- 条件によって異なる値を設定
+UPDATE products
+SET price = CASE
+  WHEN category = 'electronics' THEN price * 1.1
+  WHEN category = 'books' THEN price * 1.05
+  ELSE price
+END
+WHERE stock > 0;</code></pre>
+      </div>
+
+      <h3>JOINを使ったUPDATE（MySQL）</h3>
+      <div class="code-block">
+        <pre><code>-- 他のテーブルの値を使って更新
+UPDATE orders o
+JOIN users u ON o.user_id = u.id
+SET o.status = 'vip_processing'
+WHERE u.membership = 'premium';</code></pre>
+      </div>
+
+      <h3>JOINを使ったUPDATE（PostgreSQL）</h3>
+      <div class="code-block">
+        <pre><code>-- PostgreSQLの構文
+UPDATE orders
+SET status = 'vip_processing'
+FROM users
+WHERE orders.user_id = users.id
+  AND users.membership = 'premium';</code></pre>
+      </div>
+    </section>
+
+    <section id="delete">
+      <h2>10. データ削除（DELETE）</h2>
+
+      <h3>基本的なDELETE</h3>
+      <div class="code-block">
+        <pre><code>-- 条件に一致する行を削除
+DELETE FROM users WHERE id = 1;
+
+-- 複数条件
+DELETE FROM products
+WHERE stock = 0 AND created_at < '2025-01-01';
+
+-- 警告: WHERE句を省略すると全行が削除される！
+DELETE FROM users;  -- 全ユーザーが削除される！</code></pre>
+      </div>
+
+      <h3>サブクエリを使ったDELETE</h3>
+      <div class="code-block">
+        <pre><code>-- 注文がないユーザーを削除
+DELETE FROM users
+WHERE id NOT IN (
+  SELECT DISTINCT user_id FROM orders WHERE user_id IS NOT NULL
+);
+
+-- 1年以上前のデータを削除
+DELETE FROM logs
+WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 YEAR);</code></pre>
+      </div>
+
+      <h3>JOINを使ったDELETE（MySQL）</h3>
+      <div class="code-block">
+        <pre><code>-- 他のテーブルを参照して削除
+DELETE o
+FROM orders o
+JOIN users u ON o.user_id = u.id
+WHERE u.status = 'deleted';</code></pre>
+      </div>
+
+      <h3>TRUNCATE（全削除）</h3>
+      <div class="code-block">
+        <pre><code>-- テーブルの全データを削除（高速）
+TRUNCATE TABLE logs;
+
+-- DELETEとの違い:
+-- - TRUNCATEは高速（ロールバック不可の場合あり）
+-- - WHERE句が使えない
+-- - AUTO_INCREMENTはリセットされる
+-- - トリガーが発火しない</code></pre>
+      </div>
+
+      <h3>DELETEとTRUNCATEの比較</h3>
+      <div class="code-block">
+        <pre><code>-- DELETE: 条件指定可能、ロールバック可能、遅い
+DELETE FROM users WHERE status = 'inactive';
+
+-- TRUNCATE: 全削除のみ、高速、AUTO_INCREMENTリセット
+TRUNCATE TABLE users;</code></pre>
+      </div>
+    </section>
+
+    <section id="transactions">
+      <h2>11. トランザクション</h2>
+
+      <h3>基本的なトランザクション</h3>
+      <div class="code-block">
+        <pre><code>-- トランザクション開始
+START TRANSACTION;
+-- または
+BEGIN;
+
+-- 複数の操作を実行
+UPDATE accounts SET balance = balance - 1000 WHERE id = 1;
+UPDATE accounts SET balance = balance + 1000 WHERE id = 2;
+
+-- 全て成功したらコミット
+COMMIT;
+
+-- エラーがあったらロールバック
+ROLLBACK;</code></pre>
+      </div>
+
+      <h3>トランザクションの実用例</h3>
+      <div class="code-block">
+        <pre><code>-- 銀行口座間の送金
+START TRANSACTION;
+
+-- 送金元から引き落とし
+UPDATE accounts 
+SET balance = balance - 10000 
+WHERE id = 1 AND balance >= 10000;
+
+-- 引き落としに失敗したかチェック
+SELECT ROW_COUNT() INTO @affected;
+
+IF @affected = 0 THEN
+  ROLLBACK;
+  SELECT '残高不足' AS error;
+ELSE
+  -- 送金先に加算
+  UPDATE accounts 
+  SET balance = balance + 10000 
+  WHERE id = 2;
+  
+  COMMIT;
+  SELECT '送金完了' AS message;
+END IF;</code></pre>
+      </div>
+
+      <h3>SAVEPOINT（セーブポイント）</h3>
+      <div class="code-block">
+        <pre><code>-- トランザクションの一部だけをロールバック
+START TRANSACTION;
+
+INSERT INTO users (name, email) VALUES ('User1', 'user1@example.com');
+
+-- セーブポイントを作成
+SAVEPOINT sp1;
+
+INSERT INTO users (name, email) VALUES ('User2', 'user2@example.com');
+
+-- エラーがあったらsp1までロールバック
+ROLLBACK TO SAVEPOINT sp1;
+
+-- User1の挿入は有効、User2はキャンセルされる
+COMMIT;</code></pre>
+      </div>
+
+      <h3>トランザクション分離レベル</h3>
+      <div class="code-block">
+        <pre><code>-- 分離レベルの設定（MySQL）
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;  -- MySQLデフォルト
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+-- レベルの特徴:
+-- READ UNCOMMITTED: ダーティリード発生（最も低い分離）
+-- READ COMMITTED: コミット済みデータのみ読む
+-- REPEATABLE READ: 同じトランザクション内で一貫した読み取り
+-- SERIALIZABLE: 最も高い分離（最も遅い）</code></pre>
+      </div>
+
+      <div class="tip">
+        <strong>トランザクションの基本原則（ACID）</strong>
+        <ul>
+          <li><strong>Atomicity（原子性）</strong>: 全て成功するか、全て失敗するか</li>
+          <li><strong>Consistency（一貫性）</strong>: データベースの整合性を保つ</li>
+          <li><strong>Isolation（独立性）</strong>: 他のトランザクションから独立</li>
+          <li><strong>Durability（永続性）</strong>: コミット後はデータが永続化される</li>
+        </ul>
+      </div>
+    </section>
+
+    <Navigation currentPage="manipulation" />
+
+    <footer class="page-footer">
+      <p>
+        <a href="/tools/sql-cheatsheet/joins">前: 結合・サブクエリ編</a> |
+        <a href="/tools/sql-cheatsheet">目次に戻る</a> |
+        <a href="/tools/sql-cheatsheet/advanced">次: テーブル操作・応用編</a>
+      </p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #667eea;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    margin: 2rem 0 1rem;
+    color: #667eea;
+  }
+
+  p {
+    color: #444;
+    margin-bottom: 1rem;
+  }
+
+  .code-block {
+    margin: 1.5rem 0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .code-block pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  .code-block code {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .tip {
+    background: #e7f3ff;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .tip strong {
+    color: #1976d2;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .tip ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.5rem;
+  }
+
+  .tip li {
+    margin: 0.25rem 0;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+    color: #666;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    margin: 0 0.5rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
