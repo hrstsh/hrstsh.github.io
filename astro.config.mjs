@@ -4,5 +4,10 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://hrstsh.github.io',
   base: '/',
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      filter: (page) => true,
+      customPages: [],
+    }),
+  ],
 });
