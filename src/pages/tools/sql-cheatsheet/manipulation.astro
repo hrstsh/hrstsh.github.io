@@ -44,7 +44,7 @@ INSERT INTO users (name, email, age) VALUES
       <div class="code-block">
         <pre><code>-- 別テーブルからデータをコピー
 INSERT INTO users_backup (name, email, age)
-SELECT name, email, age FROM users WHERE age >= 20;
+SELECT name, email, age FROM users WHERE age &gt;= 20;
 
 -- 集計結果を挿入
 INSERT INTO category_stats (category, product_count, avg_price)
@@ -107,7 +107,7 @@ UPDATE users SET age = 0;  -- 全ユーザーのageが0に！</code></pre>
         <pre><code>-- 複数条件
 UPDATE products
 SET price = price * 0.9
-WHERE category = 'electronics' AND stock > 10;
+WHERE category = 'electronics' AND stock &gt; 10;
 
 -- 計算結果を使う
 UPDATE products
@@ -129,7 +129,7 @@ SET price = CASE
   WHEN category = 'books' THEN price * 1.05
   ELSE price
 END
-WHERE stock > 0;</code></pre>
+WHERE stock &gt; 0;</code></pre>
       </div>
 
       <h3>JOINを使ったUPDATE（MySQL）</h3>
@@ -162,7 +162,7 @@ DELETE FROM users WHERE id = 1;
 
 -- 複数条件
 DELETE FROM products
-WHERE stock = 0 AND created_at < '2025-01-01';
+WHERE stock = 0 AND created_at &lt; '2025-01-01';
 
 -- 警告: WHERE句を省略すると全行が削除される！
 DELETE FROM users;  -- 全ユーザーが削除される！</code></pre>
@@ -178,7 +178,7 @@ WHERE id NOT IN (
 
 -- 1年以上前のデータを削除
 DELETE FROM logs
-WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 YEAR);</code></pre>
+WHERE created_at &lt; DATE_SUB(NOW(), INTERVAL 1 YEAR);</code></pre>
       </div>
 
       <h3>JOINを使ったDELETE（MySQL）</h3>
@@ -241,7 +241,7 @@ START TRANSACTION;
 -- 送金元から引き落とし
 UPDATE accounts 
 SET balance = balance - 10000 
-WHERE id = 1 AND balance >= 10000;
+WHERE id = 1 AND balance &gt;= 10000;
 
 -- 引き落としに失敗したかチェック
 SELECT ROW_COUNT() INTO @affected;
