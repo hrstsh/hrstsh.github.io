@@ -52,7 +52,7 @@ CREATE TABLE order_details (
         <pre><code>CREATE TABLE products (
   id INT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,           -- 必須
-  price DECIMAL(10,2) CHECK (price > 0), -- 正の値のみ
+  price DECIMAL(10,2) CHECK (price&gt; 0), -- 正の値のみ
   category VARCHAR(50) DEFAULT 'Other',  -- デフォルト値
   sku VARCHAR(50) UNIQUE,                -- 一意
   created_at DATETIME NOT NULL
@@ -81,7 +81,7 @@ CREATE TABLE orders (
   user_id INT NOT NULL,
   amount DECIMAL(10,2),
   CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
-  CONSTRAINT chk_amount CHECK (amount >= 0)
+  CONSTRAINT chk_amount CHECK (amount &gt;= 0)
 );</code></pre>
       </div>
 
@@ -344,8 +344,8 @@ SELECT EXTRACT(YEAR FROM created_at) FROM users;  -- PostgreSQL</code></pre>
 SELECT 
   name,
   CASE
-    WHEN price < 1000 THEN '安い'
-    WHEN price < 5000 THEN '普通'
+    WHEN price &lt; 1000 THEN '安い'
+    WHEN price &lt; 5000 THEN '普通'
     ELSE '高い'
   END AS price_level
 FROM products;
@@ -519,7 +519,7 @@ SELECT * FROM users WHERE YEAR(created_at) = 2026;
 
 -- ✅ 良い例: インデックスが効く
 SELECT * FROM users 
-WHERE created_at >= '2026-01-01' AND created_at < '2027-01-01';
+WHERE created_at&gt;= '2026-01-01' AND created_at &lt; '2027-01-01';
 
 -- ❌ 悪い例: 関数でインデックスが効かない
 SELECT * FROM users WHERE LOWER(email) = 'test@example.com';

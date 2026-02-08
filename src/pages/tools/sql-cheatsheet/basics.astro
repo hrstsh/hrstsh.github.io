@@ -70,16 +70,16 @@ SELECT name user_name, email user_email FROM users;  -- ASは省略可</code></p
       <h3>WHERE句（条件指定）</h3>
       <div class="code-block">
         <pre><code>-- 基本的な条件
-SELECT * FROM users WHERE age >= 20;
+SELECT * FROM users WHERE age&gt;= 20;
 
 -- 複数条件（AND）
-SELECT * FROM users WHERE age >= 20 AND age < 30;
+SELECT * FROM users WHERE age&gt;= 20 AND age &lt; 30;
 
 -- 複数条件（OR）
-SELECT * FROM users WHERE age < 20 OR age >= 65;
+SELECT * FROM users WHERE age &lt; 20 OR age&gt;= 65;
 
 -- NOTで否定
-SELECT * FROM users WHERE NOT age >= 20;
+SELECT * FROM users WHERE NOT age&gt;= 20;
 SELECT * FROM users WHERE age != 20;  -- 同じ意味</code></pre>
       </div>
 
@@ -93,10 +93,10 @@ SELECT * FROM products WHERE price != 1000;
 SELECT * FROM products WHERE price &lt;> 1000;  -- 同じ意味
 
 -- 大小関係
-SELECT * FROM products WHERE price > 1000;   -- より大きい
-SELECT * FROM products WHERE price >= 1000;  -- 以上
-SELECT * FROM products WHERE price < 1000;   -- より小さい
-SELECT * FROM products WHERE price <= 1000;  -- 以下</code></pre>
+SELECT * FROM products WHERE price&gt; 1000;   -- より大きい
+SELECT * FROM products WHERE price&gt;= 1000;  -- 以上
+SELECT * FROM products WHERE price &lt; 1000;   -- より小さい
+SELECT * FROM products WHERE price &lt;= 1000;  -- 以下</code></pre>
       </div>
 
       <h3>LIKE（パターンマッチング）</h3>
@@ -137,7 +137,7 @@ SELECT * FROM orders WHERE status NOT IN ('cancelled', 'returned');</code></pre>
         <pre><code>-- 数値の範囲
 SELECT * FROM products WHERE price BETWEEN 1000 AND 5000;
 -- 上記は以下と同じ
-SELECT * FROM products WHERE price >= 1000 AND price <= 5000;
+SELECT * FROM products WHERE price&gt;= 1000 AND price &lt;= 5000;
 
 -- 日付の範囲
 SELECT * FROM orders WHERE order_date BETWEEN '2026-01-01' AND '2026-01-31';
@@ -257,24 +257,24 @@ GROUP BY user_id, status;</code></pre>
         <pre><code>-- 商品数3個以上のカテゴリ
 SELECT category, COUNT(*) AS product_count FROM products
 GROUP BY category
-HAVING COUNT(*) >= 3;
+HAVING COUNT(*)&gt;= 3;
 
 -- 平均価格つ1000円以上のカテゴリ
 SELECT category, AVG(price) AS avg_price FROM products
 GROUP BY category
-HAVING AVG(price) >= 1000;
+HAVING AVG(price)&gt;= 1000;
 
 -- 注文合計が10000円以上のユーザー
 SELECT user_id, SUM(amount) AS total_amount FROM orders
 GROUP BY user_id
-HAVING SUM(amount) >= 10000
+HAVING SUM(amount)&gt;= 10000
 ORDER BY total_amount DESC;
 
 -- WHEREとHAVINGの組み合わせ
 SELECT category, AVG(price) AS avg_price FROM products
-WHERE stock > 0                    -- 在庫ありの商品だけ
+WHERE stock&gt; 0                    -- 在庫ありの商品だけ
 GROUP BY category
-HAVING AVG(price) >= 1000;         -- 平均価格1000円以上</code></pre>
+HAVING AVG(price)&gt;= 1000;         -- 平均価格1000円以上</code></pre>
       </div>
 
       <div class="tip">

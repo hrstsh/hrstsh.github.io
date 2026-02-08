@@ -126,7 +126,7 @@ JOIN products p ON oi.product_id = p.id;</code></pre>
       <div class="code-block">
         <pre><code>-- 平均価格以上の商品
 SELECT * FROM products
-WHERE price >= (SELECT AVG(price) FROM products);
+WHERE price &gt;= (SELECT AVG(price) FROM products);
 
 -- 注文があるユーザー
 SELECT * FROM users
@@ -146,7 +146,7 @@ FROM (
   FROM orders
   GROUP BY user_id
 ) AS user_totals
-WHERE total_amount >= 10000
+WHERE total_amount &gt;= 10000
 ORDER BY total_amount DESC;
 
 -- 必ず別名（AS）が必要</code></pre>
