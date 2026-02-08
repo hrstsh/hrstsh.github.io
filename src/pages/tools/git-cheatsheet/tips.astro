@@ -312,7 +312,7 @@ COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
 
 # Conventional Commits形式を強制
-PATTERN="^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?: .{1,}"
+PATTERN="^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?: .&#123;1,&#125;"
 
 if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo "❌ Invalid commit message format!"
@@ -394,23 +394,23 @@ npx husky add .husky/pre-commit "npm test"
 npx husky add .husky/commit-msg 'npx --no -- commitlint --edit $1'
 
 # package.jsonに設定
-{
-  "scripts": {
+&#123;
+  "scripts": &#123;
     "prepare": "husky install"
-  }
-}
+  &#125;
+&#125;
 
 # lint-stagedと組み合わせてステージングされたファイルのみlint
 npm install --save-dev lint-staged
 
 # package.json
-{
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
-    "*.{css,scss}": ["prettier --write"],
-    "*.{json,md}": ["prettier --write"]
-  }
-}
+&#123;
+  "lint-staged": &#123;
+    "*.&#123;js,jsx,ts,tsx&#125;": ["eslint --fix", "prettier --write"],
+    "*.&#123;css,scss&#125;": ["prettier --write"],
+    "*.&#123;json,md&#125;": ["prettier --write"]
+  &#125;
+&#125;
 
 # .husky/pre-commit
 #!/bin/sh
