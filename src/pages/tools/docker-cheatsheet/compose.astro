@@ -1,0 +1,346 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
+---
+
+<Layout title="Docker Compose - Dockerコマンドチートシート">
+  <Navigation currentPage="/tools/docker-cheatsheet/compose" />
+  <main>
+    <h1>Docker Compose</h1>
+
+    <section>
+      <h2>Docker Composeとは</h2>
+      <p>
+        Docker Composeは、複数のコンテナを定義・実行するためのツールです。
+        YAMLファイルでサービスを定義し、一つのコマンドで全てのサービスを起動・停止できます。
+      </p>
+      <p>Webアプリケーションとデータベースなど、複数のコンテナを連携させる場合に便利です。</p>
+    </section>
+
+    <section>
+      <h2>docker-compose.ymlの基本構造</h2>
+      <pre><code class="language-yaml">version: '3.8'
+
+services:
+  # サービス1
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+    depends_on:
+      - db
+
+  # サービス2
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: myapp
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:</code></pre>
+    </section>
+
+    <section>
+      <h2>サービスの起動・停止</h2>
+      <pre><code class="language-bash"># サービスを起動（フォアグラウンド）
+docker compose up
+
+# サービスをバックグラウンドで起動
+docker compose up -d
+
+# 特定のサービスのみ起動
+docker compose up web
+
+# ビルドしてから起動
+docker compose up --build
+
+# サービスを停止（コンテナは削除されない）
+docker compose stop
+
+# サービスを停止してコンテナを削除
+docker compose down
+
+# サービス停止 + ボリュームも削除
+docker compose down -v</code></pre>
+      <p>✓ <code>up -d</code>でバックグラウンド起動が推奨です</p>
+      <p>✗ <code>down -v</code>はデータベースのデータも削除されるので注意</p>
+    </section>
+
+    <section>
+      <h2>サービスの状態確認</h2>
+      <pre><code class="language-bash"># 実行中のサービス一覧
+docker compose ps
+
+# 全てのサービス（停止中も含む）
+docker compose ps -a
+
+# サービスのログを表示
+docker compose logs
+
+# 特定サービスのログ
+docker compose logs web
+
+# リアルタイムでログを表示
+docker compose logs -f
+
+# 最新100行のログ
+docker compose logs --tail=100</code></pre>
+    </section>
+
+    <section>
+      <h2>サービス内でコマンド実行</h2>
+      <pre><code class="language-bash"># 実行中のサービスでコマンド実行
+docker compose exec web bash
+docker compose exec db mysql -u root -p
+
+# 新しいコンテナでコマンドを実行
+docker compose run web npm install
+
+# 一度だけ実行して終了時に削除
+docker compose run --rm web node script.js</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージのビルド</h2>
+      <pre><code class="language-bash"># Dockerfileからイメージをビルド
+docker compose build
+
+# 特定サービスのみビルド
+docker compose build web
+
+# キャッシュを使わずにビルド
+docker compose build --no-cache
+
+# ビルドしてから起動
+docker compose up --build</code></pre>
+    </section>
+
+    <section>
+      <h2>サービスの再起動・更新</h2>
+      <pre><code class="language-bash"># サービスを再起動
+docker compose restart
+
+# 特定サービスのみ再起動
+docker compose restart web
+
+# 設定を再読み込みして再起動
+docker compose up -d --force-recreate
+
+# 変更されたサービスのみ再作成
+docker compose up -d</code></pre>
+    </section>
+
+    <section>
+      <h2>スケーリング</h2>
+      <pre><code class="language-bash"># サービスのインスタンス数を指定
+docker compose up -d --scale web=3
+
+# 複数サービスをスケール
+docker compose up -d --scale web=3 --scale worker=2</code></pre>
+      <p>※ ポートマッピングを使用する場合は、ポート番号の競合に注意が必要です。</p>
+    </section>
+
+    <section>
+      <h2>その他の便利なコマンド</h2>
+      <pre><code class="language-bash"># 別のComposeファイルを指定
+docker compose -f docker-compose.prod.yml up -d
+
+# プロジェクト名を指定
+docker compose -p myproject up -d
+
+# サービスの設定を表示
+docker compose config
+
+# サービスで実行中のプロセスを表示
+docker compose top
+
+# サービスを一時停止/再開
+docker compose pause
+docker compose unpause</code></pre>
+    </section>
+
+    <section>
+      <h2>実用例: Web + DB構成</h2>
+      <pre><code class="language-yaml">version: '3.8'
+
+services:
+  web:
+    build: ./web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=secret
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    command: npm run dev
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:</code></pre>
+      <p>起動方法：</p>
+      <pre><code class="language-bash"># 初回起動（ビルド含む）
+docker compose up -d --build
+
+# ログ確認
+docker compose logs -f web
+
+# データベースに接続
+docker compose exec db psql -U root -d myapp
+
+# 停止と削除
+docker compose down</code></pre>
+    </section>
+
+    <section>
+      <h2>開発時のワークフロー</h2>
+      <pre><code class="language-bash"># 1. サービスを起動
+docker compose up -d
+
+# 2. ログを監視
+docker compose logs -f
+
+# 3. コードを編集（ボリュームマウントで自動反映）
+
+# 4. 必要に応じてサービスを再起動
+docker compose restart web
+
+# 5. コンテナ内でコマンド実行
+docker compose exec web npm install new-package
+
+# 6. 作業終了時に停止
+docker compose down</code></pre>
+    </section>
+
+    <section>
+      <h2>トラブルシューティング</h2>
+      <pre><code class="language-bash"># 全てを削除して再構築
+docker compose down -v
+docker compose up -d --build
+
+# 特定サービスのみ再ビルド
+docker compose build --no-cache web
+docker compose up -d web
+
+# ネットワークの問題を解決
+docker compose down
+docker network prune
+docker compose up -d</code></pre>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/tools/docker-cheatsheet">目次に戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  ul {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  p code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 1.1rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
