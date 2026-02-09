@@ -63,8 +63,8 @@ docker inspect nginx
 docker inspect イメージID
 
 # 特定の情報だけを取得
-docker inspect --format='{"{{.Config.Env}}'"}' nginx
-docker inspect --format='{"{{.Architecture}}'"}' nginx
+docker inspect --format='&#123;&#123;.Config.Env&#125;&#125;' nginx
+docker inspect --format='&#123;&#123;.Architecture&#125;&#125;' nginx
 
 # イメージの履歴を確認
 docker history nginx
@@ -192,7 +192,7 @@ docker import container.tar my-image:1.0</code></pre>
     <section>
       <h2>イメージのサイズ確認</h2>
       <pre><code class="language-bash"># イメージのサイズを確認
-docker images --format "table {"{{.Repository}}\t{{.Tag}}\t{{.Size}}'"}}"
+docker images --format "table &#123;&#123;.Repository&#125;&#125;\t&#123;&#123;.Tag&#125;&#125;\t&#123;&#123;.Size&#125;&#125;"
 
 # 特定イメージのレイヤーサイズを確認
 docker history nginx
