@@ -1,0 +1,391 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
+---
+
+<Layout title="トラブルシューティング・Tips - Dockerコマンドチートシート">
+  <Navigation currentPage="/tools/docker-cheatsheet/tips" />
+  <main>
+    <h1>トラブルシューティング・Tips</h1>
+
+    <section>
+      <h2>クリーンアップ系コマンド</h2>
+      <p>Dockerを使い続けると、使われていないイメージやコンテナがたまります。定期的な掃除が重要です。</p>
+      <pre><code class="language-bash"># ディスク使用量を確認
+docker system df
+
+# 詳細情報を表示
+docker system df -v
+
+# 未使用の全リソースを一括削除
+docker system prune
+
+# 未使用イメージも含めて削除
+docker system prune -a
+
+# ボリュームも含めて削除（注意）
+docker system prune -a --volumes
+
+# 確認なしで実行
+docker system prune -af</code></pre>
+      <p>✓ 定期的に<code>prune</code>を実行してディスク容量を節約</p>
+      <p>✗ <code>--volumes</code>オプションはデータベースデータを削除する可能性があるので注意</p>
+    </section>
+
+    <section>
+      <h2>コンテナのクリーンアップ</h2>
+      <pre><code class="language-bash"># 停止中のコンテナを全て削除
+docker container prune
+
+# 全コンテナを停止
+docker stop $(docker ps -q)
+
+# 全コンテナを削除
+docker rm $(docker ps -aq)
+
+# 実行中の全コンテナを強制停止・削除
+docker rm -f $(docker ps -aq)</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージのクリーンアップ</h2>
+      <pre><code class="language-bash"># 未使用イメージを削除
+docker image prune
+
+# タグなしイメージ（dangling）を削除
+docker image prune
+
+# 未使用の全イメージを削除
+docker image prune -a
+
+# タグなしイメージのみ一括削除
+docker rmi $(docker images -f "dangling=true" -q)
+
+# 全イメージを削除（注意）
+docker rmi $(docker images -q)</code></pre>
+    </section>
+
+    <section>
+      <h2>ボリュームの管理</h2>
+      <pre><code class="language-bash"># ボリューム一覧
+docker volume ls
+
+# ボリュームの詳細情報
+docker volume inspect ボリューム名
+
+# ボリュームを作成
+docker volume create my-volume
+
+# 未使用ボリュームを削除
+docker volume prune
+
+# 特定のボリュームを削除
+docker volume rm ボリューム名
+
+# 全ボリュームを削除（非常に危険）
+docker volume rm $(docker volume ls -q)</code></pre>
+      <p>※ ボリュームはデータを保持するため、削除前に必ず確認してください。</p>
+    </section>
+
+    <section>
+      <h2>ネットワークの管理</h2>
+      <pre><code class="language-bash"># ネットワーク一覧
+docker network ls
+
+# ネットワークの詳細情報
+docker network inspect bridge
+
+# ネットワークを作成
+docker network create my-network
+
+# コンテナをネットワークに接続
+docker network connect my-network コンテナ名
+
+# コンテナをネットワークから切断
+docker network disconnect my-network コンテナ名
+
+# 未使用ネットワークを削除
+docker network prune
+
+# ネットワークを削除
+docker network rm my-network</code></pre>
+    </section>
+
+    <section>
+      <h2>よくあるトラブルと対処法</h2>
+      
+      <h3>ポートがすでに使用されている</h3>
+      <pre><code class="language-bash"># エラー例: Error starting userland proxy: listen tcp4 0.0.0.0:8080: bind: address already in use
+
+# 対処方法1: 使用中のプロセスを確認
+lsof -i :8080
+# または
+netstat -an | grep 8080
+
+# 対処方法2: 別のポートを使用
+docker run -d -p 8081:80 nginx
+
+# 対処方法3: 使用中のコンテナを停止
+docker ps | grep 8080
+docker stop コンテナ名</code></pre>
+
+      <h3>イメージが削除できない</h3>
+      <pre><code class="language-bash"># エラー例: Error response from daemon: conflict: unable to remove repository reference
+
+# 対処方法1: 使用中のコンテナを確認・削除
+docker ps -a | grep イメージ名
+docker rm -f コンテナ名
+
+# 対処方法2: 強制削除
+docker rmi -f イメージID</code></pre>
+
+      <h3>コンテナが起動しない</h3>
+      <pre><code class="language-bash"># ログを確認
+docker logs コンテナ名
+
+# 詳細情報を確認
+docker inspect コンテナ名
+
+# イベントを確認
+docker events --since 1h
+
+# コンテナを再作成
+docker rm コンテナ名
+docker run [OPTIONS] イメージ名</code></pre>
+
+      <h3>ボリュームのパーミッションエラー</h3>
+      <pre><code class="language-bash"># エラー例: Permission denied
+
+# 対処方法1: ユーザーIDを指定
+docker run -u $(id -u):$(id -g) -v $(pwd):/app イメージ名
+
+# 対処方法2: ホスト側のパーミッションを変更
+chmod -R 755 ./data
+
+# 対処方法3: SELinuxが原因の場合（Linux）
+docker run -v $(pwd):/app:z イメージ名</code></pre>
+
+      <h3>Dockerデーモンが起動しない</h3>
+      <pre><code class="language-bash"># Dockerデーモンの状態確認
+sudo systemctl status docker
+
+# Dockerデーモンを再起動
+sudo systemctl restart docker
+
+# Dockerデーモンを有効化
+sudo systemctl enable docker
+
+# macOS/Windowsの場合：Docker Desktopを再起動</code></pre>
+    </section>
+
+    <section>
+      <h2>便利なTips</h2>
+
+      <h3>コンテナ内でシェルを起動</h3>
+      <pre><code class="language-bash"># bashを起動
+docker exec -it コンテナ名 bash
+
+# shを起動（Alpine Linuxなど）
+docker exec -it コンテナ名 sh
+
+# rootユーザーで接続
+docker exec -it -u root コンテナ名 bash
+
+# 新規コンテナでシェル起動
+docker run -it --rm ubuntu bash</code></pre>
+
+      <h3>ログを見やすく表示</h3>
+      <pre><code class="language-bash"># リアルタイムでログを追跡
+docker logs -f コンテナ名
+
+# 最新100行を表示
+docker logs --tail 100 コンテナ名
+
+# タイムスタンプ付きで表示
+docker logs -t コンテナ名
+
+# 特定時間以降のログ
+docker logs --since 2h コンテナ名
+docker logs --since 2024-01-01T00:00:00 コンテナ名</code></pre>
+
+      <h3>コンテナのリソース使用状況を監視</h3>
+      <pre><code class="language-bash"># 全コンテナのリソース使用状況
+docker stats
+
+# 特定コンテナのみ監視
+docker stats コンテナ名
+
+# ストリームしない（一回のみ表示）
+docker stats --no-stream
+
+# 実行中のプロセスを表示
+docker top コンテナ名</code></pre>
+
+      <h3>ファイルのコピー</h3>
+      <pre><code class="language-bash"># ホストからコンテナへ
+docker cp ./local-file.txt コンテナ名:/path/to/
+
+# コンテナからホストへ
+docker cp コンテナ名:/path/to/file.txt ./
+
+# ディレクトリごとコピー
+docker cp コンテナ名:/app/logs ./logs</code></pre>
+
+      <h3>イメージのエクスポート・インポート</h3>
+      <pre><code class="language-bash"># イメージをtarファイルに保存
+docker save -o my-image.tar イメージ名
+
+# tarファイルからイメージを読み込み
+docker load -i my-image.tar
+
+# 複数イメージを一括保存
+docker save -o images.tar イメージ1 イメージ2</code></pre>
+
+      <h3>エイリアスを使用した短縮コマンド</h3>
+      <pre><code class="language-bash"># ~/.bashrc または ~/.zshrc に追加
+
+# コンテナ一覧
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+
+# クリーンアップ
+alias dprune='docker system prune -af'
+
+# コンテナを停止・削除
+alias dstop='docker stop $(docker ps -q)'
+alias drm='docker rm $(docker ps -aq)'
+
+# Docker Compose
+alias dc='docker compose'
+alias dcu='docker compose up -d'
+alias dcd='docker compose down'
+alias dcl='docker compose logs -f'</code></pre>
+    </section>
+
+    <section>
+      <h2>セキュリティのベストプラクティス</h2>
+      <ul>
+        <li><strong>rootユーザーを避ける</strong>：コンテナ内では非rootユーザーを使用</li>
+        <li><strong>最小限のイメージを使用</strong>：Alpine Linuxなど軽量イメージを選ぶ</li>
+        <li><strong>イメージを定期的に更新</strong>：セキュリティパッチを適用</li>
+        <li><strong>シークレットをハードコードしない</strong>：環境変数やDocker Secretsを使用</li>
+        <li><strong>コンテナのリソースを制限</strong>：<code>--memory</code>や<code>--cpus</code>で制限</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>デバッグ用コマンド</h2>
+      <pre><code class="language-bash"># コンテナの全詳細情報をJSON形式で表示
+docker inspect コンテナ名
+
+# 特定の情報だけ抽出
+docker inspect --format='{{.NetworkSettings.IPAddress}}' コンテナ名
+
+# コンテナのプロセス一覧
+docker top コンテナ名
+
+# コンテナの変更点を確認
+docker diff コンテナ名
+
+# イメージの履歴を確認
+docker history イメージ名</code></pre>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/tools/docker-cheatsheet">目次に戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    margin-bottom: 0.8rem;
+    color: #444;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  ul {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  p code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 1.1rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
