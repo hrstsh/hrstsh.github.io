@@ -1,0 +1,185 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Chromeのブックマークレットにアイコン（ファビコン）を追加する - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>Chromeのブックマークレットにアイコン（ファビコン）を追加する</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        <code>javascript:</code> で始まるブックマークレットは、Chromeのブックマークバーに追加すると
+        デフォルトのアイコン（📄のようなマーク）で表示されます。ブックマークレットのまま、好きなファビコンを表示する方法です。
+      </p>
+
+      <h2>なぜアイコンが付かないのか</h2>
+      <p>
+        ブックマークレットのURLは <code>javascript:...</code> の形式です。通常のWebページのようにHTMLを読み込まないため、Chromeはアイコンを取得できず、共通のアイコンで表示します。
+      </p>
+
+      <h2>やり方（ブックマークのエクスポート・編集・インポート）</h2>
+      <p>
+        次の3ステップで、ブックマークレットに任意のファビコンを付けられます。
+      </p>
+
+      <h3>1. 使いたいファビコンのページをブックマークに登録する</h3>
+      <p>
+        ブックマークレットのアイコンに使いたいファビコンが表示されているページを開き、そのページをブックマークバーにブックマークとして追加します。これで「アイコン付きの普通のブックマーク」が1件できます。
+      </p>
+
+      <h3>2. ブックマークバーをエクスポートし、HTMLを編集する</h3>
+      <p>
+        Chromeのメニューから <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> を開き、右上の ⋮ から <strong>ブックマークをエクスポート</strong> を選び、HTMLファイルとして保存します。
+      </p>
+      <p>
+        保存したHTMLをテキストエディタで開くと、各ブックマークは次のような行になっています。
+      </p>
+      <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="https://example.com/page" ICON="data:image/png;base64,..."&gt;ページ名&lt;/A&gt;</code></pre>
+      <p>
+        <strong>1で追加したブックマーク</strong>の行には <code>ICON="..."</code> が入っています。この <code>ICON="..."</code> 部分（引用符ごと）をコピーします。
+      </p>
+      <p>
+        次に、<strong>ブックマークレット</strong>の行を探します。こちらは <code>HREF="javascript:..."</code> だけで、<code>ICON</code> が無いか、デフォルトのままです。その行に、コピーした <code>ICON="..."</code> をペーストして追加します。
+      </p>
+      <p>
+        例：編集前のブックマークレットの行</p>
+      <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="javascript:alert(document.title)"&gt;タイトル表示&lt;/A&gt;</code></pre>
+      <p>
+        例：1のブックマークから <code>ICON="data:image/png;base64,iVBORw0K..."</code> をコピーして付けた後
+      </p>
+      <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="javascript:alert(document.title)" ICON="data:image/png;base64,iVBORw0K..."&gt;タイトル表示&lt;/A&gt;</code></pre>
+      <p>
+        編集が終わったら、HTMLファイルを保存します。
+      </p>
+
+      <h3>3. ブックマークをインポートする</h3>
+      <p>
+        既存のブックマークバーを整理したい場合は、あらかじめ不要なものを削除するか、別フォルダに退避しておきます。Chromeの <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> で、⋮ → <strong>ブックマークをインポート</strong> を選び、手順2で編集したHTMLファイルを指定してインポートします。これで、同じ <code>javascript:</code> のまま、ブックマークレットにファビコンが表示されます。
+      </p>
+
+      <h2>ポイント</h2>
+      <ul>
+        <li>ファビコンは「そのアイコンが表示されているページを1つブックマークする」だけで用意できます。自分で画像を用意する必要はありません。</li>
+        <li>エクスポートされたHTMLでは、アイコンが <code>data:image/png;base64,...</code> や <code>https://...</code> の形で <code>ICON</code> 属性に保存されています。</li>
+        <li>ブックマークレットはあくまで <code>javascript:</code> のままなので、クリック時の挙動は変わりません。</li>
+      </ul>
+
+      <h2>注意点</h2>
+      <ul>
+        <li>インポートすると、既存のブックマークと重複したり、フォルダ構成が変わる場合があります。必要ならエクスポート前にバックアップを取るか、テスト用フォルダで試すと安全です。</li>
+      </ul>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
