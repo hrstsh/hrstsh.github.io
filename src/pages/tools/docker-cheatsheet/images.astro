@@ -63,8 +63,8 @@ docker inspect nginx
 docker inspect イメージID
 
 # 特定の情報だけを取得
-docker inspect --format='{{.Config.Env}}' nginx
-docker inspect --format='{{.Architecture}}' nginx
+docker inspect --format='{"{{.Config.Env}}'"}' nginx
+docker inspect --format='{"{{.Architecture}}'"}' nginx
 
 # イメージの履歴を確認
 docker history nginx
@@ -183,7 +183,7 @@ docker load -i nginx.tar
 docker load < nginx.tar
 
 # コンテナをイメージに変換（export/import）
-docker export コンテナID > container.tar
+docker export コンテナ名 > container.tar
 docker import container.tar my-image:1.0</code></pre>
       <p>✓ <code>save/load</code>はイメージの履歴を保持します</p>
       <p>✗ <code>export/import</code>は履歴が失われます</p>
@@ -192,7 +192,7 @@ docker import container.tar my-image:1.0</code></pre>
     <section>
       <h2>イメージのサイズ確認</h2>
       <pre><code class="language-bash"># イメージのサイズを確認
-docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+docker images --format "table {"{{.Repository}}\t{{.Tag}}\t{{.Size}}'"}}"
 
 # 特定イメージのレイヤーサイズを確認
 docker history nginx
