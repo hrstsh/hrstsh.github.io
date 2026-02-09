@@ -17,6 +17,10 @@ https://hrstsh.github.io/
 ├── / ...................... Home (トップページ)
 │   https://hrstsh.github.io/
 │
+├── /tips/ ................. 小技集
+│   https://hrstsh.github.io/tips
+│   (chrome-bookmarklet-favicon など)
+│
 └── /tools/ ................ Tools (ツール)
     ├── /git-cheatsheet .... Gitコマンドチートシート
     │   https://hrstsh.github.io/tools/git-cheatsheet
@@ -125,6 +129,7 @@ You can also trigger deployment manually:
 │   │   └── Layout.astro    # Base layout component
 │   ├── pages/
 │   │   ├── index.astro     # Home page
+│   │   ├── tips/           # 小技集 (tips & tricks)
 │   │   └── tools/         # Tools (cheatsheets)
 │   │       ├── git-cheatsheet/   # Git (index, basics, branches, remote, advanced, tips)
 │   │       ├── docker-cheatsheet/# Docker (index, basics, images, containers, compose, tips)
