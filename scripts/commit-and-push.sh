@@ -13,6 +13,14 @@ fi
 
 msg="$1"
 
+# 現在のブランチと状態を表示
+echo "--- 現在のブランチ ---"
+git branch --show-current
+echo ""
+echo "--- 状態 (git status) ---"
+git status
+echo ""
+
 git add -A
 git commit -m "$msg"
 git push origin HEAD
