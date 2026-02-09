@@ -17,12 +17,18 @@ https://hrstsh.github.io/
 ├── / ...................... Home (トップページ)
 │   https://hrstsh.github.io/
 │
-├── /about ................. About (プロフィール)
-│   https://hrstsh.github.io/about
-│
 └── /tools/ ................ Tools (ツール)
-    └── /git-cheatsheet .... Gitコマンドチートシート
-        https://hrstsh.github.io/tools/git-cheatsheet
+    ├── /git-cheatsheet .... Gitコマンドチートシート
+    │   https://hrstsh.github.io/tools/git-cheatsheet
+    │   (basics, branches, remote, advanced, tips)
+    │
+    ├── /docker-cheatsheet . Dockerコマンドチートシート
+    │   https://hrstsh.github.io/tools/docker-cheatsheet
+    │   (basics, images, containers, compose, tips)
+    │
+    └── /sql-cheatsheet .... SQL基本コマンド集
+        https://hrstsh.github.io/tools/sql-cheatsheet
+        (basics, joins, manipulation, advanced)
 ```
 
 ## Tech Stack
@@ -110,20 +116,27 @@ You can also trigger deployment manually:
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml      # GitHub Actions deployment config
-├── scripts/                # Shell scripts (e.g. Git helpers)
+├── scripts/                # Build & Git helpers
+│   ├── generate-sitemap.js # Sitemap generation (post-build)
+│   ├── checkout-latest-branch.sh
+│   └── commit-and-push.sh
 ├── src/
 │   ├── layouts/
 │   │   └── Layout.astro    # Base layout component
 │   ├── pages/
 │   │   ├── index.astro     # Home page
-│   │   ├── about.astro     # About page
-│   │   └── tools/          # Tools pages
-│   │       └── git-cheatsheet.astro  # Git command cheatsheet
+│   │   └── tools/         # Tools (cheatsheets)
+│   │       ├── git-cheatsheet/   # Git (index, basics, branches, remote, advanced, tips)
+│   │       ├── docker-cheatsheet/# Docker (index, basics, images, containers, compose, tips)
+│   │       └── sql-cheatsheet/   # SQL (index, basics, joins, manipulation, advanced)
+│   ├── components/        # Per-tool navigation etc.
+│   │   ├── git-cheatsheet/
+│   │   ├── docker-cheatsheet/
+│   │   └── sql-cheatsheet/
 │   └── styles/
 │       └── global.css      # Global styles
-├── public/                 # Static assets
+├── public/                 # Static assets (e.g. robots.txt)
 ├── .cursorrules            # AI development guidelines
-├── .gitignore
 ├── astro.config.mjs        # Astro configuration
 ├── package.json
 ├── tsconfig.json
