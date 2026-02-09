@@ -1,0 +1,270 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
+---
+
+<Layout title="基本操作 - Dockerコマンドチートシート">
+  <Navigation currentPage="/tools/docker-cheatsheet/basics" />
+  <main>
+    <h1>基本操作</h1>
+
+    <section>
+      <h2>Dockerとは</h2>
+      <p>
+        Dockerは、アプリケーションをコンテナという軽量な実行環境で動かすためのプラットフォームです。
+        コンテナを使うことで、開発環境と本番環境の差異をなくし、「自分の環境では動く」問題を解決します。
+      </p>
+    </section>
+
+    <section>
+      <h2>基本概念</h2>
+      <ul>
+        <li><strong>イメージ</strong>: アプリケーションとその依存関係をパッケージ化したテンプレート</li>
+        <li><strong>コンテナ</strong>: イメージから起動された実行環境の実体</li>
+        <li><strong>レジストリ</strong>: イメージを保存・共有する場所（Docker Hubなど）</li>
+        <li><strong>Dockerfile</strong>: イメージを作成するための設計図</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>インストール確認</h2>
+      <p>Dockerが正しくインストールされているか確認します。</p>
+      <pre><code class="language-bash"># バージョン確認
+docker --version
+# または
+docker version
+
+# Docker詳細情報の表示
+docker info</code></pre>
+    </section>
+
+    <section>
+      <h2>ヘルプの表示</h2>
+      <pre><code class="language-bash"># 全コマンドのヘルプ
+docker --help
+
+# 特定コマンドのヘルプ
+docker run --help
+docker build --help</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナの起動</h2>
+      <p><code>docker run</code>は最も基本的なコマンドです。イメージからコンテナを作成して起動します。</p>
+      <pre><code class="language-bash"># 基本形
+docker run [オプション] イメージ名 [コマンド]
+
+# Nginxコンテナを起動
+docker run nginx
+
+# コンテナ名を指定して起動
+docker run --name my-nginx nginx
+
+# バックグラウンドで起動（デタッチモード）
+docker run -d nginx
+
+# ポートマッピング（ホスト:コンテナ）
+docker run -d -p 8080:80 nginx</code></pre>
+      <p>✓ デタッチモード（<code>-d</code>）を使うと、コンテナがバックグラウンドで動作します</p>
+      <p>✗ デタッチモードなしで起動すると、ターミナルが占有されます</p>
+    </section>
+
+    <section>
+      <h2>コンテナの一覧表示</h2>
+      <pre><code class="language-bash"># 実行中のコンテナを表示
+docker ps
+
+# 全てのコンテナを表示（停止中も含む）
+docker ps -a
+
+# 最新のコンテナのみ表示
+docker ps -l
+
+# コンテナIDのみ表示
+docker ps -q</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナの停止・開始・再起動</h2>
+      <pre><code class="language-bash"># コンテナの停止（猶予時間あり）
+docker stop コンテナID
+docker stop my-nginx
+
+# コンテナの強制停止
+docker kill コンテナID
+
+# 停止中のコンテナを開始
+docker start コンテナID
+
+# コンテナを再起動
+docker restart コンテナID
+
+# 複数コンテナを一度に停止
+docker stop コンテナID1 コンテナID2</code></pre>
+      <p>✓ <code>stop</code>はグレースフルシャットダウン（正常終了）を試みます</p>
+      <p>✗ <code>kill</code>は即座に強制終了するため、データ損失の可能性があります</p>
+    </section>
+
+    <section>
+      <h2>コンテナの削除</h2>
+      <pre><code class="language-bash"># 停止中のコンテナを削除
+docker rm コンテナID
+
+# 実行中のコンテナを強制削除
+docker rm -f コンテナID
+
+# 複数コンテナを削除
+docker rm コンテナID1 コンテナID2
+
+# 停止中の全コンテナを削除
+docker container prune
+
+# 確認なしで削除
+docker container prune -f</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージの削除</h2>
+      <pre><code class="language-bash"># イメージを削除
+docker rmi イメージ名
+docker rmi nginx
+
+# イメージIDで削除
+docker rmi イメージID
+
+# 強制削除
+docker rmi -f イメージID
+
+# 未使用イメージを全て削除
+docker image prune
+
+# タグなしイメージも含めて削除
+docker image prune -a</code></pre>
+    </section>
+
+    <section>
+      <h2>よく使う組み合わせ</h2>
+      <pre><code class="language-bash"># コンテナ起動後、終了時に自動削除
+docker run --rm nginx
+
+# インタラクティブモードで起動（シェル操作）
+docker run -it ubuntu bash
+
+# デタッチモード + ポートマッピング + コンテナ名指定
+docker run -d -p 8080:80 --name my-web nginx
+
+# 環境変数を設定して起動
+docker run -e MY_VAR=value nginx</code></pre>
+    </section>
+
+    <section>
+      <h2>実用例</h2>
+      <pre><code class="language-bash"># Nginx Webサーバーを起動
+docker run -d -p 80:80 --name web-server nginx
+
+# MySQL データベースを起動
+docker run -d \
+  --name mysql-db \
+  -e MYSQL_ROOT_PASSWORD=mypassword \
+  -p 3306:3306 \
+  mysql:8.0
+
+# Node.js 開発環境を起動
+docker run -it --rm \
+  -v $(pwd):/app \
+  -w /app \
+  node:18 \
+  npm install</code></pre>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/tools/docker-cheatsheet">目次に戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  ul {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  p code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 1.1rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
