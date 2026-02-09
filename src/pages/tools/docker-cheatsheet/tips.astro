@@ -279,7 +279,7 @@ alias dcl='docker compose logs -f'</code></pre>
 docker inspect コンテナ名
 
 # 特定の情報だけ抽出
-docker inspect --format='{{.NetworkSettings.IPAddress}}' コンテナ名
+docker inspect --format='&#123;&#123;.NetworkSettings.IPAddress&#125;&#125;' コンテナ名
 
 # コンテナのプロセス一覧
 docker top コンテナ名
