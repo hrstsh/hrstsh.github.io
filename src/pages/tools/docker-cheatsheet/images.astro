@@ -173,17 +173,17 @@ docker push ghcr.io/username/my-app:latest</code></pre>
       <p>イメージをファイルとして保存したり、読み込んだりできます。</p>
       <pre><code class="language-bash"># イメージをtarファイルに保存
 docker save -o nginx.tar nginx
-docker save nginx > nginx.tar
+docker save nginx &gt; nginx.tar
 
 # 複数イメージを一つのファイルに保存
 docker save -o images.tar nginx mysql redis
 
 # tarファイルからイメージを読み込む
 docker load -i nginx.tar
-docker load < nginx.tar
+docker load &lt; nginx.tar
 
 # コンテナをイメージに変換（export/import）
-docker export コンテナ名 > container.tar
+docker export コンテナ名 &gt; container.tar
 docker import container.tar my-image:1.0</code></pre>
       <p>✓ <code>save/load</code>はイメージの履歴を保持します</p>
       <p>✗ <code>export/import</code>は履歴が失われます</p>
