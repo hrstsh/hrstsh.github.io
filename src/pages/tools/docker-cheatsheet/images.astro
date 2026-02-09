@@ -1,0 +1,295 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
+---
+
+<Layout title="イメージ管理 - Dockerコマンドチートシート">
+  <Navigation currentPage="/tools/docker-cheatsheet/images" />
+  <main>
+    <h1>イメージ管理</h1>
+
+    <section>
+      <h2>イメージの検索</h2>
+      <p>Docker Hubでイメージを検索します。</p>
+      <pre><code class="language-bash"># Docker Hubでイメージを検索
+docker search nginx
+docker search mysql
+
+# 公式イメージのみ表示
+docker search --filter "is-official=true" nginx
+
+# 星数が一定以上のものを検索
+docker search --filter "stars=100" nginx</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージの取得（Pull）</h2>
+      <p>レジストリからイメージをダウンロードします。</p>
+      <pre><code class="language-bash"># 最新版を取得（latestタグ）
+docker pull nginx
+docker pull ubuntu
+
+# 特定バージョンを取得
+docker pull nginx:1.25
+docker pull mysql:8.0
+docker pull node:18-alpine
+
+# 特定のレジストリから取得
+docker pull ghcr.io/user/repo:tag</code></pre>
+      <p>✓ 本番環境では必ずタグを明示的に指定しましょう</p>
+      <p>✗ <code>latest</code>タグは不安定な場合があるため注意が必要です</p>
+    </section>
+
+    <section>
+      <h2>イメージの一覧表示</h2>
+      <pre><code class="language-bash"># ローカルのイメージ一覧
+docker images
+docker image ls
+
+# イメージIDのみ表示
+docker images -q
+
+# 中間イメージも含めて表示
+docker images -a
+
+# タグなしイメージのみ表示
+docker images -f "dangling=true"</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージ詳細情報の確認</h2>
+      <pre><code class="language-bash"># イメージの詳細情報をJSON形式で表示
+docker inspect nginx
+docker inspect イメージID
+
+# 特定の情報だけを取得
+docker inspect --format='{{.Config.Env}}' nginx
+docker inspect --format='{{.Architecture}}' nginx
+
+# イメージの履歴を確認
+docker history nginx
+docker history --no-trunc nginx</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージの削除</h2>
+      <pre><code class="language-bash"># イメージを名前で削除
+docker rmi nginx
+docker image rm nginx:1.25
+
+# イメージIDで削除
+docker rmi イメージID
+
+# 複数イメージを一度に削除
+docker rmi nginx mysql redis
+
+# 強制削除（コンテナが使用中でも）
+docker rmi -f nginx
+
+# 未使用イメージを全て削除
+docker image prune
+
+# タグなしイメージも含めて削除
+docker image prune -a
+
+# 確認なしで実行
+docker image prune -f</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージのビルド</h2>
+      <p>Dockerfileからイメージを作成します。</p>
+      <pre><code class="language-bash"># カレントディレクトリのDockerfileからビルド
+docker build .
+
+# タグを付けてビルド
+docker build -t my-app:1.0 .
+docker build -t myname/my-app:latest .
+
+# Dockerfileを指定してビルド
+docker build -f Dockerfile.prod -t my-app:prod .
+
+# キャッシュを使わずにビルド
+docker build --no-cache -t my-app .
+
+# ビルド引数を渡す
+docker build --build-arg NODE_VERSION=18 -t my-app .
+
+# ビルドコンテキストを指定
+docker build -t my-app ./src</code></pre>
+    </section>
+
+    <section>
+      <h2>Dockerfileの基本</h2>
+      <pre><code class="language-dockerfile"># ベースイメージの指定
+FROM node:18-alpine
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# ファイルのコピー
+COPY package*.json ./
+
+# コマンドの実行
+RUN npm install
+
+# アプリコードをコピー
+COPY . .
+
+# ポートの公開
+EXPOSE 3000
+
+# コンテナ起動時のコマンド
+CMD ["npm", "start"]</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージのタグ付け</h2>
+      <pre><code class="language-bash"># 既存イメージに新しいタグを付ける
+docker tag my-app:1.0 my-app:latest
+docker tag my-app myname/my-app:1.0
+
+# レジストリ用のタグ付け
+docker tag my-app:1.0 registry.example.com/my-app:1.0
+docker tag my-app ghcr.io/username/my-app:latest</code></pre>
+    </section>
+
+    <section>
+      <h2>イメージのプッシュ（Push）</h2>
+      <pre><code class="language-bash"># Docker Hubにプッシュ
+docker push myname/my-app:1.0
+docker push myname/my-app:latest
+
+# プライベートレジストリにプッシュ
+docker push registry.example.com/my-app:1.0
+
+# GitHub Container Registryにプッシュ
+docker push ghcr.io/username/my-app:latest</code></pre>
+      <p>※ プッシュ前に<code>docker login</code>で認証が必要です</p>
+    </section>
+
+    <section>
+      <h2>イメージの保存と読込</h2>
+      <p>イメージをファイルとして保存したり、読み込んだりできます。</p>
+      <pre><code class="language-bash"># イメージをtarファイルに保存
+docker save -o nginx.tar nginx
+docker save nginx > nginx.tar
+
+# 複数イメージを一つのファイルに保存
+docker save -o images.tar nginx mysql redis
+
+# tarファイルからイメージを読み込む
+docker load -i nginx.tar
+docker load < nginx.tar
+
+# コンテナをイメージに変換（export/import）
+docker export コンテナID > container.tar
+docker import container.tar my-image:1.0</code></pre>
+      <p>✓ <code>save/load</code>はイメージの履歴を保持します</p>
+      <p>✗ <code>export/import</code>は履歴が失われます</p>
+    </section>
+
+    <section>
+      <h2>イメージのサイズ確認</h2>
+      <pre><code class="language-bash"># イメージのサイズを確認
+docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
+
+# 特定イメージのレイヤーサイズを確認
+docker history nginx
+
+# ディスク使用状況を確認
+docker system df
+docker system df -v</code></pre>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/tools/docker-cheatsheet">目次に戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  ul {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  p code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 1.1rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>

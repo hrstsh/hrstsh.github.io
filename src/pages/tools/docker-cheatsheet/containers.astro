@@ -1,0 +1,326 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
+---
+
+<Layout title="コンテナ操作 - Dockerコマンドチートシート">
+  <Navigation currentPage="/tools/docker-cheatsheet/containers" />
+  <main>
+    <h1>コンテナ操作</h1>
+
+    <section>
+      <h2>コンテナ起動の主要オプション</h2>
+      <pre><code class="language-bash"># デタッチモード（バックグラウンド実行）
+docker run -d nginx
+
+# コンテナ名を指定
+docker run --name my-nginx nginx
+
+# ポートマッピング（ホスト:コンテナ）
+docker run -p 8080:80 nginx
+docker run -p 127.0.0.1:8080:80 nginx  # IP指定
+
+# 複数ポートのマッピング
+docker run -p 8080:80 -p 8443:443 nginx
+
+# ボリュームマウント（データ永続化）
+docker run -v /host/path:/container/path nginx
+docker run -v $(pwd):/app node:18
+
+# 読み取り専用でマウント
+docker run -v /host/path:/container/path:ro nginx
+
+# 名前付きボリュームを使用
+docker run -v my-volume:/data nginx
+
+# 環境変数の設定
+docker run -e NODE_ENV=production node:18
+docker run -e DB_HOST=localhost -e DB_PORT=5432 my-app
+
+# 環境変数をファイルから読み込む
+docker run --env-file .env my-app
+
+# コンテナ終了時に自動削除
+docker run --rm nginx
+
+# インタラクティブモード（シェル操作）
+docker run -it ubuntu bash
+docker run -it --rm alpine sh
+
+# リソース制限
+docker run --memory="512m" --cpus="1.5" nginx
+
+# 再起動ポリシーの設定
+docker run --restart=always nginx
+docker run --restart=unless-stopped nginx
+docker run --restart=on-failure:3 nginx  # 最大3回まで</code></pre>
+    </section>
+
+    <section>
+      <h2>実行中コンテナでコマンド実行</h2>
+      <p><code>docker exec</code>を使うと、実行中のコンテナ内でコマンドを実行できます。</p>
+      <pre><code class="language-bash"># コンテナ内でbashを起動
+docker exec -it コンテナID bash
+docker exec -it my-nginx bash
+
+# Alpine Linuxの場合（shを使用）
+docker exec -it コンテナID sh
+
+# コマンドを直接実行
+docker exec コンテナID ls -la /app
+docker exec my-nginx nginx -v
+
+# rootユーザーで実行
+docker exec -u root -it コンテナID bash
+
+# 環境変数を設定して実行
+docker exec -e MY_VAR=value コンテナID printenv
+
+# 作業ディレクトリを指定して実行
+docker exec -w /app コンテナID npm install</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナのログ確認</h2>
+      <pre><code class="language-bash"># コンテナのログを表示
+docker logs コンテナID
+docker logs my-nginx
+
+# リアルタイムでログを追跡（tail -f相当）
+docker logs -f コンテナID
+
+# 最後の100行だけ表示
+docker logs --tail 100 コンテナID
+
+# タイムスタンプ付きで表示
+docker logs -t コンテナID
+
+# 特定時刻以降のログを表示
+docker logs --since 2024-01-01T00:00:00 コンテナID
+docker logs --since 10m コンテナID  # 10分前から
+
+# 特定時刻までのログを表示
+docker logs --until 2024-01-31T23:59:59 コンテナID</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナのステータス確認</h2>
+      <pre><code class="language-bash"># コンテナのリソース使用状況を確認
+docker stats
+
+# 特定コンテナのみ表示
+docker stats コンテナID
+
+# 一度だけ表示（更新なし）
+docker stats --no-stream
+
+# コンテナ内のプロセス一覧
+docker top コンテナID
+
+# コンテナの詳細情報を確認
+docker inspect コンテナID
+
+# 特定の情報を取得
+docker inspect --format='{{.State.Status}}' コンテナID
+docker inspect --format='{{.NetworkSettings.IPAddress}}' コンテナID
+
+# ポートマッピングの確認
+docker port コンテナID</code></pre>
+    </section>
+
+    <section>
+      <h2>ファイルのコピー</h2>
+      <p>ホストとコンテナ間でファイルをコピーできます。</p>
+      <pre><code class="language-bash"># ホストからコンテナへ
+docker cp /host/file.txt コンテナID:/container/path/
+docker cp ./config.json my-nginx:/etc/nginx/
+
+# コンテナからホストへ
+docker cp コンテナID:/container/file.txt /host/path/
+docker cp my-nginx:/var/log/nginx/access.log ./logs/
+
+# ディレクトリごとコピー
+docker cp /host/directory コンテナID:/container/path/
+docker cp コンテナID:/app/logs ./backup/</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナへのアタッチ</h2>
+      <pre><code class="language-bash"># 実行中コンテナにアタッチ（出力を見る）
+docker attach コンテナID
+
+# アタッチを解除（コンテナを止めずに）
+# Ctrl+P, Ctrl+Q を順に押す</code></pre>
+      <p>※ <code>attach</code>と<code>exec</code>の違い: attachはメインプロセスに接続、execは新しいプロセスを起動</p>
+    </section>
+
+    <section>
+      <h2>コンテナの一時停止と再開</h2>
+      <pre><code class="language-bash"># コンテナを一時停止（プロセスを凍結）
+docker pause コンテナID
+
+# 停止したコンテナを再開
+docker unpause コンテナID</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナの削除</h2>
+      <pre><code class="language-bash"># 停止中コンテナを削除
+docker rm コンテナID
+docker rm my-nginx
+
+# 実行中コンテナを強制削除
+docker rm -f コンテナID
+
+# 複数コンテナを削除
+docker rm コンテナ1 コンテナ2 コンテナ3
+
+# 停止中の全コンテナを削除
+docker container prune
+
+# 確認なしで削除
+docker container prune -f
+
+# 全コンテナを停止して削除
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナからイメージを作成</h2>
+      <pre><code class="language-bash"># 実行中コンテナからイメージを作成
+docker commit コンテナID my-custom-image:1.0
+
+# メッセージと作者情報を付けて作成
+docker commit -m "Added custom config" -a "Your Name" コンテナID my-image:1.0
+
+# コンテナを停止せずに作成
+docker commit --pause=false コンテナID my-image:1.0</code></pre>
+      <p>※ 本番環境ではDockerfileを使用することを推奨します</p>
+    </section>
+
+    <section>
+      <h2>実用例集</h2>
+      <pre><code class="language-bash"># WordPress + MySQL を起動
+# MySQL
+docker run -d \
+  --name wordpress-db \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=wordpress \
+  mysql:8.0
+
+# WordPress
+docker run -d \
+  --name wordpress \
+  -p 8080:80 \
+  -e WORDPRESS_DB_HOST=wordpress-db:3306 \
+  -e WORDPRESS_DB_PASSWORD=root \
+  --link wordpress-db \
+  wordpress
+
+# Redisをキャッシュサーバーとして起動
+docker run -d \
+  --name redis-cache \
+  -p 6379:6379 \
+  redis:alpine
+
+# PostgreSQLをデータボリュームで起動
+docker run -d \
+  --name postgres-db \
+  -e POSTGRES_PASSWORD=mypassword \
+  -e POSTGRES_DB=mydb \
+  -v postgres-data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  postgres:15
+
+# MongoDBを起動
+docker run -d \
+  --name mongodb \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=password \
+  -v mongo-data:/data/db \
+  -p 27017:27017 \
+  mongo:7</code></pre>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/tools/docker-cheatsheet">目次に戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1.5rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    line-height: 1.5;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  p code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #667eea;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 1.1rem;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
