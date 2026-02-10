@@ -1,0 +1,184 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const zshSnippet = `autoload -Uz vcs_info
+zstyle ':vcs_info:*' formats '[%b]'
+zstyle ':vcs_info:*' actionformats '[%b|%a]'
+
+precmd () {
+  # 1行あける
+  print
+
+  # 左: カレントディレクトリ
+  local left=' %{\e[38;5;2m%}(%~)%{\e[m%}'
+
+  # 右: Gitブランチ
+  vcs_info
+  local right="%{\e[38;5;32m%}\${vcs_info_msg_0_}%{\e[m%}"
+
+  # 左右の間をスペースで埋める
+  local invisible='%([BSUbfksu]|([FK]|){*})'
+  local leftwidth=\${#\${(S%%)left//$~invisible/}}
+  local rightwidth=\${#\${(S%%)right//$~invisible/}}
+  local padwidth=$(($COLUMNS - ($leftwidth + $rightwidth) % $COLUMNS))
+
+  print -P $left\${(r:$padwidth:: :)}$right
+}
+
+# 入力プロンプト
+PROMPT="(⁎'~') < "
+
+# 右側に日時を表示
+RPROMPT=$'%{\e[38;5;251m%}%D{%b/%d} %*%{\e[m%}'
+
+# 1秒ごとにプロンプト再描画（RPROMPT更新）
+TMOUT=1
+TRAPALRM() {
+  zle reset-prompt
+}`;
+
+const backupAndReload = `# 1) まずバックアップ
+cp ~/.zshrc ~/.zshrc.bak
+
+# 2) 編集
+nano ~/.zshrc
+# (または) code ~/.zshrc
+
+# 3) 反映
+source ~/.zshrc`;
+---
+
+<Layout title="Mac の terminal の表示をカスタマイズする（zsh） - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>Mac の terminal の表示をカスタマイズする（zsh）</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        自分の Mac で使っている <code>~/.zshrc</code> の設定をベースに、
+        Terminal の表示を整える方法。テーマや外部ツールなしで、
+        「ディレクトリ・Gitブランチ・日時・プロンプト文字」を出す。
+      </p>
+
+      <h2>この設定で変わるところ</h2>
+      <ul>
+        <li>コマンド入力の前に1行空けて見やすくする</li>
+        <li>左側にカレントディレクトリを表示</li>
+        <li>右側に Git ブランチ名を表示（Git管理下のみ）</li>
+        <li>入力プロンプトを好きな文字列に変更</li>
+        <li>右側に日時を表示</li>
+      </ul>
+
+      <h2>手順</h2>
+      <p>まずはバックアップしてから <code>~/.zshrc</code> を編集する。</p>
+      <CodeBlock code={backupAndReload} language="shell" />
+
+      <h2>設定例（そのまま貼り付け可）</h2>
+      <CodeBlock code={zshSnippet} language="shell" />
+
+      <h2>どこをいじると見た目が変わるか</h2>
+      <ul>
+        <li><code>left</code> の中身: 左側の表示（今はディレクトリ）</li>
+        <li><code>right</code> の中身: 右側の表示（今はブランチ）</li>
+        <li><code>PROMPT</code>: 入力行の先頭文字列</li>
+        <li><code>RPROMPT</code>: 右側の表示（今は日時）</li>
+      </ul>
+
+      <h2>補足</h2>
+      <ul>
+        <li>Git ブランチ表示は <code>autoload -Uz vcs_info</code> と <code>vcs_info</code> がポイント。</li>
+        <li>色は ANSI エスケープ（<code>\\e[38;5;...m</code>）で指定している。</li>
+        <li>もし表示が崩れたら、<code>~/.zshrc.bak</code> を戻せば復旧できる。</li>
+      </ul>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
+
