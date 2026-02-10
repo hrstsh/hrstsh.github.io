@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build 後に dist/ 内の HTML から URL を収集し、sitemap-v2.xml を生成する。
+ * Build 後に dist/ 内の HTML から URL を収集し、sitemap.xml を生成する。
  * Astro の @astrojs/sitemap が CI で _routes undefined になる問題の代替。
  */
 import { readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -65,8 +65,8 @@ ${sorted.map(([path, lastmod]) => {
 </urlset>
 `;
 
-writeFileSync(join(distDir, 'sitemap-v2.xml'), xml, 'utf8');
-console.log('Generated dist/sitemap-v2.xml with', sorted.length, 'URLs');
+writeFileSync(join(distDir, 'sitemap.xml'), xml, 'utf8');
+console.log('Generated dist/sitemap.xml with', sorted.length, 'URLs');
 
 function escapeXml(s) {
   return s
