@@ -126,19 +126,18 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
 
     <article class="article-body">
       <p>
-        X(Twitter) のタイムラインで「長文ツイート」だけを自動で隠す Chrome 拡張の作り方です。
-        以下のファイルを用意してそのままコピペすれば、同じ動きを再現できます。
+        X(Twitter) のタイムラインで長文ツイートだけを隠す Chrome 拡張の作り方。下のファイルをコピペすれば同じように動く。
       </p>
 
       <h2>できること</h2>
       <ul>
-        <li>140文字を超えるツイート、または「もっと見る」が付くツイートを非表示にする</li>
-        <li>拡張のポップアップで ON/OFF を切り替えられる（設定は保存される）</li>
-        <li>スクロールで新しく流れてくるツイートにも自動で反映される</li>
+        <li>140文字超 or「もっと見る」が付くツイートを非表示にする</li>
+        <li>ポップアップで ON/OFF を切り替え（設定は保存される）</li>
+        <li>スクロールで流れてくる新規ツイートにも自動で効く</li>
       </ul>
 
       <h2>用意するファイル</h2>
-      <p>拡張用のフォルダを作り、次の4ファイル＋アイコンを置きます。</p>
+      <p>拡張用フォルダに次の4ファイル（と任意で icon.png）を置く。</p>
       <ul>
         <li><code>manifest.json</code> … 拡張の設定</li>
         <li><code>content.js</code> … タイムラインに注入するスクリプト（長文判定・非表示）</li>
@@ -149,7 +148,7 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
 
       <h2>manifest.json（全文）</h2>
       <CodeBlock code={manifestCode} language="json" />
-      <p>※ <code>icon.png</code> を使わない場合は <code>"icons"</code> ブロックごと削除してかまいません。</p>
+      <p>※ <code>icon.png</code> を使わないなら <code>"icons"</code> ブロックごと消してよい。</p>
 
       <h2>content.js（全文）</h2>
       <CodeBlock code={contentCode} language="javascript" />
@@ -162,17 +161,17 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
 
       <h2>入れ方</h2>
       <ol>
-        <li>上記4ファイル（と必要なら icon.png）を同じフォルダに保存する</li>
+        <li>4ファイル（と必要なら icon.png）を同じフォルダに保存する</li>
         <li>Chrome で <code>chrome://extensions/</code> を開く</li>
         <li>「デベロッパーモード」を ON にする</li>
-        <li>「パッケージ化されていない拡張機能を読み込む」でそのフォルダを選ぶ</li>
+        <li>「パッケージ化されていない拡張機能を読み込む」でそのフォルダを指定する</li>
       </ol>
-      <p>X(Twitter)を開いたタブで、長文ツイートが非表示になり、拡張アイコンから ON/OFF を切り替えられます。</p>
+      <p>X のタブで長文が非表示になり、拡張アイコンから ON/OFF を切り替えられる。</p>
 
       <h2>補足</h2>
       <ul>
-        <li>長文の基準（140文字）は <code>content.js</code> の <code>MAX_LENGTH</code> を変えれば変更できます。</li>
-        <li>X の DOM 構造（<code>data-testid</code> など）が変わると動かなくなる可能性があります。そのときはセレクタを調整してください。</li>
+        <li>長文の基準（140文字）は <code>content.js</code> の <code>MAX_LENGTH</code> を変えればよい。</li>
+        <li>X の DOM（<code>data-testid</code> など）が変わると動かなくなることがある。そのときはセレクタを直す。</li>
       </ul>
     </article>
 
