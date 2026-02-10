@@ -53,11 +53,14 @@ for (const e of pathEntries) {
 const sorted = [...unique.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 ${sorted.map(([path, lastmod]) => {
   const href = pathToUrl(path);
   const lastmodStr = escapeXml(toLastmod(lastmod));
-  return `  <url><loc>${escapeXml(href)}</loc><lastmod>${lastmodStr}</lastmod></url>`;
+  return `  <url>\n    <loc>${escapeXml(href)}</loc>\n    <lastmod>${lastmodStr}</lastmod>\n  </url>`;
 }).join('\n')}
 </urlset>
 `;
