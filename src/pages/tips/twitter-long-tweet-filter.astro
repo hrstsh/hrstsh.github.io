@@ -1,0 +1,282 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const manifestCode = `{
+  "name": "X長文フィルタ",
+  "manifest_version": 3,
+  "version": "1.0",
+  "permissions": ["activeTab", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://twitter.com/*", "https://x.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "256": "icon.png"
+  }
+}`;
+
+const contentCode = `(function() {
+    'use strict';
+
+    const MAX_LENGTH = 140;
+    const SHOW_MORE_SELECTOR = '[data-testid="tweet-text-show-more-link"]';
+    let isFilterEnabled = true;
+
+    chrome.storage.local.get(['filterEnabled'], (result) => {
+        isFilterEnabled = result.filterEnabled !== false;
+        applyVisibilityAll();
+    });
+
+    chrome.storage.onChanged.addListener((changes) => {
+        if (changes.filterEnabled) {
+            isFilterEnabled = changes.filterEnabled.newValue;
+            applyVisibilityAll();
+        }
+    });
+
+    function processTweets() {
+        const articles = document.querySelectorAll('article[data-testid="tweet"]');
+        articles.forEach(article => {
+            if (article.dataset.isLongChecked) {
+                updateArticleVisibility(article);
+                return;
+            }
+            const textNode = article.querySelector('div[data-testid="tweetText"]');
+            const showMoreBtn = article.querySelector(SHOW_MORE_SELECTOR);
+            let isLong = false;
+            if (textNode) {
+                const textContent = textNode.textContent || "";
+                if (textContent.length > MAX_LENGTH || showMoreBtn !== null) isLong = true;
+            }
+            article.dataset.isLongTweet = isLong;
+            article.dataset.isLongChecked = "true";
+            updateArticleVisibility(article);
+        });
+    }
+
+    function updateArticleVisibility(article) {
+        const isLong = article.dataset.isLongTweet === "true";
+        if (isFilterEnabled && isLong) {
+            if (article.style.display !== 'none') article.style.display = 'none';
+        } else {
+            if (article.style.display === 'none') article.style.display = '';
+        }
+    }
+
+    function applyVisibilityAll() {
+        const articles = document.querySelectorAll('article[data-testid="tweet"]');
+        articles.forEach(article => updateArticleVisibility(article));
+    }
+
+    const observer = new MutationObserver(() => processTweets());
+    observer.observe(document.body, { childList: true, subtree: true });
+})();`;
+
+const popupHtmlCode = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 200px; padding: 10px; font-family: sans-serif; }
+    .container { display: flex; align-items: center; justify-content: space-between; }
+    .label { font-size: 14px; font-weight: bold; }
+    .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #1DA1F2; }
+    input:checked + .slider:before { transform: translateX(16px); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="label">長文非表示</span>
+    <label class="switch">
+      <input type="checkbox" id="toggleFilter">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>`;
+
+const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('toggleFilter');
+    chrome.storage.local.get(['filterEnabled'], (result) => {
+        toggle.checked = result.filterEnabled !== false;
+    });
+    toggle.addEventListener('change', () => {
+        chrome.storage.local.set({ filterEnabled: toggle.checked });
+    });
+});`;
+---
+
+<Layout title="X(Twitter)の長文ツイートを自動で非表示にするChrome拡張 - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>X(Twitter)の長文ツイートを自動で非表示にするChrome拡張</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter) のタイムラインで「長文ツイート」だけを自動で隠す Chrome 拡張の作り方です。
+        以下のファイルを用意してそのままコピペすれば、同じ動きを再現できます。
+      </p>
+
+      <h2>できること</h2>
+      <ul>
+        <li>140文字を超えるツイート、または「もっと見る」が付くツイートを非表示にする</li>
+        <li>拡張のポップアップで ON/OFF を切り替えられる（設定は保存される）</li>
+        <li>スクロールで新しく流れてくるツイートにも自動で反映される</li>
+      </ul>
+
+      <h2>用意するファイル</h2>
+      <p>拡張用のフォルダを作り、次の4ファイル＋アイコンを置きます。</p>
+      <ul>
+        <li><code>manifest.json</code> … 拡張の設定</li>
+        <li><code>content.js</code> … タイムラインに注入するスクリプト（長文判定・非表示）</li>
+        <li><code>popup.html</code> … ポップアップのHTML</li>
+        <li><code>popup.js</code> … ポップアップのON/OFF処理</li>
+        <li><code>icon.png</code> … アイコン（256×256推奨。任意）</li>
+      </ul>
+
+      <h2>manifest.json（全文）</h2>
+      <CodeBlock code={manifestCode} language="json" />
+      <p>※ <code>icon.png</code> を使わない場合は <code>"icons"</code> ブロックごと削除してかまいません。</p>
+
+      <h2>content.js（全文）</h2>
+      <CodeBlock code={contentCode} language="javascript" />
+
+      <h2>popup.html（全文）</h2>
+      <CodeBlock code={popupHtmlCode} language="html" />
+
+      <h2>popup.js（全文）</h2>
+      <CodeBlock code={popupJsCode} language="javascript" />
+
+      <h2>入れ方</h2>
+      <ol>
+        <li>上記4ファイル（と必要なら icon.png）を同じフォルダに保存する</li>
+        <li>Chrome で <code>chrome://extensions/</code> を開く</li>
+        <li>「デベロッパーモード」を ON にする</li>
+        <li>「パッケージ化されていない拡張機能を読み込む」でそのフォルダを選ぶ</li>
+      </ol>
+      <p>X(Twitter)を開いたタブで、長文ツイートが非表示になり、拡張アイコンから ON/OFF を切り替えられます。</p>
+
+      <h2>補足</h2>
+      <ul>
+        <li>長文の基準（140文字）は <code>content.js</code> の <code>MAX_LENGTH</code> を変えれば変更できます。</li>
+        <li>X の DOM 構造（<code>data-testid</code> など）が変わると動かなくなる可能性があります。そのときはセレクタを調整してください。</li>
+      </ul>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>

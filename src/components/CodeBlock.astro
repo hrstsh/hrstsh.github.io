@@ -1,0 +1,51 @@
+---
+/**
+ * コードを安全に表示するコンポーネント。
+ * コードを文字列で渡すため、テンプレートに { } を書かずに済み、Astro のビルドエラーを防げる。
+ *
+ * 使用例:
+ *   const snippet = `function f() { return 1; }`;
+ *   <CodeBlock code={snippet} language="javascript" />
+ */
+interface Props {
+  code: string;
+  language?: string;
+}
+
+const { code, language = 'text' } = Astro.props;
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+const escaped = escapeHtml(code);
+const langClass = language ? `language-${language}` : '';
+---
+
+<pre class="code-block"><code class={langClass} set:html={escaped}></code></pre>
+
+<style>
+  .code-block {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .code-block code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  }
+</style>
+
