@@ -1,0 +1,288 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const applescriptCode = `on run {input, parameters}
+    set thePath to POSIX path of input
+    set the clipboard to thePath
+    return input
+end run`;
+
+const bashExampleCode = `# ドラッグ&ドロップするとこうなる
+cd /Users/username/Documents/project
+
+# スペースがある場合はエスケープされる
+cd /Users/username/My\\ Documents/project`;
+
+const pathComparisonCode = `# 絶対パス
+/Users/username/Documents/project/file.txt
+
+# 相対パス（現在のディレクトリが /Users/username の場合）
+Documents/project/file.txt
+
+# ホームディレクトリからのパス
+~/Documents/project/file.txt`;
+
+const openCommandCode = `open .`;
+---
+
+<Layout title="macOSでファイルパスを一発でターミナルにコピーする - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>macOSでファイルパスを一発でターミナルにコピーする</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        Finder でファイルを選んでからターミナルで操作したい時、パスをコピーするのが面倒。macOS には、簡単にファイルパスを取得する方法がいくつかある。
+      </p>
+
+      <h2>方法1: Option + 右クリック（一番簡単）</h2>
+      <p>
+        macOS に標準で備わっている機能。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li>Finder でファイルやフォルダを選択</li>
+        <li><strong>Option キーを押しながら右クリック</strong>（または二本指タップ）</li>
+        <li>メニューに <strong>「～のパス名をコピー」</strong> が追加されてるのでクリック</li>
+        <li>フルパスがクリップボードにコピーされる</li>
+      </ol>
+
+      <p>コピーされるパスの例：</p>
+      <pre><code class="language-text">/Users/username/Documents/project/file.txt</code></pre>
+
+      <h2>方法2: ターミナルにドラッグ&ドロップ</h2>
+      <p>
+        直接ターミナルにパスを貼り付けたい場合に便利。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li>ターミナルを開く</li>
+        <li>Finder からファイルやフォルダをターミナルのウィンドウにドラッグ&ドロップ</li>
+        <li>パスが自動的に入力される（スペースが含まれる場合はエスケープされる）</li>
+      </ol>
+
+      <p>例：</p>
+      <CodeBlock code={bashExampleCode} language="bash" />
+
+      <h2>方法3: Cmd + Option + C（ショートカット）</h2>
+      <p>
+        ファイルを選択してショートカットでコピーできる。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li>Finder でファイルやフォルダを選択</li>
+        <li><strong>Cmd + Option + C</strong> を押す</li>
+        <li>フルパスがクリップボードにコピーされる</li>
+      </ol>
+
+      <p>
+        キーボードだけで完結するので、マウスを使わずに操作したい時に便利。
+      </p>
+
+      <h2>方法4: Automator でカスタムサービスを作成</h2>
+      <p>
+        より高度なカスタマイズがしたい場合、Automator で独自のサービスを作成できる。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li><strong>Automator</strong> を起動（Applications > Automator）</li>
+        <li><strong>クイックアクション</strong> を選択</li>
+        <li>「選択された Finder 項目を取得」アクションを追加</li>
+        <li>「AppleScript を実行」アクションを追加</li>
+        <li>以下のスクリプトを入力：</li>
+      </ol>
+
+      <CodeBlock code={applescriptCode} language="applescript" />
+
+      <ol start="6">
+        <li>「ファイル」→「保存」で名前を付けて保存（例: 「パスをコピー」）</li>
+        <li>Finder でファイルを右クリック→「クイックアクション」→作成したサービス名で実行</li>
+      </ol>
+
+      <h2>方法5: ショートカット.app で独自ショートカットを作成</h2>
+      <p>
+        macOS Monterey 以降では、「ショートカット」アプリでも同様のことができる。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li><strong>ショートカット</strong> アプリを開く</li>
+        <li>右上の <strong>+</strong> ボタンをクリック</li>
+        <li>「Finder で選択項目を取得」アクションを追加</li>
+        <li>「テキストをクリップボードにコピー」アクションを追加</li>
+        <li>上部の詳細ボタン（ℹ️）をクリックして、「Finder でクイックアクションとして使用」をオン</li>
+        <li>名前を付けて完了</li>
+      </ol>
+
+      <h2>相対パス vs 絶対パス</h2>
+      <p>
+        上記の方法でコピーされるのは<strong>絶対パス</strong>（フルパス）。相対パスが必要な場合は、以下のように手動で編集する必要がある。
+      </p>
+
+      <CodeBlock code={pathComparisonCode} language="bash" />
+
+      <h2>複数ファイルのパスを一度にコピー</h2>
+      <p>
+        複数のファイルを選択して <strong>Option + 右クリック</strong> → 「～のパス名をコピー」を実行すると、すべてのファイルのパスが改行区切りでコピーされる。
+      </p>
+
+      <pre><code class="language-text">/Users/username/Documents/file1.txt
+/Users/username/Documents/file2.txt
+/Users/username/Documents/file3.txt</code></pre>
+
+      <h2>こんな時に便利</h2>
+      <ul>
+        <li>Finder で見つけたファイルをターミナルで操作したい</li>
+        <li>スクリプトやコマンドにファイルパスを渡したい</li>
+        <li>深い階層のディレクトリに <code>cd</code> したい</li>
+        <li>複数のファイルパスを一度に取得したい</li>
+        <li>ドキュメントやメールにファイルパスを記載したい</li>
+      </ul>
+
+      <h2>おまけ: 現在のディレクトリを Finder で開く</h2>
+      <p>
+        逆に、ターミナルから現在のディレクトリを Finder で開きたい場合は、以下のコマンドを実行する：
+      </p>
+
+      <CodeBlock code={openCommandCode} language="bash" />
+
+      <p>
+        <code>.</code> は現在のディレクトリを意味する。<code>open</code> コマンドは指定したファイルやディレクトリを Finder で開く。
+      </p>
+
+      <h2>注意</h2>
+      <ul>
+        <li>コピーされるパスにスペースや特殊文字が含まれる場合、ターミナルではエスケープ（<code>\</code>）が必要になることがある。</li>
+        <li>シンボリックリンクの場合、リンク先のパスではなくリンク自体のパスがコピーされる。</li>
+        <li>Automator やショートカットで作成したサービスは、初回実行時にアクセス許可を求められることがある。</li>
+      </ul>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body h4 {
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 1.5rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
