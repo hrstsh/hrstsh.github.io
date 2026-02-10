@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build 後に dist/ 内の HTML から URL を収集し、sitemap-YYYY.xml を生成する。
+ * Build 後に dist/ 内の HTML から URL を収集し、sitemap-v3.xml を生成する。
  * Astro の @astrojs/sitemap が CI で _routes undefined になる問題の代替。
  */
 import { readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -10,9 +10,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
 const site = 'https://hrstsh.github.io';
-// 年ベースのファイル名（Google Search Console のキャッシュ回避）
-const year = new Date().getFullYear();
-const sitemapFilename = `sitemap-${year}.xml`;
+// Google Search Console のキャッシュ回避のため v3 を使用
+const sitemapFilename = 'sitemap-v3.xml';
 
 function collectPaths(dir, base = '') {
   const entries = readdirSync(dir, { withFileTypes: true });

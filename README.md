@@ -86,11 +86,11 @@ Helper scripts for Git workflow (run from repository root):
 
 ## SEO
 
-- **Sitemap**: Generated at build time by `scripts/generate-sitemap.js` (output: `/sitemap-YYYY.xml`, 例: `/sitemap-2026.xml`). The script runs after `astro build` and scans `dist/` for pages.
-  - 年ベースのファイル名で Google Search Console のキャッシュ問題を回避
+- **Sitemap**: Generated at build time by `scripts/generate-sitemap.js` (output: `/sitemap-v3.xml`). The script runs after `astro build` and scans `dist/` for pages.
+  - Google Search Console のキャッシュ問題を回避するため v3 を使用
   - 各ページの `<lastmod>` タグに最終更新日を含む
   - 標準的な XML 形式（スキーマ定義、適切なインデント）
-- **robots.txt**: `public/robots.txt` の Sitemap URL を毎年更新する必要があります（例: `https://hrstsh.github.io/sitemap-2026.xml`）
+- **robots.txt**: `public/robots.txt` allows all crawlers and points to `https://hrstsh.github.io/sitemap-v3.xml`.
 
 ## Security
 
