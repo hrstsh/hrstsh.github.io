@@ -1,5 +1,29 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const applescriptCode = `on run {input, parameters}
+    set thePath to POSIX path of input
+    set the clipboard to thePath
+    return input
+end run`;
+
+const bashExampleCode = `# ドラッグ&ドロップするとこうなる
+cd /Users/username/Documents/project
+
+# スペースがある場合はエスケープされる
+cd /Users/username/My\\ Documents/project`;
+
+const pathComparisonCode = `# 絶対パス
+/Users/username/Documents/project/file.txt
+
+# 相対パス（現在のディレクトリが /Users/username の場合）
+Documents/project/file.txt
+
+# ホームディレクトリからのパス
+~/Documents/project/file.txt`;
+
+const openCommandCode = `open .`;
 ---
 
 <Layout title="macOSでファイルパスを一発でターミナルにコピーする - 小技集">
@@ -11,19 +35,19 @@ import Layout from '../../layouts/Layout.astro';
 
     <article class="article-body">
       <p>
-        Finderでファイルを選んでからターミナルで操作したい時、パスをコピーするのが面倒です。macOSには、簡単にファイルパスを取得する方法がいくつかあります。
+        Finder でファイルを選んでからターミナルで操作したい時、パスをコピーするのが面倒。macOS には、簡単にファイルパスを取得する方法がいくつかある。
       </p>
 
       <h2>方法1: Option + 右クリック（一番簡単）</h2>
       <p>
-        macOSに標準で備わっている機能です。
+        macOS に標準で備わっている機能。
       </p>
 
       <h3>手順</h3>
       <ol>
-        <li>Finderでファイルやフォルダを選択</li>
-        <li><strong>Optionキーを押しながら右クリック</strong>（または二本指タップ）</li>
-        <li>メニューに <strong>「～のパス名をコピー」</strong> が追加されているのでクリック</li>
+        <li>Finder でファイルやフォルダを選択</li>
+        <li><strong>Option キーを押しながら右クリック</strong>（または二本指タップ）</li>
+        <li>メニューに <strong>「～のパス名をコピー」</strong> が追加されてるのでクリック</li>
         <li>フルパスがクリップボードにコピーされる</li>
       </ol>
 
@@ -32,96 +56,81 @@ import Layout from '../../layouts/Layout.astro';
 
       <h2>方法2: ターミナルにドラッグ&ドロップ</h2>
       <p>
-        直接ターミナルにパスを貼り付けたい場合に便利です。
+        直接ターミナルにパスを貼り付けたい場合に便利。
       </p>
 
       <h3>手順</h3>
       <ol>
         <li>ターミナルを開く</li>
-        <li>Finderからファイルやフォルダをターミナルのウィンドウにドラッグ&ドロップ</li>
+        <li>Finder からファイルやフォルダをターミナルのウィンドウにドラッグ&ドロップ</li>
         <li>パスが自動的に入力される（スペースが含まれる場合はエスケープされる）</li>
       </ol>
 
       <p>例：</p>
-      <pre><code class="language-bash"># ドラッグ&ドロップするとこうなる
-cd /Users/username/Documents/project
-
-# スペースがある場合はエスケープされる
-cd /Users/username/My\ Documents/project</code></pre>
+      <CodeBlock code={bashExampleCode} language="bash" />
 
       <h2>方法3: Cmd + Option + C（ショートカット）</h2>
       <p>
-        ファイルを選択してショートカットでコピーできます。
+        ファイルを選択してショートカットでコピーできる。
       </p>
 
       <h3>手順</h3>
       <ol>
-        <li>Finderでファイルやフォルダを選択</li>
+        <li>Finder でファイルやフォルダを選択</li>
         <li><strong>Cmd + Option + C</strong> を押す</li>
         <li>フルパスがクリップボードにコピーされる</li>
       </ol>
 
       <p>
-        この方法はキーボードだけで完結するので、マウスを使わずに操作したい時に便利です。
+        キーボードだけで完結するので、マウスを使わずに操作したい時に便利。
       </p>
 
-      <h2>方法4: Automatorでカスタムサービスを作成</h2>
+      <h2>方法4: Automator でカスタムサービスを作成</h2>
       <p>
-        より高度なカスタマイズがしたい場合、Automatorで独自のサービスを作成できます。
+        より高度なカスタマイズがしたい場合、Automator で独自のサービスを作成できる。
       </p>
 
       <h3>手順</h3>
       <ol>
         <li><strong>Automator</strong> を起動（Applications > Automator）</li>
         <li><strong>クイックアクション</strong> を選択</li>
-        <li>「選択されたFinder項目を取得」アクションを追加</li>
-        <li>「AppleScriptを実行」アクションを追加</li>
+        <li>「選択された Finder 項目を取得」アクションを追加</li>
+        <li>「AppleScript を実行」アクションを追加</li>
         <li>以下のスクリプトを入力：</li>
       </ol>
 
-      <pre><code class="language-applescript">on run {input, parameters}
-    set thePath to POSIX path of input
-    set the clipboard to thePath
-    return input
-end run</code></pre>
+      <CodeBlock code={applescriptCode} language="applescript" />
 
       <ol start="6">
         <li>「ファイル」→「保存」で名前を付けて保存（例: 「パスをコピー」）</li>
-        <li>Finderでファイルを右クリック→「クイックアクション」→作成したサービス名で実行</li>
+        <li>Finder でファイルを右クリック→「クイックアクション」→作成したサービス名で実行</li>
       </ol>
 
-      <h2>方法5: ショートカット.appで独自ショートカットを作成</h2>
+      <h2>方法5: ショートカット.app で独自ショートカットを作成</h2>
       <p>
-        macOS Monterey以降では、「ショートカット」アプリでも同様のことができます。
+        macOS Monterey 以降では、「ショートカット」アプリでも同様のことができる。
       </p>
 
       <h3>手順</h3>
       <ol>
         <li><strong>ショートカット</strong> アプリを開く</li>
         <li>右上の <strong>+</strong> ボタンをクリック</li>
-        <li>「Finderで選択項目を取得」アクションを追加</li>
+        <li>「Finder で選択項目を取得」アクションを追加</li>
         <li>「テキストをクリップボードにコピー」アクションを追加</li>
-        <li>上部の詳細ボタン（ℹ️）をクリックして、「Finderでクイックアクションとして使用」をオン</li>
+        <li>上部の詳細ボタン（ℹ️）をクリックして、「Finder でクイックアクションとして使用」をオン</li>
         <li>名前を付けて完了</li>
       </ol>
 
-      <h2>相対パスvs絶対パス</h2>
+      <h2>相対パス vs 絶対パス</h2>
       <p>
-        上記の方法でコピーされるのは<strong>絶対パス</strong>（フルパス）です。相対パスが必要な場合は、以下のように手動で編集する必要があります。
+        上記の方法でコピーされるのは<strong>絶対パス</strong>（フルパス）。相対パスが必要な場合は、以下のように手動で編集する必要がある。
       </p>
 
-      <pre><code class="language-bash"># 絶対パス
-/Users/username/Documents/project/file.txt
-
-# 相対パス（現在のディレクトリが /Users/username の場合）
-Documents/project/file.txt
-
-# ホームディレクトリからのパス
-~/Documents/project/file.txt</code></pre>
+      <CodeBlock code={pathComparisonCode} language="bash" />
 
       <h2>複数ファイルのパスを一度にコピー</h2>
       <p>
-        複数のファイルを選択して <strong>Option + 右クリック</strong> → 「～のパス名をコピー」を実行すると、すべてのファイルのパスが改行区切りでコピーされます。
+        複数のファイルを選択して <strong>Option + 右クリック</strong> → 「～のパス名をコピー」を実行すると、すべてのファイルのパスが改行区切りでコピーされる。
       </p>
 
       <pre><code class="language-text">/Users/username/Documents/file1.txt
@@ -130,29 +139,29 @@ Documents/project/file.txt
 
       <h2>こんな時に便利</h2>
       <ul>
-        <li>Finderで見つけたファイルをターミナルで操作したい</li>
+        <li>Finder で見つけたファイルをターミナルで操作したい</li>
         <li>スクリプトやコマンドにファイルパスを渡したい</li>
         <li>深い階層のディレクトリに <code>cd</code> したい</li>
         <li>複数のファイルパスを一度に取得したい</li>
         <li>ドキュメントやメールにファイルパスを記載したい</li>
       </ul>
 
-      <h2>おまけ: 現在のディレクトリをFinderで開く</h2>
+      <h2>おまけ: 現在のディレクトリを Finder で開く</h2>
       <p>
-        逆に、ターミナルから現在のディレクトリをFinderで開きたい場合は、以下のコマンドを実行します：
+        逆に、ターミナルから現在のディレクトリを Finder で開きたい場合は、以下のコマンドを実行する：
       </p>
 
-      <pre><code class="language-bash">open .</code></pre>
+      <CodeBlock code={openCommandCode} language="bash" />
 
       <p>
-        <code>.</code> は現在のディレクトリを意味します。<code>open</code> コマンドは指定したファイルやディレクトリをFinderで開きます。
+        <code>.</code> は現在のディレクトリを意味する。<code>open</code> コマンドは指定したファイルやディレクトリを Finder で開く。
       </p>
 
-      <h2>注意点</h2>
+      <h2>注意</h2>
       <ul>
-        <li>コピーされるパスにスペースや特殊文字が含まれる場合、ターミナルではエスケープ（<code>\</code>）が必要になることがあります。</li>
-        <li>シンボリックリンクの場合、リンク先のパスではなくリンク自体のパスがコピーされます。</li>
-        <li>Automatorやショートカットで作成したサービスは、初回実行時にアクセス許可を求められることがあります。</li>
+        <li>コピーされるパスにスペースや特殊文字が含まれる場合、ターミナルではエスケープ（<code>\</code>）が必要になることがある。</li>
+        <li>シンボリックリンクの場合、リンク先のパスではなくリンク自体のパスがコピーされる。</li>
+        <li>Automator やショートカットで作成したサービスは、初回実行時にアクセス許可を求められることがある。</li>
       </ul>
 
     </article>
