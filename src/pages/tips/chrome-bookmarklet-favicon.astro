@@ -11,65 +11,61 @@ import Layout from '../../layouts/Layout.astro';
 
     <article class="article-body">
       <p>
-        <code>javascript:</code> で始まるブックマークレットは、Chromeのブックマークバーに追加すると
-        デフォルトのアイコン（📄のようなマーク）で表示されます。ブックマークレットのまま、好きなファビコンを表示する方法です。
+        <code>javascript:</code> のブックマークレットは、Chrome のブックマークバーだとデフォルトの📄みたいなアイコンになる。そのままで好きなファビコンを付ける方法。
       </p>
 
-      <h2>なぜアイコンが付かないのか</h2>
+      <h2>なぜアイコンが付かないか</h2>
       <p>
-        ブックマークレットのURLは <code>javascript:...</code> の形式です。通常のWebページのようにHTMLを読み込まないため、Chromeはアイコンを取得できず、共通のアイコンで表示します。
+        URL が <code>javascript:...</code> だから、普通のページみたいに HTML を読まない。Chrome はアイコンを取れず、共通アイコンになる。
       </p>
 
-      <h2>やり方（ブックマークのエクスポート・編集・インポート）</h2>
+      <h2>やり方（エクスポート → 編集 → インポート）</h2>
       <p>
-        次の3ステップで、ブックマークレットに任意のファビコンを付けられます。
+        3ステップで付けられる。
       </p>
 
-      <h3>1. 使いたいファビコンのページをブックマークに登録する</h3>
+      <h3>1. 使いたいファビコンのページをブックマークする</h3>
       <p>
-        ブックマークレットのアイコンに使いたいファビコンが表示されているページを開き、そのページをブックマークバーにブックマークとして追加します。これで「アイコン付きの普通のブックマーク」が1件できます。
+        アイコンに使いたいファビコンが出ているページを開いて、そのページをブックマークバーに追加する。これで「アイコン付きの普通のブックマーク」が1つできる。
       </p>
 
-      <h3>2. ブックマークバーをエクスポートし、HTMLを編集する</h3>
+      <h3>2. ブックマークをエクスポートして HTML を編集する</h3>
       <p>
-        Chromeのメニューから <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> を開き、右上の ⋮ から <strong>ブックマークをエクスポート</strong> を選び、HTMLファイルとして保存します。
+        Chrome の <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> を開き、右上の ⋮ から <strong>ブックマークをエクスポート</strong> で HTML で保存する。
       </p>
       <p>
-        保存したHTMLをテキストエディタで開くと、各ブックマークは次のような行になっています。
+        その HTML をエディタで開くと、1行1ブックマークでこんな形になっている。
       </p>
       <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="https://example.com/page" ICON="data:image/png;base64,..."&gt;ページ名&lt;/A&gt;</code></pre>
       <p>
-        <strong>1で追加したブックマーク</strong>の行には <code>ICON="..."</code> が入っています。この <code>ICON="..."</code> 部分（引用符ごと）をコピーします。
+        <strong>1で追加したブックマーク</strong>の行には <code>ICON="..."</code> がある。この <code>ICON="..."</code> を引用符ごとコピーする。
       </p>
       <p>
-        次に、<strong>ブックマークレット</strong>の行を探します。こちらは <code>HREF="javascript:..."</code> だけで、<code>ICON</code> が無いか、デフォルトのままです。その行に、コピーした <code>ICON="..."</code> をペーストして追加します。
+        <strong>ブックマークレット</strong>の行を探す。<code>HREF="javascript:..."</code> だけで <code>ICON</code> が無い（かデフォルト）の行に、さっきコピーした <code>ICON="..."</code> をペーストする。
       </p>
-      <p>
-        例：編集前のブックマークレットの行</p>
+      <p>編集前のブックマークレットの行：</p>
       <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="javascript:alert(document.title)"&gt;タイトル表示&lt;/A&gt;</code></pre>
-      <p>
-        例：1のブックマークから <code>ICON="data:image/png;base64,iVBORw0K..."</code> をコピーして付けた後
-      </p>
+      <p>1のブックマークから <code>ICON="data:image/png;base64,iVBORw0K..."</code> をコピーして付けた後：</p>
       <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="javascript:alert(document.title)" ICON="data:image/png;base64,iVBORw0K..."&gt;タイトル表示&lt;/A&gt;</code></pre>
       <p>
-        編集が終わったら、HTMLファイルを保存します。
+        編集したら HTML を保存する。
       </p>
 
       <h3>3. ブックマークをインポートする</h3>
       <p>
-        既存のブックマークバーを整理したい場合は、あらかじめ不要なものを削除するか、別フォルダに退避しておきます。Chromeの <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> で、⋮ → <strong>ブックマークをインポート</strong> を選び、手順2で編集したHTMLファイルを指定してインポートします。これで、同じ <code>javascript:</code> のまま、ブックマークレットにファビコンが表示されます。
+        既存のブックマークを整理したいときは、事前に不要なのを消すか別フォルダに退避しておく。Chrome の <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> で ⋮ → <strong>ブックマークをインポート</strong> を選び、2で編集した HTML を指定してインポートする。これで <code>javascript:</code> のままファビコンが出る。
       </p>
 
       <h2>ポイント</h2>
       <ul>
-        <li>ファビコンは「そのアイコンが表示されているページを1つブックマークする」だけで用意できます。自分で画像を用意する必要はありません。</li>
-        <li>エクスポートされたHTMLでは、アイコンが <code>data:image/png;base64,...</code> や <code>https://...</code> の形で <code>ICON</code> 属性に保存されています。</li>
-        <li>ブックマークレットはあくまで <code>javascript:</code> のままなので、クリック時の挙動は変わりません。</li>
+        <li>ファビコンは「そのアイコンが出ているページを1つブックマークする」だけで足りる。画像を自分で用意しなくていい。</li>
+        <li>エクスポートした HTML では、アイコンが <code>data:image/png;base64,...</code> や <code>https://...</code> で <code>ICON</code> に入っている。</li>
+        <li>ブックマークレットは <code>javascript:</code> のままなので、クリック時の動きは変わらない。</li>
       </ul>
 
-      <h2>注意点</h2>
+      <h2>注意</h2>
       <ul>
-        <li>インポートすると、既存のブックマークと重複したり、フォルダ構成が変わる場合があります。必要ならエクスポート前にバックアップを取るか、テスト用フォルダで試すと安全です。</li>
+        <li>インポートで既存と重なったりフォルダ構成が変わることがある。心配ならエクスポート前にバックアップか、テスト用フォルダで試すといい。</li>
       </ul>
 
     </article>
