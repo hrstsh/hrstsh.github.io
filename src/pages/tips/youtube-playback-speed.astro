@@ -1,5 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const basicCommand = `document.querySelector("video").playbackRate = 3;`;
+const checkCommand = `document.querySelector("video").playbackRate;`;
+const bookmarkletCode = `javascript:(function(){var s=prompt("再生速度を入力（例: 3）","3");if(s){document.querySelector("video").playbackRate=parseFloat(s);}})();`;
 ---
 
 <Layout title="YouTube動画を2倍速以上で再生する方法（Chrome） - 小技集">
@@ -43,19 +48,21 @@ import Layout from '../../layouts/Layout.astro';
 
       <h3>2. コンソールにコマンドを入力</h3>
       <p>
-        開発者ツールの「Console」タブに以下を入力して Enter を押します：
+        Console に以下を打って Enter：
       </p>
-      <pre><code class="language-javascript">document.querySelector("video").playbackRate = 3;</code></pre>
+      <CodeBlock code={basicCommand} language="javascript" />
       <p>
-        数値の <code>3</code> の部分を変えれば好きな速度に設定できます。
+        <code>3</code> のところを変えれば好きな速度になる。
       </p>
 
       <h3>3. 即座に速度が変わる</h3>
       <p>
-        Enterを押した瞬間から、指定した速度で動画が再生されます。UI上の速度表示は変わりませんが、実際の再生速度は変わっています。
+        Enter した瞬間から指定速度で再生される。UI の速度表示は変わらないけど、実際の速度は変わってる。
       </p>
 
       <h2>おすすめの速度設定</h2>
+      
+      <h3>高速再生</h3>
       <ul>
         <li><code>2.5</code>: ちょっと早めに見たい時</li>
         <li><code>3</code>: アーカイブ消化に便利な速度</li>
@@ -63,40 +70,61 @@ import Layout from '../../layouts/Layout.astro';
         <li><code>8</code>: 流し見するとき（音声はほぼ聞き取れない）</li>
       </ul>
       <p>
-        理論上は最大16倍速まで設定できますが、実用的なのは4～8倍速くらいまでです。
+        理論上は16倍速まで設定できるけど、実用的には4～8倍速くらいまで。
       </p>
 
-      <h2>現在の速度を確認する方法</h2>
+      <h3>スロー再生</h3>
+      <ul>
+        <li><code>0.1</code>: ダンスや楽器演奏の動きを細かく確認したい時</li>
+        <li><code>0.25</code>: UI で選べる最低速度（語学学習向き）</li>
+        <li><code>0.5</code>: ゆっくり聞きたい時</li>
+        <li><code>0.75</code>: 少しだけスローにしたい時</li>
+      </ul>
       <p>
-        今何倍速になっているか確認したいときは、コンソールで以下を実行：
+        0.1倍速くらいまで下げるとコマ送りに近い感覚で見られる。
       </p>
-      <pre><code class="language-javascript">document.querySelector("video").playbackRate;</code></pre>
+
+      <h2>現在の速度を確認する</h2>
       <p>
-        現在の速度が数値で返ってきます（例: <code>3</code>）。
+        今何倍速か確認したいときは、コンソールで：
+      </p>
+      <CodeBlock code={checkCommand} language="javascript" />
+      <p>
+        現在の速度が数値で返ってくる（例: <code>3</code>）。
       </p>
 
       <h2>ブックマークレットで1クリック化</h2>
       <p>
-        毎回コンソールを開くのが面倒な場合は、ブックマークレットにしておくと便利です。以下のコードを<strong>URL</strong>欄に設定したブックマークを作成します：
+        毎回コンソール開くのが面倒なら、ブックマークレットにしておくといい。次のコードを<strong>URL</strong>欄にしたブックマークを作る：
       </p>
-      <pre><code class="language-javascript">javascript:(function(){var s=prompt("再生速度を入力（例: 3）","3");if(s){document.querySelector("video").playbackRate=parseFloat(s);}})();</code></pre>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
       <p>
-        ブックマークをクリックすると速度入力のダイアログが出て、数値を入力すればその速度に変わります。
+        クリックすると速度入力のダイアログが出て、数値を入れればその速度になる。
       </p>
 
-      <h2>注意点</h2>
+      <h2>注意</h2>
       <ul>
-        <li>動画を切り替えたり、ページをリロードすると速度はリセットされます。その都度設定し直す必要があります。</li>
-        <li>YouTubeの仕様変更により、将来的にこの方法が使えなくなる可能性があります。</li>
-        <li>3倍速以上だと音声がほとんど聞き取れなくなるので、字幕があると便利です。</li>
+        <li>動画を切り替えたりリロードすると速度はリセットされる。毎回設定し直す。</li>
+        <li>YouTube の仕様変更で将来使えなくなる可能性がある。</li>
+        <li>3倍速以上だと音声がほぼ聞き取れないので、字幕があると便利。</li>
       </ul>
 
       <h2>こんな時に便利</h2>
+      
+      <h3>高速再生</h3>
       <ul>
         <li>VTuberの配信アーカイブを消化したい</li>
         <li>長い講義動画やチュートリアルを短時間で見たい</li>
         <li>既に内容を知っている動画を復習する</li>
         <li>Premium課金せずに高速再生したい</li>
+      </ul>
+
+      <h3>スロー再生</h3>
+      <ul>
+        <li>ダンス・スポーツの動きをじっくり確認したい</li>
+        <li>楽器演奏の指の動きを見たい</li>
+        <li>語学学習で発音をゆっくり聞きたい</li>
+        <li>複雑な操作手順を細かく追いたい</li>
       </ul>
 
     </article>
