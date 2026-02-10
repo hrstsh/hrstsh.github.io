@@ -1,0 +1,248 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const bookmarkletCode = `javascript:(function(){var u=location.href;if(u.match(/pbs\\.twimg\\.com\\/media/)){if(u.includes('?')){location.href=u.replace(/name=[^&]+/,'name=orig');}else{location.href=u.split(':')[0]+':orig';}}else{alert('Twitter/Xの画像URLで実行してください');}})();`;
+---
+
+<Layout title="X(Twitter)の画像をオリジナル画質で保存する方法 - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>X(Twitter)の画像をオリジナル画質で保存する方法</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter) の画像は通常、圧縮された状態で表示されてる。でも画像 URL に <code>:orig</code> を付けるだけで、オリジナル画質の画像を取得できる。
+      </p>
+
+      <h2>なぜ画質が落ちるのか</h2>
+      <p>
+        X(Twitter) は表示速度を優先して、画像を自動的に圧縮・リサイズして配信してる。右クリックで保存した画像は、この圧縮版になるため、本来の画質より劣化してる。
+      </p>
+
+      <h2>オリジナル画質で取得する方法</h2>
+
+      <h3>方法1: :orig を追加する（推奨）</h3>
+      <p>
+        画像の URL の末尾に <code>:orig</code> を追加する。
+      </p>
+
+      <h4>手順</h4>
+      <ol>
+        <li>保存したい画像を右クリック → <strong>画像アドレスをコピー</strong></li>
+        <li>コピーした URL をブラウザのアドレスバーに貼り付ける</li>
+        <li>URL の末尾に <code>:orig</code> を追加</li>
+        <li>Enter で開いて、右クリック → <strong>名前を付けて画像を保存</strong></li>
+      </ol>
+
+      <p>例：</p>
+      <pre><code class="language-text">元のURL:
+https://pbs.twimg.com/media/ABC123xyz.jpg
+
+オリジナル画質:
+https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
+
+      <h3>方法2: ?name=orig を追加する</h3>
+      <p>
+        新しい形式の URL では、<code>?name=orig</code> をパラメータとして追加する。
+      </p>
+
+      <p>例：</p>
+      <pre><code class="language-text">元のURL:
+https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=small
+
+オリジナル画質:
+https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
+
+      <p>
+        <code>name=small</code> や <code>name=large</code> の部分を <code>name=orig</code> に変更するだけ。
+      </p>
+
+      <h2>ブックマークレットで1クリック化</h2>
+      <p>
+        毎回 URL をコピーして編集するのが面倒なら、ブックマークレットを使うと便利。画像を開いた状態でクリックすると、自動的にオリジナル画質の URL に切り替わる。
+      </p>
+
+      <p>
+        次のコードを<strong>URL</strong>欄にしたブックマークを作る：
+      </p>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h3>使い方</h3>
+      <ol>
+        <li>保存したい画像を右クリック → <strong>新しいタブで画像を開く</strong></li>
+        <li>ブックマークレットをクリック</li>
+        <li>オリジナル画質のURLに切り替わる</li>
+        <li>右クリック → <strong>名前を付けて画像を保存</strong></li>
+      </ol>
+
+      <h2>画質の違い</h2>
+      <p>
+        通常保存とオリジナル画質の違いは、元画像の解像度による：
+      </p>
+      <ul>
+        <li>高解像度のイラストや写真: 違いが顕著</li>
+        <li>スクリーンショット: 元から圧縮されてるので違いは少ない</li>
+        <li>低解像度の画像: ほとんど違いがない</li>
+      </ul>
+
+      <h2>その他のパラメータ</h2>
+      <p>
+        <code>:orig</code> 以外にも、次のような指定ができる：
+      </p>
+      <ul>
+        <li><code>:large</code> - 大サイズ（オリジナルより小さい場合がある）</li>
+        <li><code>:medium</code> - 中サイズ</li>
+        <li><code>:small</code> - 小サイズ</li>
+        <li><code>:thumb</code> - サムネイル</li>
+      </ul>
+      <p>
+        基本的には <code>:orig</code> を使えば最高画質が得られる。
+      </p>
+
+      <h2>注意</h2>
+      <ul>
+        <li>この方法は<strong>非公式の仕様</strong>で、X(Twitter) の仕様変更で将来使えなくなる可能性がある。</li>
+        <li>元画像が低画質やスクリーンショットの場合、<code>:orig</code> を付けても画質は向上しない。</li>
+        <li>非常に大きい画像（例: 10000px以上）は、X 側で自動的に縮小されてる場合がある。</li>
+        <li>GIF 画像や MP4 動画には効果がない。</li>
+        <li>画像を保存する際は、著作権に注意。</li>
+      </ul>
+
+      <h2>こんな時に便利</h2>
+      <ul>
+        <li>イラストレーターが投稿した高解像度のイラストを保存したい</li>
+        <li>写真家の投稿した写真を壁紙にしたい</li>
+        <li>細かい文字が読めないくらい圧縮された画像を高画質で見たい</li>
+        <li>自分の投稿した画像をオリジナル画質で保存し直したい</li>
+      </ul>
+
+      <h2>補足：Chrome拡張機能もある</h2>
+      <p>
+        自動的にオリジナル画質で保存できる Chrome 拡張機能もいくつか公開されてるけど、ブックマークレットなら拡張機能をインストールせずに使える。
+      </p>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body h4 {
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 1.5rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
