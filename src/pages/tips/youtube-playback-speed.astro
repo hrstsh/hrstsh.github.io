@@ -1,0 +1,212 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="YouTube動画を2倍速以上で再生する方法（Chrome） - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>YouTube動画を2倍速以上で再生する方法（Chrome）</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        YouTubeの無料アカウントでは、UI上で選べる再生速度は2倍速まで。でもChromeの開発者コンソールを使えば、3倍速、4倍速、それ以上の速度で再生できます。
+      </p>
+
+      <h2>UI上の速度制限</h2>
+      <p>
+        2026年2月現在、YouTubeの再生速度設定は以下の通りです：
+      </p>
+      <ul>
+        <li><strong>無料ユーザー</strong>: 0.25倍速～2.00倍速まで</li>
+        <li><strong>YouTube Premium</strong>: 0.25倍速～4.00倍速まで</li>
+      </ul>
+      <p>
+        Premium会員じゃないと2倍以上は選べませんが、コンソールから直接設定すれば回避できます。
+      </p>
+
+      <h2>やり方（1行のコマンドで完了）</h2>
+      <p>
+        Chrome（またはEdge、Brave等のChromiumブラウザ）でYouTube動画を開いている状態で：
+      </p>
+
+      <h3>1. 開発者ツールを開く</h3>
+      <p>
+        以下のいずれかの方法で開きます：
+      </p>
+      <ul>
+        <li>Macの場合: <code>Command + Option + J</code></li>
+        <li>Windowsの場合: <code>Ctrl + Shift + J</code></li>
+        <li>または右クリック → <strong>検証</strong> → <strong>Console</strong>タブ</li>
+      </ul>
+
+      <h3>2. コンソールにコマンドを入力</h3>
+      <p>
+        開発者ツールの「Console」タブに以下を入力して Enter を押します：
+      </p>
+      <pre><code class="language-javascript">document.querySelector("video").playbackRate = 3;</code></pre>
+      <p>
+        数値の <code>3</code> の部分を変えれば好きな速度に設定できます。
+      </p>
+
+      <h3>3. 即座に速度が変わる</h3>
+      <p>
+        Enterを押した瞬間から、指定した速度で動画が再生されます。UI上の速度表示は変わりませんが、実際の再生速度は変わっています。
+      </p>
+
+      <h2>おすすめの速度設定</h2>
+      <ul>
+        <li><code>2.5</code>: ちょっと早めに見たい時</li>
+        <li><code>3</code>: アーカイブ消化に便利な速度</li>
+        <li><code>4</code>: Premium会員の最大速度と同等</li>
+        <li><code>8</code>: 流し見するとき（音声はほぼ聞き取れない）</li>
+      </ul>
+      <p>
+        理論上は最大16倍速まで設定できますが、実用的なのは4～8倍速くらいまでです。
+      </p>
+
+      <h2>現在の速度を確認する方法</h2>
+      <p>
+        今何倍速になっているか確認したいときは、コンソールで以下を実行：
+      </p>
+      <pre><code class="language-javascript">document.querySelector("video").playbackRate;</code></pre>
+      <p>
+        現在の速度が数値で返ってきます（例: <code>3</code>）。
+      </p>
+
+      <h2>ブックマークレットで1クリック化</h2>
+      <p>
+        毎回コンソールを開くのが面倒な場合は、ブックマークレットにしておくと便利です。以下のコードを<strong>URL</strong>欄に設定したブックマークを作成します：
+      </p>
+      <pre><code class="language-javascript">javascript:(function(){var s=prompt("再生速度を入力（例: 3）","3");if(s){document.querySelector("video").playbackRate=parseFloat(s);}})();</code></pre>
+      <p>
+        ブックマークをクリックすると速度入力のダイアログが出て、数値を入力すればその速度に変わります。
+      </p>
+
+      <h2>注意点</h2>
+      <ul>
+        <li>動画を切り替えたり、ページをリロードすると速度はリセットされます。その都度設定し直す必要があります。</li>
+        <li>YouTubeの仕様変更により、将来的にこの方法が使えなくなる可能性があります。</li>
+        <li>3倍速以上だと音声がほとんど聞き取れなくなるので、字幕があると便利です。</li>
+      </ul>
+
+      <h2>こんな時に便利</h2>
+      <ul>
+        <li>VTuberの配信アーカイブを消化したい</li>
+        <li>長い講義動画やチュートリアルを短時間で見たい</li>
+        <li>既に内容を知っている動画を復習する</li>
+        <li>Premium課金せずに高速再生したい</li>
+      </ul>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
