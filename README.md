@@ -19,7 +19,7 @@ https://hrstsh.github.io/
 │
 ├── /tips/ ................. 小技集
 │   https://hrstsh.github.io/tips
-│   (chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+│   (twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 │
 └── /tools/ ................ Tools (ツール)
     ├── /git-cheatsheet .... Gitコマンドチートシート
