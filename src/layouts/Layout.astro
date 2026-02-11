@@ -6,6 +6,7 @@ interface Props {
 }
 
 const { title } = Astro.props;
+const isProd = import.meta.env.PROD; // 本番環境判定
 ---
 
 <!doctype html>
@@ -19,14 +20,18 @@ const { title } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     
-    <!-- Google Analytics 4 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-P4KH9E143V"></script>
-    <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-P4KH9E143V');
-    </script>
+    <!-- Google Analytics 4 (本番環境のみ) -->
+    {isProd && (
+      <>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-P4KH9E143V"></script>
+        <script is:inline>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-P4KH9E143V');
+        </script>
+      </>
+    )}
   </head>
   <body>
     <slot />
