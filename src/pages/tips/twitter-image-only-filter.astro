@@ -97,21 +97,21 @@ const popupHtmlCode = `<!DOCTYPE html>
     画像のみ表示
   </label>
 
-  <script>
-    const toggle = document.getElementById('toggle');
-
-    // 現在の設定を読み込む
-    chrome.storage.sync.get(['enabled'], function(result) {
-      toggle.checked = result.enabled || false;
-    });
-
-    // トグル変更時に保存
-    toggle.addEventListener('change', function() {
-      chrome.storage.sync.set({ enabled: toggle.checked });
-    });
-  </script>
+  <script src="popup.js"></script>
 </body>
 </html>`;
+
+const popupJsCode = `const toggle = document.getElementById('toggle');
+
+// 現在の設定を読み込む
+chrome.storage.sync.get(['enabled'], function(result) {
+  toggle.checked = result.enabled || false;
+});
+
+// トグル変更時に保存
+toggle.addEventListener('change', function() {
+  chrome.storage.sync.set({ enabled: toggle.checked });
+});`;
 
 const cssCustomCode = `/* リツイートを非表示 */
 article:has([data-testid="socialContext"]) {
@@ -177,7 +177,11 @@ const selector = allowedUsers.map(u =>
 
       <h3>1. フォルダ構成</h3>
       <p>以下の構成でフォルダを作成する：</p>
-      <CodeBlock code={folderStructure} language="text" />
+      <pre><code class="language-text">twitter-image-only-filter/
+├── manifest.json
+├── content.js
+├── popup.html
+└── popup.js</code></pre>
 
       <h3>2. manifest.json</h3>
       <CodeBlock code={manifestCode} language="json" />
@@ -188,7 +192,13 @@ const selector = allowedUsers.map(u =>
       <h3>4. popup.html</h3>
       <CodeBlock code={popupHtmlCode} language="html" />
 
-      <h3>5. 拡張機能のインストール</h3>
+      <h3>5. popup.js</h3>
+      <p>
+        CSP (Content Security Policy) 対策のため、スクリプトを別ファイルに分離：
+      </p>
+      <CodeBlock code={popupJsCode} language="javascript" />
+
+      <h3>6. 拡張機能のインストール</h3>
       <ol>
         <li>Chrome で <code>chrome://extensions/</code> を開く</li>
         <li>右上の「デベロッパーモード」をオン</li>
@@ -197,7 +207,7 @@ const selector = allowedUsers.map(u =>
         <li>拡張機能がインストールされる</li>
       </ol>
 
-      <h3>6. 使い方</h3>
+      <h3>7. 使い方</h3>
       <ol>
         <li>X(Twitter) を開く</li>
         <li>拡張機能アイコンをクリック</li>
