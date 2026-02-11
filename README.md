@@ -21,18 +21,25 @@ https://hrstsh.github.io/
 │   https://hrstsh.github.io/tips
 │   (twitter-image-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 │
-└── /tools/ ................ Tools (ツール)
-    ├── /git-cheatsheet .... Gitコマンドチートシート
-    │   https://hrstsh.github.io/tools/git-cheatsheet
-    │   (basics, branches, remote, advanced, tips)
-    │
-    ├── /docker-cheatsheet . Dockerコマンドチートシート
-    │   https://hrstsh.github.io/tools/docker-cheatsheet
-    │   (basics, images, containers, compose, tips)
-    │
-    └── /sql-cheatsheet .... SQL基本コマンド集
-        https://hrstsh.github.io/tools/sql-cheatsheet
-        (basics, joins, manipulation, advanced)
+├── /utilities/ ............ 実用ツール
+│   https://hrstsh.github.io/utilities
+│   ├── /styled-text-replacer ... スタイル付きテキスト置換
+│   │   https://hrstsh.github.io/utilities/styled-text-replacer
+│   │   (書式を維持したまま文字列置換、クライアントサイドで動作)
+│   └── (今後追加予定)
+│
+└── /tools/ ................ Tools (コマンド集)
+   ├── /git-cheatsheet .... Gitコマンドチートシート
+   │   https://hrstsh.github.io/tools/git-cheatsheet
+   │   (basics, branches, remote, advanced, tips)
+   │
+   ├── /docker-cheatsheet . Dockerコマンドチートシート
+   │   https://hrstsh.github.io/tools/docker-cheatsheet
+   │   (basics, images, containers, compose, tips)
+   │
+   └── /sql-cheatsheet .... SQL基本コマンド集
+       https://hrstsh.github.io/tools/sql-cheatsheet
+       (basics, joins, manipulation, advanced)
 ```
 
 ## Tech Stack
