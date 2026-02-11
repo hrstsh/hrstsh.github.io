@@ -54,7 +54,8 @@ for (const e of pathEntries) {
 }
 const sorted = [...unique.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
+// UTF-8 エンコーディングを明示的に指定した XML を生成
+const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
@@ -67,7 +68,8 @@ ${sorted.map(([path, lastmod]) => {
 </urlset>
 `;
 
-writeFileSync(join(distDir, sitemapFilename), xml, 'utf8');
+// UTF-8 で明示的に保存（BOM なし）
+writeFileSync(join(distDir, sitemapFilename), xml, { encoding: 'utf8' });
 console.log(`Generated dist/${sitemapFilename} with`, sorted.length, 'URLs');
 console.log('');
 console.log('⚠️  重要: robots.txt を手動で更新してください');
