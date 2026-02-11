@@ -16,6 +16,7 @@ Current pages available on the site:
 https://hrstsh.github.io/
 ├── / ...................... Home (トップページ)
 │   https://hrstsh.github.io/
+│   (最近の更新は src/data/recent.ts で手動管理)
 │
 ├── /cheatsheets/ .......... チートシート (コマンド集)
 │   https://hrstsh.github.io/cheatsheets
@@ -143,6 +144,8 @@ You can also trigger deployment manually:
 ├── src/
 │   ├── layouts/
 │   │   └── Layout.astro    # Base layout component
+│   ├── data/
+│   │   └── recent.ts       # 最近の更新（手動管理・トップ画面右サイドバー）
 │   ├── pages/
 │   │   ├── index.astro     # Home page
 │   │   ├── tips/           # Tips (tips & tricks)

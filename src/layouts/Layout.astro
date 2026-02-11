@@ -58,6 +58,11 @@ const ogImage = image ? (image.startsWith('http') ? image : new URL(image, site)
     )}
   </head>
   <body>
-    <slot />
+    <div class="layout-main">
+      <slot />
+    </div>
+    <footer class="site-footer">
+      © 2026 hrstsh
+    </footer>
   </body>
 </html>
