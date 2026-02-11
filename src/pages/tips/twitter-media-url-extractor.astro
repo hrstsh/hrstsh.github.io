@@ -11,22 +11,18 @@ const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
 console.log(urls.join('\\n'));
 console.log(\`取得件数: \${urls.length}件\`);`;
 
-const copyToClipboard = `// クリップボードにコピー（エラーハンドリング付き）
+const selectAllScript = `// コンソールでURLを全選択しやすく出力
 const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
   .map(img => img.src.replace(/&name=\\w+/, '&name=orig'))
   .filter(url => url.includes('/media/'))
   .filter((v, i, a) => a.indexOf(v) === i);
 
-// クリップボードにコピー（失敗時はコンソールに出力）
-navigator.clipboard.writeText(urls.join('\\n'))
-  .then(() => {
-    alert(\`\${urls.length}件の画像URLをコピーしました！\`);
-  })
-  .catch(err => {
-    console.log('クリップボードへのコピーに失敗しました。以下のURLをコピーしてください：');
-    console.log(urls.join('\\n'));
-    alert(\`エラーが発生しました。コンソールに出力したURLをコピーしてください。\\n取得件数: \${urls.length}件\`);
-  });`;
+// 区切り線で見やすく出力
+console.log('========== 画像URL一覧 ==========');
+console.log(urls.join('\\n'));
+console.log('==================================');
+console.log(\`取得件数: \${urls.length}件\`);
+console.log('上記のURLをコピーしてください');`;
 
 const bookmarkletCode = `javascript:(function(){const u=Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]')).map(i=>i.src.replace(/&name=\\w+/,'&name=orig')).filter(url=>url.includes('/media/')).filter((v,i,a)=>a.indexOf(v)===i);navigator.clipboard.writeText(u.join('\\n')).then(()=>alert(u.length+'件の画像URLをコピーしました！'));})();`;
 
@@ -136,33 +132,26 @@ async function downloadImages(urls) {
         <code>&name=orig</code> が付いているのでオリジナル画質で取得できる。
       </p>
 
-      <h2>クリップボードにコピー</h2>
+      <h3>4. 出力されたURLをコピー</h3>
       <p>
-        コンソールの出力をコピーするのが面倒な場合、クリップボードに直接コピーするバージョン：
-      </p>
-      <CodeBlock code={copyToClipboard} language="javascript" />
-      <p>
-        実行すると自動的にクリップボードにコピーされて、件数がアラートで表示される。
+        コンソールに出力されたURLをマウスでドラッグして選択し、コピー（<code>Ctrl+C</code> / <code>Cmd+C</code>）。
       </p>
       
       <div class="note-box">
-        <strong>⚠️ エラーが出る場合</strong>
+        <strong>💡 Tips: 見やすく出力する</strong>
         <p>
-          「Document is not focused」というエラーが出る場合、以下を試してください：
+          区切り線付きで見やすく出力するバージョン：
         </p>
-        <ol>
-          <li>コンソール以外の場所（ページ本体）を一度クリック</li>
-          <li>再度コンソールでスクリプトを実行</li>
-        </ol>
+        <CodeBlock code={selectAllScript} language="javascript" />
         <p>
-          または、エラーハンドリング付きのスクリプト（上記）を使えば、
-          失敗してもコンソールに出力されるので手動でコピーできる。
+          これだとURLの部分を選択しやすくなる。
         </p>
       </div>
 
-      <h2>ブックマークレット版</h2>
+      <h2>ブックマークレット版（おすすめ）</h2>
       <p>
         毎回コンソールを開くのが面倒な場合、ブックマークレットにしておくとワンクリックで実行できる。
+        <strong>ブックマークレットならクリップボードへの自動コピーも動作する。</strong>
       </p>
 
       <h3>登録方法</h3>
@@ -175,8 +164,17 @@ async function downloadImages(urls) {
       <CodeBlock code={bookmarkletCode} language="javascript" />
       <p>
         登録後、メディアタブでブックマークレットをクリックすると、
-        画像URLが自動的にクリップボードにコピーされる。
+        <strong>画像URLが自動的にクリップボードにコピーされる。</strong>
       </p>
+      
+      <div class="note-box note-box-info">
+        <strong>💡 ブックマークレットがおすすめな理由</strong>
+        <ul>
+          <li>ワンクリックで実行できる</li>
+          <li>クリップボードへの自動コピーが動作する（コンソールでは不可）</li>
+          <li>開発者ツールを開く必要がない</li>
+        </ul>
+      </div>
 
       <h2>応用：自動スクロールで全画像を取得</h2>
       <p>
@@ -367,5 +365,17 @@ async function downloadImages(urls) {
 
   .note-box li {
     margin: 0.25rem 0;
+  }
+
+  .note-box-info {
+    background: #e7f3ff;
+    border-left-color: #2196f3;
+  }
+
+  .note-box-info strong,
+  .note-box-info p,
+  .note-box-info ul,
+  .note-box-info li {
+    color: #0d47a1;
   }
 </style>
