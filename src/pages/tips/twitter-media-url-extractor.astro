@@ -1,0 +1,502 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const basicScript = `// 現在表示されている画像URLを取得
+const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
+  .map(img => img.src.replace(/&name=\\w+/, '&name=orig'))
+  .filter(url => url.includes('/media/'))
+  .filter((v, i, a) => a.indexOf(v) === i);
+
+console.log(urls.join('\\n'));
+console.log(\`取得件数: \${urls.length}件\`);`;
+
+const selectAllScript = `// コンソールでURLを全選択しやすく出力
+const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
+  .map(img => img.src.replace(/&name=\\w+/, '&name=orig'))
+  .filter(url => url.includes('/media/'))
+  .filter((v, i, a) => a.indexOf(v) === i);
+
+// 区切り線で見やすく出力
+console.log('========== 画像URL一覧 ==========');
+console.log(urls.join('\\n'));
+console.log('==================================');
+console.log(\`取得件数: \${urls.length}件\`);
+console.log('上記のURLをコピーしてください');`;
+
+const bookmarkletCode = `javascript:(function(){const u=Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]')).map(i=>i.src.replace(/&name=\\w+/,'&name=orig')).filter(url=>url.includes('/media/')).filter((v,i,a)=>a.indexOf(v)===i);navigator.clipboard.writeText(u.join('\\n')).then(()=>alert(u.length+'件の画像URLをコピーしました！'));})();`;
+
+const pythonScript = `import requests
+import os
+
+# urls.txt から URL を読み込んでダウンロード
+def download_images(url_file='urls.txt', output_dir='twitter_images'):
+    # 出力ディレクトリを作成
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # URLs を読み込み
+    with open(url_file, 'r') as f:
+        urls = [line.strip() for line in f if line.strip()]
+    
+    print(f'{len(urls)}件の画像をダウンロード開始...')
+    
+    # 各URLをダウンロード
+    for i, url in enumerate(urls, 1):
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            
+            # ファイル名を生成
+            filename = f'twitter_image_{i:03d}.jpg'
+            filepath = os.path.join(output_dir, filename)
+            
+            # 保存
+            with open(filepath, 'wb') as f:
+                f.write(response.content)
+            
+            print(f'[{i}/{len(urls)}] {filename} ダウンロード完了')
+            
+        except Exception as e:
+            print(f'[{i}/{len(urls)}] エラー: {e}')
+    
+    print(f'\\n完了！{output_dir}/ に保存されました')
+
+if __name__ == '__main__':
+    download_images()`;
+
+const autoScrollScript = `// 自動スクロールして全画像を読み込む
+async function loadAllMedia() {
+  let lastHeight = 0;
+  let scrollCount = 0;
+  const maxScrolls = 50; // 最大スクロール回数
+  
+  while (scrollCount < maxScrolls) {
+    window.scrollTo(0, document.body.scrollHeight);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const currentHeight = document.body.scrollHeight;
+    if (currentHeight === lastHeight) {
+      console.log('最後まで読み込みました');
+      break;
+    }
+    lastHeight = currentHeight;
+    scrollCount++;
+  }
+  
+  // URL取得
+  const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
+    .map(img => img.src.replace(/&name=\\w+/, '&name=orig'))
+    .filter(url => url.includes('/media/'))
+    .filter((v, i, a) => a.indexOf(v) === i);
+  
+  console.log(\`取得件数: \${urls.length}件\`);
+  console.log(urls.join('\\n'));
+  
+  return urls;
+}
+
+// 実行
+loadAllMedia();`;
+
+const openTabsScript = `// 新しいタブで画像を一括表示
+async function openAllMedia() {
+  // 1. URL取得
+  const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
+    .map(img => img.src.replace(/&name=\\w+/, '&name=orig'))
+    .filter(url => url.includes('/media/'))
+    .filter((v, i, a) => a.indexOf(v) === i);
+  
+  console.log(\`\${urls.length}件の画像を新しいタブで開きます...\`);
+  
+  // 確認
+  if (!confirm(\`\${urls.length}件の画像を新しいタブで開きますか？\`)) {
+    return;
+  }
+  
+  // 2. 順次タブで開く
+  for (let i = 0; i < urls.length; i++) {
+    window.open(urls[i], '_blank');
+    console.log(\`[\${i + 1}/\${urls.length}] タブを開きました\`);
+    
+    // ブラウザの制限を避けるため少し待機
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+  
+  console.log('完了！各タブで右クリック→「名前を付けて保存」でダウンロードしてください');
+}
+
+// 実行
+openAllMedia();`;
+---
+
+<Layout title="X(Twitter)のメディア欄から画像URLを一括取得する方法 - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>X(Twitter)のメディア欄から画像URLを一括取得する方法</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter) のメディアタブに表示されている画像のURLを一括で取得する方法。
+        開発者ツールのコンソールで実行するだけで、オリジナル画質の画像URLを取得できる。
+      </p>
+
+      <h2>メディアタブとは</h2>
+      <p>
+        ユーザープロフィールページの「メディア」タブをクリックすると、
+        そのユーザーが投稿した画像や動画が一覧表示される。
+      </p>
+      <p>
+        <code>https://x.com/username/media</code> の形式でアクセスできる。
+      </p>
+
+      <h2>基本：画像URLを取得する</h2>
+      
+      <h3>1. メディアタブを開く</h3>
+      <p>
+        対象ユーザーのプロフィールページで「メディア」タブをクリック。
+      </p>
+
+      <h3>2. 開発者ツールを開く</h3>
+      <p>
+        以下のいずれかの方法で開く：
+      </p>
+      <ul>
+        <li>Macの場合: <code>Command + Option + J</code></li>
+        <li>Windowsの場合: <code>Ctrl + Shift + J</code></li>
+        <li>または右クリック → <strong>検証</strong> → <strong>Console</strong>タブ</li>
+      </ul>
+
+      <h3>3. コンソールにスクリプトを入力</h3>
+      <p>
+        以下のスクリプトをコピーして、コンソールに貼り付けて Enter。
+      </p>
+      <CodeBlock code={basicScript} language="javascript" />
+      <p>
+        現在表示されている画像のURLがコンソールに出力される。
+        <code>&name=orig</code> が付いているのでオリジナル画質で取得できる。
+      </p>
+
+      <h3>4. 出力されたURLをコピー</h3>
+      <p>
+        コンソールに出力されたURLをマウスでドラッグして選択し、コピー（<code>Ctrl+C</code> / <code>Cmd+C</code>）。
+      </p>
+      
+      <div class="note-box">
+        <strong>💡 Tips: 見やすく出力する</strong>
+        <p>
+          区切り線付きで見やすく出力するバージョン：
+        </p>
+        <CodeBlock code={selectAllScript} language="javascript" />
+        <p>
+          これだとURLの部分を選択しやすくなる。
+        </p>
+      </div>
+
+      <h2>ブックマークレット版（おすすめ）</h2>
+      <p>
+        毎回コンソールを開くのが面倒な場合、ブックマークレットにしておくとワンクリックで実行できる。
+        <strong>ブックマークレットならクリップボードへの自動コピーも動作する。</strong>
+      </p>
+
+      <h3>登録方法</h3>
+      <ol>
+        <li>ブックマークバーを表示（<code>Ctrl+Shift+B</code> / <code>Cmd+Shift+B</code>）</li>
+        <li>ブックマークバーの上で右クリック → 「ページを追加」</li>
+        <li>名前: <code>X画像URL取得</code>（任意）</li>
+        <li>URL: 以下のコードをコピー</li>
+      </ol>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+      <p>
+        登録後、メディアタブでブックマークレットをクリックすると、
+        <strong>画像URLが自動的にクリップボードにコピーされる。</strong>
+      </p>
+      
+      <div class="note-box note-box-info">
+        <strong>💡 ブックマークレットがおすすめな理由</strong>
+        <ul>
+          <li>ワンクリックで実行できる</li>
+          <li>クリップボードへの自動コピーが動作する（コンソールでは不可）</li>
+          <li>開発者ツールを開く必要がない</li>
+        </ul>
+      </div>
+
+      <h2>応用：自動スクロールで全画像を取得</h2>
+      <p>
+        メディアタブは最初に一部の画像しか表示されないので、
+        スクロールして追加読み込みする必要がある。
+        自動スクロールで全画像を読み込んでから取得するスクリプト：
+      </p>
+      <CodeBlock code={autoScrollScript} language="javascript" />
+      <p>
+        このスクリプトは自動的にスクロールして画像を読み込み、
+        最後まで到達したらURLを取得する。
+        大量の画像がある場合は時間がかかるので注意。
+      </p>
+
+      <h2>取得したURLをダウンロードする</h2>
+      
+      <div class="note-box">
+        <strong>⚠️ ブラウザからの直接ダウンロードについて</strong>
+        <p>
+          Twitter の画像は別ドメイン（pbs.twimg.com）にあるため、
+          ブラウザのセキュリティ制約（CORS）により、JavaScriptから直接ダウンロードすることができません。
+        </p>
+        <p>
+          そのため、以下のいずれかの方法でダウンロードする必要があります。
+        </p>
+      </div>
+      
+      <h3>方法1: タブで一括表示 → 手動保存</h3>
+      <p>
+        各画像を新しいタブで開いて、手動で保存する方法：
+      </p>
+      <CodeBlock code={openTabsScript} language="javascript" />
+      
+      <div class="note-box">
+        <strong>⚠️ 初回実行時の確認</strong>
+        <p>
+          初回実行時、ブラウザのポップアップブロックが働いて1つ目のタブしか開かれません。
+          以下の手順でポップアップを許可してください：
+        </p>
+        <ol>
+          <li>アドレスバーの右側に表示される ポップアップブロックのアイコンをクリック</li>
+          <li>「x.com のポップアップとリダイレクトを常に許可する」を選択</li>
+          <li>スクリプトを再実行</li>
+        </ol>
+        <p>
+          許可後は全ての画像が新しいタブで開かれます。
+        </p>
+      </div>
+      
+      <p>
+        各タブで右クリック → 「名前を付けて画像を保存」でダウンロード。
+      </p>
+      
+      <div class="note-box note-box-info">
+        <strong>💡 Tips</strong>
+        <ul>
+          <li>大量の画像がある場合、ブラウザが重くなる可能性がある</li>
+          <li>10〜20件ずつに分けて実行するのがおすすめ</li>
+        </ul>
+      </div>
+
+      <h3>方法2: wget で一括ダウンロード</h3>
+      <p>
+        <code>wget</code> を使ってターミナルから一括ダウンロード：
+      </p>
+      
+      <h4>手順</h4>
+      <ol>
+        <li>上記のスクリプトでURLを取得してコピー</li>
+        <li>テキストエディタで <code>urls.txt</code> に保存（1行1URL）</li>
+        <li>ターミナルで以下を実行</li>
+      </ol>
+      <CodeBlock code="wget -i urls.txt -P ./twitter_images" language="bash" />
+      <p>
+        <code>./twitter_images</code> フォルダに全ての画像がダウンロードされる。
+      </p>
+      
+      <div class="note-box note-box-info">
+        <strong>💡 wget がない場合</strong>
+        <ul>
+          <li><strong>Mac</strong>: <code>brew install wget</code></li>
+          <li><strong>Windows</strong>: Git Bash または WSL で <code>wget</code> が使える</li>
+        </ul>
+      </div>
+
+      <h3>方法3: Python3 で一括ダウンロード（おすすめ）</h3>
+      <p>
+        Python3 を使った一括ダウンロードスクリプト：
+      </p>
+      
+      <h4>準備</h4>
+      <CodeBlock code="pip3 install requests" language="bash" />
+      
+      <h4>スクリプト</h4>
+      <p>
+        <code>download_twitter_images.py</code> として保存：
+      </p>
+      <CodeBlock code={pythonScript} language="python" />
+      
+      <h4>実行</h4>
+      <ol>
+        <li>URLを取得して <code>urls.txt</code> に保存（1行1URL）</li>
+        <li>スクリプトと同じフォルダに <code>urls.txt</code> を配置</li>
+        <li>ターミナルで実行</li>
+      </ol>
+      <CodeBlock code="python3 download_twitter_images.py" language="bash" />
+      <p>
+        <code>twitter_images/</code> フォルダに <code>twitter_image_001.jpg</code>、<code>twitter_image_002.jpg</code>... の形式で保存される。
+      </p>
+      
+      <div class="note-box note-box-info">
+        <strong>💡 Python の利点</strong>
+        <ul>
+          <li>進捗が表示されるので分かりやすい</li>
+          <li>エラーが出てもスキップして続行する</li>
+          <li>連番でファイル名を整理できる</li>
+          <li>Windows / Mac / Linux どこでも動く</li>
+        </ul>
+      </div>
+
+      <h2>注意事項</h2>
+      <ul>
+        <li>大量の画像を一気にダウンロードすると、Twitter側のレート制限に引っかかる可能性がある</li>
+        <li>他人の画像をダウンロードする場合、著作権に注意</li>
+        <li>ブラウザによっては自動ダウンロードがブロックされる場合がある</li>
+        <li>スクリプトはTwitterの仕様変更で動かなくなる可能性がある</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/twitter-image-original-quality">X(Twitter)の画像をオリジナル画質で保存する方法</a></li>
+        <li><a href="/tips/twitter-image-only-filter">X(Twitter)のタイムラインを「画像のみ」表示に切り替える</a></li>
+      </ul>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ul, .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body strong {
+    font-weight: 600;
+    color: #333;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .note-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .note-box strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #856404;
+  }
+
+  .note-box p {
+    margin: 0.5rem 0;
+    color: #856404;
+  }
+
+  .note-box ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: #856404;
+  }
+
+  .note-box li {
+    margin: 0.25rem 0;
+  }
+
+  .note-box-info {
+    background: #e7f3ff;
+    border-left-color: #2196f3;
+  }
+
+  .note-box-info strong,
+  .note-box-info p,
+  .note-box-info ul,
+  .note-box-info li {
+    color: #0d47a1;
+  }
+</style>
