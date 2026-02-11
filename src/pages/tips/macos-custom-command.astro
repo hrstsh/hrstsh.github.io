@@ -80,14 +80,14 @@ const directoryStructure = `~/MyCommands/
 const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
 ---
 
-<Layout title="Macで自作コマンドを作って登録する方法">
+<Layout title="Macで自作コマンドを作って登録する方法 - 小技集">
   <main>
-    <h1>Macで自作コマンドを作って登録する方法</h1>
-    
-    <p class="date">最終更新: 2026年2月</p>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>Macで自作コマンドを作って登録する方法</h1>
+    </header>
 
-    <section>
-      <h2>はじめに</h2>
+    <article class="article-body">
       <p>
         Macのターミナルで繰り返し行う作業ってありますよね。
         そんな時、自分専用のコマンドを作って登録しておくと作業効率が格段に上がる。
@@ -96,9 +96,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
         今回は<strong>ファイル名を一括変換するコマンド</strong>を例に、
         自作コマンドの作り方から PATH 設定までを解説します。
       </p>
-    </section>
 
-    <section>
       <h2>自作コマンドを作るメリット</h2>
       <ul>
         <li><strong>作業効率の向上</strong>: 長いコマンドを短縮できる</li>
@@ -106,9 +104,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
         <li><strong>カスタマイズ性</strong>: 自分の使い方に最適化できる</li>
         <li><strong>再利用性</strong>: 一度作れば他のマシンでも使える</li>
       </ul>
-    </section>
 
-    <section>
       <h2>今回作るコマンド：ファイル名一括変換</h2>
       <p>
         ここでは<strong>「amv」（all mv の意）</strong>というコマンド名で、
@@ -117,9 +113,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <p>
         例えば、バラバラの名前の画像ファイルを <code>vacation_001.jpg</code>、<code>vacation_002.jpg</code>... と整理できる。
       </p>
-    </section>
 
-    <section>
       <h2>自作コマンドの作り方（基本の流れ）</h2>
       
       <h3>1. コマンド用のディレクトリを作成</h3>
@@ -157,9 +151,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <h3>4. 実行権限を付与</h3>
       <p>シェルスクリプトに実行権限を与える。</p>
       <CodeBlock code={chmodCommand} language="bash" />
-    </section>
 
-    <section>
       <h2>PATH 設定で、どこからでも実行可能に</h2>
       <p>
         作成したコマンドをどこからでも実行できるように、<code>~/.zshrc</code> に PATH を追加する。
@@ -174,9 +166,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <p>
         これで <code>amv</code> コマンドがどのディレクトリからでも実行できるようになる。
       </p>
-    </section>
 
-    <section>
       <h2>使い方</h2>
       <p>実際に使ってみる。</p>
       <CodeBlock code={usageExample} language="plaintext" />
@@ -184,9 +174,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
         ワイルドカード（<code>*.jpg</code>）で対象ファイルを指定して、
         固定文字列を入力すると自動的に連番付きでリネームされる。
       </p>
-    </section>
 
-    <section>
       <h2>応用：他のコマンドを作る</h2>
       <p>
         この構成を応用すれば、さまざまな自作コマンドを作れる。
@@ -199,9 +187,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <p>
         Python 以外にも、シェルスクリプトだけ、Ruby、Node.js など好きな言語で作成できる。
       </p>
-    </section>
 
-    <section>
       <h2>まとめ</h2>
       <p>
         自作コマンドを作ることで日々の作業が効率化されて、ターミナル操作がより快適になる。
@@ -209,11 +195,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <p>
         一度覚えてしまえばいろいろな場面で応用できるので、ぜひ試してみてください。
       </p>
-    </section>
-
-    <div class="back-link">
-      <a href="/tips">← 小技集トップに戻る</a>
-    </div>
+    </article>
   </main>
 </Layout>
 
@@ -221,84 +203,102 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
   main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
   }
 
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .date {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
-
-  section {
-    margin-bottom: 3rem;
-  }
-
-  h2 {
+  .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #667eea;
+    margin-bottom: 0.75rem;
     color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
   }
 
-  h3 {
+  .article-body h3 {
     font-size: 1.2rem;
     margin-top: 1.5rem;
-    margin-bottom: 0.8rem;
-    color: #555;
-  }
-
-  p {
-    line-height: 1.8;
-    margin-bottom: 1rem;
-    color: #444;
-  }
-
-  ul, ol {
-    line-height: 1.8;
-    margin-bottom: 1rem;
-    padding-left: 2rem;
-    color: #444;
-  }
-
-  li {
     margin-bottom: 0.5rem;
+    color: #444;
   }
 
-  code {
-    background: #f5f5f5;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
     font-size: 0.9em;
   }
 
-  strong {
-    font-weight: 600;
-    color: #333;
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
-  .back-link {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid #ddd;
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
   }
 
-  .back-link a {
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
     color: #667eea;
     text-decoration: none;
-    font-weight: 500;
   }
 
-  .back-link a:hover {
+  .page-footer a:hover {
     text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
   }
 </style>
