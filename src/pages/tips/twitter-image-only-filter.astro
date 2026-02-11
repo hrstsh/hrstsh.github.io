@@ -1,0 +1,339 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="X(Twitter)のタイムラインを「画像のみ」表示に切り替える - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>X(Twitter)のタイムラインを「画像のみ」表示に切り替える</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter)でイラストレーターや写真家の投稿を見る時、テキストツイートが邪魔で画像だけをサクッと見たいことがあります。ブックマークレットまたはChrome・拡張機能でテキストツイートを自動で非表示にできます。
+      </p>
+
+      <h2>何ができるか</h2>
+      <p>
+        この小技で以下が実現できます：
+      </p>
+      <ul>
+        <li>画像・動画が含まれないツイートを自動で非表示</li>
+        <li>タイムラインが画像・動画付きツイートだけになる</li>
+        <li>イラストや写真の閲覧に集中できる</li>
+        <li>ワンクリックでON/OFF切り替え可能（拡張機能版）</li>
+      </ul>
+
+      <h2>方法1: ブックマークレット版（一番簡単）</h2>
+      <p>
+        インストール不要で、ブックマークレットを作成するだけです。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li>Chromeで新しいブックマークを作成（ブックマークバーを右クリック → 「ページを追加」）</li>
+        <li>名前を「Twitter画像のみ」などに設定</li>
+        <li>URLに以下のコードを貼り付け：</li>
+      </ol>
+
+      <pre><code class="language-javascript">javascript:(function(){const style=document.getElementById('twitter-image-only-filter');if(style){style.remove();}else{const s=document.createElement('style');s.id='twitter-image-only-filter';s.textContent='article:not(:has(img)):not(:has(video)){display:none!important;}';document.head.appendChild(s);}})();</code></pre>
+
+      <h3>使い方</h3>
+      <ol>
+        <li>X(Twitter)のタイムラインを開く</li>
+        <li>作成したブックマークレットをクリック</li>
+        <li>画像・動画がないツイートが非表示になる</li>
+        <li>もう一度クリックすると解除される（トグル動作）</li>
+      </ol>
+
+      <h2>方法2: Chrome拡張機能版（自動適用）</h2>
+      <p>
+        ページを開くたびに自動で適用される拡張機能を作成します。
+      </p>
+
+      <h3>1. フォルダ構成</h3>
+      <p>以下の構成でフォルダを作成します：</p>
+      <pre><code class="language-text">twitter-image-only-filter/
+├── manifest.json
+├── content.js
+└── popup.html</code></pre>
+
+      <h3>2. manifest.json</h3>
+      <pre><code class="language-json">{
+  "manifest_version": 3,
+  "name": "Twitter Image Only Filter",
+  "version": "1.0",
+  "description": "X(Twitter)で画像・動画付きツイートだけを表示",
+  "permissions": ["storage", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}</code></pre>
+
+      <h3>3. content.js</h3>
+      <pre><code class="language-javascript">// 設定を読み込んでフィルターを適用
+chrome.storage.sync.get(['enabled'], function(result) {
+  if (result.enabled) {
+    applyFilter();
+  }
+});
+
+// 設定変更を監視
+chrome.storage.onChanged.addListener(function(changes) {
+  if (changes.enabled) {
+    if (changes.enabled.newValue) {
+      applyFilter();
+    } else {
+      removeFilter();
+    }
+  }
+});
+
+function applyFilter() {
+  // 既存のstyleを削除
+  const existingStyle = document.getElementById('twitter-image-only-filter');
+  if (existingStyle) {
+    existingStyle.remove();
+  }
+
+  // 新しいstyleを追加
+  const style = document.createElement('style');
+  style.id = 'twitter-image-only-filter';
+  style.textContent = `
+    /* 画像・動画がないツイートを非表示 */
+    article:not(:has(img)):not(:has(video)) {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function removeFilter() {
+  const style = document.getElementById('twitter-image-only-filter');
+  if (style) {
+    style.remove();
+  }
+}</code></pre>
+
+      <h3>4. popup.html</h3>
+      <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;style&gt;
+    body {
+      width: 200px;
+      padding: 15px;
+      font-family: sans-serif;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      margin-right: 8px;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;label&gt;
+    &lt;input type="checkbox" id="toggle"&gt;
+    画像のみ表示
+  &lt;/label&gt;
+
+  &lt;script&gt;
+    const toggle = document.getElementById('toggle');
+
+    // 現在の設定を読み込む
+    chrome.storage.sync.get(['enabled'], function(result) {
+      toggle.checked = result.enabled || false;
+    });
+
+    // トグル変更時に保存
+    toggle.addEventListener('change', function() {
+      chrome.storage.sync.set({ enabled: toggle.checked });
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+      <h3>5. 拡張機能のインストール</h3>
+      <ol>
+        <li>Chromeで <code>chrome://extensions/</code> を開く</li>
+        <li>右上の「デベロッパーモード」をオン</li>
+        <li>「パッケージ化されていない拡張機能を読み込む」をクリック</li>
+        <li>作成したフォルダを選択</li>
+        <li>拡張機能がインストールされる</li>
+      </ol>
+
+      <h3>6. 使い方</h3>
+      <ol>
+        <li>X(Twitter)を開く</li>
+        <li>拡張機能アイコンをクリック</li>
+        <li>「画像のみ表示」チェックボックスをオン</li>
+        <li>ページをリロードするとフィルターが適用される</li>
+      </ol>
+
+      <h2>仕組みの解説</h2>
+      <p>
+        このフィルターはCSSの <code>:has()</code> 擬似クラスを使っています。<code>article:not(:has(img)):not(:has(video))</code> は「<code>&lt;img&gt;</code> も <code>&lt;video&gt;</code> も含まない <code>&lt;article&gt;</code> 要素」を選択し、<code>display: none</code> で非表示にしています。
+      </p>
+
+      <h2>カスタマイズ</h2>
+
+      <h3>リツイートも非表示にしたい場合</h3>
+      <p>content.jsの <code>style.textContent</code> に以下を追加：</p>
+      <pre><code class="language-css">/* リツイートを非表示 */
+article:has([data-testid="socialContext"]) {
+  display: none !important;
+}</code></pre>
+
+      <h3>特定のユーザーだけ表示したい場合</h3>
+      <p>以下のように修正：</p>
+      <pre><code class="language-javascript">// 画像があるか、特定ユーザーのツイート以外を非表示
+const allowedUsers = ['username1', 'username2'];
+const selector = allowedUsers.map(u => 
+  `article:not(:has(img)):not(:has(video)):not(:has([href="/${u}"]))`
+).join(',');</code></pre>
+
+      <h2>注意点</h2>
+      <ul>
+        <li>X(Twitter)の仕様変更により、将来的に動作しなくなる可能性があります。</li>
+        <li>ブックマークレット版はページをリロードすると解除されます。</li>
+        <li>拡張機能版は設定が保存され、次回以降も自動適用されます。</li>
+        <li>スクロールして新しいツイートが読み込まれた時も自動でフィルターされます。</li>
+      </ul>
+
+      <h2>こんな時に便利</h2>
+      <ul>
+        <li>イラストレーターの作品だけを見たい</li>
+        <li>写真家のタイムラインをギャラリーのように見たい</li>
+        <li>画像付きツイートだけを流し見したい</li>
+        <li>テキストツイートが多すぎて画像が埋もれる</li>
+        <li>純粋にビジュアルコンテンツだけを楽しみたい</li>
+      </ul>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">小技集一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 1.5rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
