@@ -7,19 +7,19 @@ const { currentPage } = Astro.props;
 ---
 
 <nav class="page-nav">
-  <a href="/tools/sql-cheatsheet" class:list={['nav-link', { active: currentPage === 'index' }]}>
+  <a href="/cheatsheets/sql-cheatsheet" class:list={['nav-link', { active: currentPage === 'index' }]}>
     目次
   </a>
-  <a href="/tools/sql-cheatsheet/basics" class:list={['nav-link', { active: currentPage === 'basics' }]}>
+  <a href="/cheatsheets/sql-cheatsheet/basics" class:list={['nav-link', { active: currentPage === 'basics' }]}>
     基礎・データ取得
   </a>
-  <a href="/tools/sql-cheatsheet/joins" class:list={['nav-link', { active: currentPage === 'joins' }]}>
+  <a href="/cheatsheets/sql-cheatsheet/joins" class:list={['nav-link', { active: currentPage === 'joins' }]}>
     結合・サブクエリ
   </a>
-  <a href="/tools/sql-cheatsheet/manipulation" class:list={['nav-link', { active: currentPage === 'manipulation' }]}>
+  <a href="/cheatsheets/sql-cheatsheet/manipulation" class:list={['nav-link', { active: currentPage === 'manipulation' }]}>
     データ操作
   </a>
-  <a href="/tools/sql-cheatsheet/advanced" class:list={['nav-link', { active: currentPage === 'advanced' }]}>
+  <a href="/cheatsheets/sql-cheatsheet/advanced" class:list={['nav-link', { active: currentPage === 'advanced' }]}>
     テーブル操作・応用
   </a>
 </nav>
