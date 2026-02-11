@@ -1,0 +1,410 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="SQL整形ツール - hrstsh" description="SQLを整形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。ブラウザ上で完結、データ送信なし。">
+  <main>
+    <header class="article-header">
+      <a href="/tools" class="back-link">← ツール一覧</a>
+      <h1>SQL整形ツール</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        SQLを整形して読みやすくするツール。インデントや改行を自動で整理し、
+        <strong>MySQL</strong>、<strong>PostgreSQL</strong>、<strong>SQL Server</strong> など複数のデータベースに対応しています。
+      </p>
+
+      <div class="tool-container">
+        <section class="tool-section">
+          <h2>1. オプション</h2>
+          <div class="input-group">
+            <label for="dialect">データベース:</label>
+            <select id="dialect">
+              <option value="sql">標準 SQL</option>
+              <option value="mysql">MySQL</option>
+              <option value="postgresql">PostgreSQL</option>
+              <option value="transactsql">SQL Server (T-SQL)</option>
+            </select>
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="joinStyle" checked />
+              JOIN整形スタイル（FROM/JOIN/テーブル/ON を改行で分ける）
+            </label>
+          </div>
+        </section>
+
+        <section class="tool-section">
+          <h2>2. SQLを入力</h2>
+          <textarea id="inputSql" placeholder="整形したいSQLをここに貼り付けてください&#10;&#10;例: SELECT * FROM users WHERE id=1"></textarea>
+        </section>
+
+        <section class="tool-section">
+          <button id="formatBtn" class="primary-btn">✨ 整形する</button>
+        </section>
+
+        <section class="tool-section">
+          <h2>3. 整形結果</h2>
+          <div id="output" class="preview-box" contenteditable="false">
+            整形結果がここに表示されます
+          </div>
+          <button id="copyBtn" class="primary-btn" disabled>📋 クリップボードにコピー</button>
+          <p id="copyStatus" class="status-message"></p>
+        </section>
+      </div>
+
+      <section class="usage-section">
+        <h2>JOIN整形スタイル</h2>
+        <p>
+          「JOIN整形スタイル」を有効にすると、JOIN 部分を次の形式で整形します。
+        </p>
+        <pre><code>FROM
+    Table_A A
+INNER JOIN
+    Table_B B
+ ON B.id = A.id
+AND B.num = A.num</code></pre>
+      </section>
+
+      <section class="usage-section">
+        <h2>対応している方言</h2>
+        <ul>
+          <li><strong>標準 SQL</strong> … 汎用的なSQL</li>
+          <li><strong>MySQL</strong> … MySQL / MariaDB</li>
+          <li><strong>PostgreSQL</strong> … PostgreSQL</li>
+          <li><strong>SQL Server (T-SQL)</strong> … Microsoft SQL Server / Azure SQL</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>注意事項</h2>
+        <ul>
+          <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
+          <li>複雑な構文や方言固有の構文は正しく解析できない場合があります</li>
+          <li>重要なSQLは整形前にバックアップを取ることをおすすめします</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<script>
+  import { format } from 'sql-formatter';
+
+  let formattedSql = '';
+
+  const inputSql = document.getElementById('inputSql') as HTMLTextAreaElement;
+  const output = document.getElementById('output') as HTMLDivElement;
+  const formatBtn = document.getElementById('formatBtn') as HTMLButtonElement;
+  const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
+  const dialectSelect = document.getElementById('dialect') as HTMLSelectElement;
+  const joinStyleCheck = document.getElementById('joinStyle') as HTMLInputElement;
+  const copyStatus = document.getElementById('copyStatus') as HTMLParagraphElement;
+
+  /** JOIN を指定形式に整形（FROM/JOIN/テーブル/ON を改行で分ける） */
+  function applyJoinStyle(sql: string): string {
+    const indent = '    ';
+    const lines = sql.split('\n');
+    const result: string[] = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const joinMatch = line.match(/^(\s*)(INNER |LEFT |RIGHT |FULL |CROSS )?JOIN\s+([^\s]+(?:\s+[^\s]+)?)\s+ON\s+(.+)$/);
+      if (joinMatch) {
+        const joinType = joinMatch[2] || '';
+        const table = joinMatch[3];
+        let onClause = joinMatch[4];
+        let j = i + 1;
+        while (j < lines.length && /^\s+AND\s+/.test(lines[j])) {
+          onClause += ' AND ' + lines[j].replace(/^\s+AND\s+/, '').trim();
+          j++;
+        }
+        const onParts = onClause.split(/\s+AND\s+/).map((p) => p.trim());
+        result.push((joinType + 'JOIN').trim());
+        result.push(indent + table);
+        result.push(' ON ' + onParts[0]);
+        for (let k = 1; k < onParts.length; k++) {
+          result.push('AND ' + onParts[k]);
+        }
+        i = j;
+        continue;
+      }
+      result.push(line);
+      i++;
+    }
+    return result.join('\n');
+  }
+
+  formatBtn.addEventListener('click', () => {
+    const sql = inputSql.value.trim();
+    if (!sql) {
+      alert('SQLを入力してください');
+      return;
+    }
+
+    const language = dialectSelect.value as 'sql' | 'mysql' | 'postgresql' | 'transactsql';
+
+    try {
+      formattedSql = format(sql, {
+        language,
+        tabWidth: 4,
+        logicalOperatorNewline: 'before',
+      });
+      if (joinStyleCheck.checked) {
+        formattedSql = applyJoinStyle(formattedSql);
+      }
+      output.textContent = formattedSql;
+      output.style.color = '#333';
+      output.style.fontStyle = 'normal';
+      copyBtn.disabled = false;
+      copyStatus.textContent = '';
+    } catch (err) {
+      output.textContent = `エラー: ${(err as Error).message}`;
+      output.style.color = '#dc3545';
+      copyBtn.disabled = true;
+    }
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!formattedSql) return;
+
+    try {
+      await navigator.clipboard.writeText(formattedSql);
+      copyStatus.textContent = '✅ クリップボードにコピーしました！';
+      copyStatus.style.color = '#28a745';
+      setTimeout(() => {
+        copyStatus.textContent = '';
+      }, 3000);
+    } catch (err) {
+      alert('クリップボードへのコピーに失敗しました');
+      console.error(err);
+    }
+  });
+</script>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body {
+    color: #444;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .tool-container {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+
+  .tool-section {
+    margin-bottom: 2rem;
+  }
+
+  .tool-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-section h2 {
+    font-size: 1.2rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
+    color: #555 !important;
+    border: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+
+  .input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .input-group select {
+    width: 100%;
+    max-width: 280px;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  .input-group select:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .checkbox-group {
+    margin-top: 1rem;
+  }
+
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    box-sizing: border-box;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .preview-box {
+    min-height: 120px;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow-y: auto;
+    max-height: 400px;
+    color: #999;
+    font-style: italic;
+    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .primary-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .status-message {
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  .usage-section {
+    margin-top: 2rem;
+  }
+
+  .usage-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .usage-section ul {
+    padding-left: 2rem;
+  }
+
+  .usage-section pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .usage-section pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  @media (max-width: 768px) {
+    .tool-container {
+      padding: 1rem;
+    }
+  }
+</style>

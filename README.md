@@ -36,7 +36,9 @@ https://hrstsh.github.io/
 │   ├── /styled-text-replacer ... スタイル付きテキスト置換
 │   │   https://hrstsh.github.io/tools/styled-text-replacer
 │   │   (書式を維持したまま文字列置換、クライアントサイドで動作)
-│   └── (今後追加予定)
+│   └── /sql-formatter ......... SQL整形ツール
+│       https://hrstsh.github.io/tools/sql-formatter
+│       (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
 │
 └── /tips/ ................. 小技集
     https://hrstsh.github.io/tips
