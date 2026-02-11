@@ -114,15 +114,18 @@ toggle.addEventListener('change', function() {
 });`;
 
 const cssCustomCode = `/* リツイートを非表示 */
-article:has([data-testid="socialContext"]) {
+div[data-testid="cellInnerDiv"]:has([data-testid="socialContext"]) {
   display: none !important;
 }`;
 
-const jsCustomCode = `// 画像があるか、特定ユーザーのツイート以外を非表示
+const jsCustomCode = `// 特定ユーザーのツイート以外を非表示（画像なしのみ）
 const allowedUsers = ['username1', 'username2'];
-const selector = allowedUsers.map(u => 
-  \\\`article:not(:has(img)):not(:has(video)):not(:has([href="/\${u}"]))\\\`
-).join(',');`;
+const userSelector = allowedUsers.map(u => \\\`:has([href*="/\${u}"])\\\`).join(',');
+const styleText = \\\`
+  div[data-testid="cellInnerDiv"]:has(article):not(:has(div[data-testid="tweetPhoto"])):not(:has(video)):not(\${userSelector}) {
+    display: none !important;
+  }
+\\\`;`;
 ---
 
 <Layout title="X(Twitter)のタイムラインを「画像のみ」表示に切り替える - 小技集">
@@ -238,12 +241,15 @@ const selector = allowedUsers.map(u =>
       <h2>カスタマイズ</h2>
 
       <h3>リツイートも非表示にしたい場合</h3>
-      <p>content.js の <code>style.textContent</code> に以下を追加：</p>
+      <p>content.js の <code>applyFilter()</code> 関数内、<code>style.textContent</code> に以下の CSS を追加：</p>
       <CodeBlock code={cssCustomCode} language="css" />
 
-      <h3>特定のユーザーだけ表示したい場合</h3>
-      <p>以下のように修正：</p>
+      <h3>特定のユーザーのツイートは画像なしでも表示したい場合</h3>
+      <p>content.js の <code>applyFilter()</code> 関数を以下のように書き換える：</p>
       <CodeBlock code={jsCustomCode} language="javascript" />
+      <p>
+        <code>username1</code>, <code>username2</code> のところに、表示したいユーザーの ID を入れる。これらのユーザーのツイートは画像がなくても表示される。
+      </p>
 
       <h2>注意</h2>
       <ul>
