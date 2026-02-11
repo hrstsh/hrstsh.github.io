@@ -1,0 +1,424 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="ゼロ幅文字でリンク化回避 - hrの備忘録" description="X(Twitter)で @、.、# を含む文が勝手にリンク化されるのを防ぐツール。ゼロ幅文字を挿入して見た目を変えずにメンション・URL・ハッシュタグを無効化。ブラウザ上で完結、データ送信なし。">
+  <main>
+    <header class="article-header">
+      <a href="/tools" class="back-link">← ツール一覧</a>
+      <h1>ゼロ幅文字でリンク化回避</h1>
+    </header>
+
+    <article class="article-body">
+      <section class="usage-section intro-section">
+        <h2>このツールについて</h2>
+        <p>
+          X(Twitter) やその他 SNS では、<code>@</code>（メンション）、<code>.</code>（URL）、<code>#</code>（ハッシュタグ）を含む文字列が自動でリンク化されます。
+          スペースを入れるとリンク化は防げますが、見た目が変わってしまいます。
+        </p>
+        <p>
+          このツールは、見えない「ゼロ幅文字」を挿入することで、<strong>見た目を変えずに</strong>リンク化だけを無効化します。
+          変換後のテキストをコピーして X に貼り付ければ、そのまま表示されます。
+        </p>
+        <h3>使い方</h3>
+        <ol>
+          <li>無効化したい項目（メンション / URL / ハッシュタグ）にチェックを入れる</li>
+          <li>テキストを入力する（直接入力またはクリップボードから読み込み）</li>
+          <li>「変換する」をクリック</li>
+          <li>結果をコピーして X に貼り付ける</li>
+        </ol>
+      </section>
+
+      <div class="tool-container">
+        <section class="tool-section">
+          <h2>1. 無効化対象を選択</h2>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="breakAt" checked />
+              メンション（@）
+            </label>
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="breakDot" checked />
+              URL
+            </label>
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="breakHash" checked />
+              ハッシュタグ（#）
+            </label>
+          </div>
+        </section>
+
+        <section class="tool-section">
+          <h2>2. テキストを入力</h2>
+          <button id="loadBtn" class="secondary-btn">📋 クリップボードから読み込む</button>
+          <p class="note">※ 初回はブラウザから許可を求められる場合があります</p>
+          <textarea id="inputText" placeholder="例: @JAM EXPO に出演します。"></textarea>
+        </section>
+
+        <section class="tool-section">
+          <button id="convertBtn" class="primary-btn">✨ 変換する</button>
+        </section>
+
+        <section class="tool-section">
+          <h2>3. 変換結果</h2>
+          <div id="output" class="preview-box" contenteditable="false">
+            変換結果がここに表示されます
+          </div>
+          <div class="result-actions">
+            <button id="copyBtn" class="primary-btn" disabled>📋 クリップボードにコピー</button>
+            <button id="tweetBtn" class="primary-btn tweet-btn" disabled>Xで投稿する</button>
+          </div>
+          <p id="copyStatus" class="status-message"></p>
+        </section>
+      </div>
+
+      <section class="usage-section">
+        <h2>ゼロ幅文字とは</h2>
+        <p>
+          幅を持たない（表示されない）Unicode 文字です。テキストの見た目は変わりませんが、
+          X のリンク検出が「区切り」として認識するため、@、.、# がリンク化されなくなります。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>こんな時に便利</h2>
+        <ul>
+          <li>メールアドレス（contact@example.com）をリンクにしたくない</li>
+          <li>URL をそのまま表示したいだけ（クリック可能にしたくない）</li>
+          <li>ハッシュタグとして検索に引っかからせたくない</li>
+          <li>@ 付きの文を引用として掲載したい</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>注意事項</h2>
+        <ul>
+          <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
+          <li>X のリンク検出アルゴリズムは変更されることがあります</li>
+          <li>一部のサービスではゼロ幅文字を除去する場合があります</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<script>
+  const ZW = '\u200B'; // ゼロ幅スペース (Zero-Width Space)
+
+  let convertedText = '';
+
+  const inputText = document.getElementById('inputText') as HTMLTextAreaElement;
+  const output = document.getElementById('output') as HTMLDivElement;
+  const convertBtn = document.getElementById('convertBtn') as HTMLButtonElement;
+  const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
+  const tweetBtn = document.getElementById('tweetBtn') as HTMLButtonElement;
+  const breakAtCheck = document.getElementById('breakAt') as HTMLInputElement;
+  const breakDotCheck = document.getElementById('breakDot') as HTMLInputElement;
+  const breakHashCheck = document.getElementById('breakHash') as HTMLInputElement;
+  const copyStatus = document.getElementById('copyStatus') as HTMLParagraphElement;
+  const loadBtn = document.getElementById('loadBtn') as HTMLButtonElement;
+
+  loadBtn.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      inputText.value = text;
+    } catch (err) {
+      alert('クリップボードの読み込みに失敗しました。\nブラウザの権限設定を確認してください。');
+      console.error(err);
+    }
+  });
+
+  convertBtn.addEventListener('click', () => {
+    let text = inputText.value;
+    if (!text) {
+      alert('テキストを入力してください');
+      return;
+    }
+
+    if (breakAtCheck.checked) {
+      text = text.replace(/@/g, '@' + ZW);
+    }
+    if (breakDotCheck.checked) {
+      text = text.replace(/\./g, ZW + '.' + ZW);
+    }
+    if (breakHashCheck.checked) {
+      text = text.replace(/#/g, '#' + ZW);
+    }
+
+    convertedText = text;
+    output.textContent = text;
+    output.style.color = '#333';
+    output.style.fontStyle = 'normal';
+    copyBtn.disabled = false;
+    tweetBtn.disabled = false;
+    copyStatus.textContent = '';
+  });
+
+  tweetBtn.addEventListener('click', () => {
+    if (!convertedText) return;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(convertedText)}`;
+    window.open(url, '_blank', 'noopener,noreferrer,width=550,height=420');
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!convertedText) return;
+
+    try {
+      await navigator.clipboard.writeText(convertedText);
+      copyStatus.textContent = '✅ クリップボードにコピーしました！';
+      copyStatus.style.color = '#28a745';
+      setTimeout(() => {
+        copyStatus.textContent = '';
+      }, 3000);
+    } catch (err) {
+      alert('クリップボードへのコピーに失敗しました');
+      console.error(err);
+    }
+  });
+</script>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body {
+    color: #444;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .tool-container {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+
+  .tool-section {
+    margin-bottom: 2rem;
+  }
+
+  .tool-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-section h2 {
+    font-size: 1.2rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
+    color: #555 !important;
+    border: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .checkbox-group {
+    margin-bottom: 1rem;
+  }
+
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #333;
+    font-size: 0.95rem;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .preview-box {
+    min-height: 100px;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow-y: auto;
+    max-height: 300px;
+    color: #999;
+    font-style: italic;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .primary-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .result-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tweet-btn {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+  }
+
+  .tweet-btn:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .secondary-btn {
+    padding: 0.5rem 1rem;
+    background: #e9ecef;
+    color: #495057;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .secondary-btn:hover {
+    background: #dee2e6;
+    border-color: #adb5bd;
+  }
+
+  .note {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .status-message {
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  .usage-section {
+    margin-top: 2rem;
+  }
+
+  .intro-section {
+    margin-top: 0;
+  }
+
+  .usage-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .usage-section h3 {
+    font-size: 1.1rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .usage-section ul,
+  .usage-section ol {
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .usage-section li {
+    margin-bottom: 0.35rem;
+  }
+
+  @media (max-width: 768px) {
+    .tool-container {
+      padding: 1rem;
+    }
+  }
+</style>
