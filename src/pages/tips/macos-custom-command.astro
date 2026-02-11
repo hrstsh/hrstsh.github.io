@@ -1,0 +1,306 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const shellScript = `#!/bin/zsh
+
+python3 $(cd $(dirname $0); pwd)/amv.py`;
+
+const pythonScript = `import glob
+import os
+
+def getPattern():
+\treturn input("[入力]変更するファイル群を指定するパターン： ")
+
+def getFiles(pattern):
+\tfiles = [p for p in glob.glob(pattern) if os.path.isfile(p)]
+\tfiles.sort()
+\tif files:
+\t\tprint("変更対象のファイル：")
+\t\tfor file in files:
+\t\t\tprint("- " + file)
+\t\tprint("上記のファイル群を {固定文字列}_{連番}.{拡張子} の形式で一括変換します")
+\t\tprint()
+\telse:
+\t\tprint("パターンに合致するファイルがありません")
+\t\tprint("ワイルドカード(*)のみ使用できます")
+\t\texit()
+\treturn files
+
+def getFixed():
+\treturn input("[入力]ファイル名の固定文字列：")
+
+def renameFiles(files, fixed):
+\tprint()
+\tfor i in range(len(files)):
+\t\textension = files[i].split(".")[-1]
+\t\tafter = f"{fixed}_{i+1:03}.{extension}"
+\t\tos.rename(files[i], after)
+\t\tprint(f"{files[i]}  ->  {after}")
+
+def main():
+\tpattern = getPattern()
+\tfiles = getFiles(pattern)
+\tfixed = getFixed()
+\trenameFiles(files, fixed)
+
+if __name__ == "__main__":
+\tmain()`;
+
+const zshrcConfig = `# 自作コマンドのPATH設定
+export PATH=$HOME/MyCommands/amv:$PATH`;
+
+const usageExample = `$ cd ~/Downloads
+$ ls
+photo1.jpg  photo2.jpg  photo3.jpg  IMG_001.jpg  IMG_002.jpg
+
+$ amv
+[入力]変更するファイル群を指定するパターン： *.jpg
+変更対象のファイル：
+- IMG_001.jpg
+- IMG_002.jpg
+- photo1.jpg
+- photo2.jpg
+- photo3.jpg
+上記のファイル群を {固定文字列}_{連番}.{拡張子} の形式で一括変換します
+
+[入力]ファイル名の固定文字列：vacation
+
+IMG_001.jpg  ->  vacation_001.jpg
+IMG_002.jpg  ->  vacation_002.jpg
+photo1.jpg  ->  vacation_003.jpg
+photo2.jpg  ->  vacation_004.jpg
+photo3.jpg  ->  vacation_005.jpg`;
+
+const directoryStructure = `~/MyCommands/
+  └── amv/
+      ├── amv        # シェルスクリプト（エントリーポイント）
+      └── amv.py     # Python本体`;
+
+const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
+---
+
+<Layout title="macで自作コマンドを作って登録する方法">
+  <main>
+    <h1>macで自作コマンドを作って登録する方法</h1>
+    
+    <p class="date">最終更新: 2026年2月</p>
+
+    <section>
+      <h2>はじめに</h2>
+      <p>
+        mac のターミナルで繰り返し行う作業ってありますよね。
+        そんな時、自分専用のコマンドを作って登録しておくと、作業効率が格段に上がります。
+      </p>
+      <p>
+        今回は、<strong>ファイル名を一括変換する `amv` コマンド</strong>を例に、
+        自作コマンドの作り方から PATH 設定までを解説します。
+      </p>
+    </section>
+
+    <section>
+      <h2>自作コマンドを作るメリット</h2>
+      <ul>
+        <li><strong>作業効率の向上</strong>: 長いコマンドを短縮できる</li>
+        <li><strong>ミス防止</strong>: よく使う処理を定型化</li>
+        <li><strong>カスタマイズ性</strong>: 自分の使い方に最適化できる</li>
+        <li><strong>再利用性</strong>: 一度作れば他のマシンでも使える</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>今回作る「amv」コマンドとは</h2>
+      <p>
+        <code>amv</code> は、複数のファイル名を一括で「<strong>固定文字列_連番.拡張子</strong>」の形式に変換するコマンドです。
+      </p>
+      <p>
+        例えば、バラバラの名前の画像ファイルを `vacation_001.jpg`、`vacation_002.jpg`... と整理できます。
+      </p>
+    </section>
+
+    <section>
+      <h2>自作コマンドの作り方（基本の流れ）</h2>
+      
+      <h3>1. コマンド用のディレクトリを作成</h3>
+      <p>まず、自作コマンドを保存するディレクトリを作ります。</p>
+      <CodeBlock code={directoryStructure} language="plaintext" />
+      <p>
+        <code>~/MyCommands/</code> 以下に、コマンドごとにディレクトリを作る構成です。
+      </p>
+
+      <h3>2. シェルスクリプト（エントリーポイント）を作成</h3>
+      <p>
+        <code>~/MyCommands/amv/amv</code> ファイルを作成します（拡張子なし）。
+      </p>
+      <CodeBlock code={shellScript} language="bash" />
+      <p>
+        このスクリプトは Python ファイルを呼び出す役割です。
+        <code>$(cd $(dirname $0); pwd)</code> で、スクリプト自身のディレクトリを取得しています。
+      </p>
+
+      <h3>3. Python本体を作成</h3>
+      <p>
+        <code>~/MyCommands/amv/amv.py</code> に実際の処理を書きます。
+      </p>
+      <CodeBlock code={pythonScript} language="python" />
+      <p>
+        この Python スクリプトは：
+      </p>
+      <ul>
+        <li>ワイルドカードでファイルを選択</li>
+        <li>固定文字列を入力</li>
+        <li>連番付きでリネーム</li>
+      </ul>
+      <p>という流れで動作します。</p>
+
+      <h3>4. 実行権限を付与</h3>
+      <p>シェルスクリプトに実行権限を与えます。</p>
+      <CodeBlock code={chmodCommand} language="bash" />
+    </section>
+
+    <section>
+      <h2>PATH設定で、どこからでも実行可能に</h2>
+      <p>
+        作成したコマンドをどこからでも実行できるように、<code>~/.zshrc</code> に PATH を追加します。
+      </p>
+      
+      <h3>~/.zshrc に追記</h3>
+      <CodeBlock code={zshrcConfig} language="bash" />
+      
+      <p>設定を反映させるため、ターミナルを再起動するか、以下を実行します。</p>
+      <CodeBlock code="source ~/.zshrc" language="bash" />
+      
+      <p>
+        これで <code>amv</code> コマンドがどのディレクトリからでも実行できるようになります。
+      </p>
+    </section>
+
+    <section>
+      <h2>使い方</h2>
+      <p>実際に使ってみましょう。</p>
+      <CodeBlock code={usageExample} language="plaintext" />
+      <p>
+        ワイルドカード（<code>*.jpg</code>）で対象ファイルを指定し、
+        固定文字列を入力すると、自動的に連番付きでリネームされます。
+      </p>
+    </section>
+
+    <section>
+      <h2>応用：他のコマンドを作る</h2>
+      <p>
+        この構成を応用すれば、さまざまな自作コマンドを作れます。
+      </p>
+      <ul>
+        <li><strong>よく使うコマンドのメモ表示</strong>（単純な cat コマンド）</li>
+        <li><strong>定型作業の自動化</strong>（ファイル移動、バックアップなど）</li>
+        <li><strong>API連携</strong>（外部サービスへの投稿など）</li>
+      </ul>
+      <p>
+        Python 以外にも、シェルスクリプトだけ、Ruby、Node.js など、
+        好きな言語で作成できます。
+      </p>
+    </section>
+
+    <section>
+      <h2>まとめ</h2>
+      <p>
+        自作コマンドを作ることで、日々の作業が効率化され、
+        ターミナル操作がより快適になります。
+      </p>
+      <p>
+        一度覚えてしまえば、いろいろな場面で応用できるので、
+        ぜひ試してみてください。
+      </p>
+    </section>
+
+    <div class="back-link">
+      <a href="/tips">← 小技集トップに戻る</a>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  .date {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  section {
+    margin-bottom: 3rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #667eea;
+    color: #333;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+    color: #555;
+  }
+
+  p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  ul, ol {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+    color: #444;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  code {
+    background: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .back-link {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #ddd;
+  }
+
+  .back-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .back-link a:hover {
+    text-decoration: underline;
+  }
+</style>
