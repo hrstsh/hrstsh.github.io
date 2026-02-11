@@ -3,10 +3,16 @@ import '../styles/global.css';
 
 interface Props {
   title: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
 }
 
-const { title } = Astro.props;
+const { title, description, image, noindex = false } = Astro.props;
 const isProd = import.meta.env.PROD; // 本番環境判定
+const site = 'https://hrstsh.github.io';
+const canonical = new URL(Astro.url.pathname || '/', site).href;
+const ogImage = image ? (image.startsWith('http') ? image : new URL(image, site).href) : `${site}/favicon.svg`;
 ---
 
 <!doctype html>
@@ -14,11 +20,26 @@ const isProd = import.meta.env.PROD; // 本番環境判定
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="index,follow" />
+    <meta name="robots" content={noindex ? 'noindex,nofollow' : 'index,follow'} />
     <meta name="google-site-verification" content="g_JyuwwxxKRZEqFVR8hB6-9Q_70v6CmlVbM1-GBtHbw" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="ja_JP" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
     
     <!-- Google Analytics 4 (本番環境のみ) -->
     {isProd && (
