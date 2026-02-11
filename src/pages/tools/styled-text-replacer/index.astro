@@ -1,0 +1,427 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="スタイル付きテキスト置換 - ツール">
+  <main>
+    <header class="article-header">
+      <a href="/tools" class="back-link">← ツール一覧</a>
+      <h1>スタイル付きテキスト置換</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        Word や Google ドキュメント、Notion などからコピーした<strong>書式付きテキスト</strong>を、
+        スタイル（太字・色・サイズなど）を維持したまま置換できるツール。
+      </p>
+
+      <div class="tool-container">
+        <section class="tool-section">
+          <h2>1. クリップボードから読み込み</h2>
+          <button id="loadBtn" class="primary-btn">📋 クリップボードから読み込む</button>
+          <p class="note">※ 初回はブラウザから許可を求められる場合があります</p>
+        </section>
+
+        <section class="tool-section">
+          <h2>2. プレビュー（読み込み後）</h2>
+          <div id="preview" class="preview-box" contenteditable="false">
+            ここに読み込んだテキストが表示されます
+          </div>
+        </section>
+
+        <section class="tool-section">
+          <h2>3. 置換設定</h2>
+          <div class="input-group">
+            <label for="searchText">置換前の文字列:</label>
+            <input type="text" id="searchText" placeholder="例: 会社名" />
+          </div>
+          <div class="input-group">
+            <label for="replaceText">置換後の文字列:</label>
+            <input type="text" id="replaceText" placeholder="例: 組織名" />
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="useRegex" />
+              正規表現を使用する
+            </label>
+          </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="caseSensitive" />
+              大文字・小文字を区別する
+            </label>
+          </div>
+          <button id="replaceBtn" class="primary-btn">🔄 置換を実行</button>
+        </section>
+
+        <section class="tool-section">
+          <h2>4. 置換結果</h2>
+          <div id="result" class="preview-box" contenteditable="false">
+            置換後のテキストがここに表示されます
+          </div>
+          <button id="copyBtn" class="primary-btn" disabled>📋 クリップボードにコピー</button>
+          <p id="copyStatus" class="status-message"></p>
+        </section>
+      </div>
+
+      <section class="usage-section">
+        <h2>使い方</h2>
+        <ol>
+          <li>Word や Google ドキュメントなどで<strong>書式付きテキスト</strong>をコピー</li>
+          <li>このページで「クリップボードから読み込む」ボタンをクリック</li>
+          <li>プレビューで内容とスタイルを確認</li>
+          <li>置換前・置換後の文字列を入力</li>
+          <li>「置換を実行」をクリック</li>
+          <li>結果を確認して「クリップボードにコピー」</li>
+          <li>元の文書に貼り付け（Ctrl+V / Cmd+V）</li>
+        </ol>
+      </section>
+
+      <section class="usage-section">
+        <h2>こんな時に便利</h2>
+        <ul>
+          <li>書式設定した長文の中で特定の単語を一括置換したい</li>
+          <li>太字や色付きの文字を含む文書で用語を統一したい</li>
+          <li>スタイルを崩さずに会社名や製品名を変更したい</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>注意事項</h2>
+        <ul>
+          <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
+          <li>複雑なレイアウト（表、画像など）は正しく処理できない場合があります</li>
+          <li>Chrome、Edge、Safari などモダンブラウザでの使用を推奨</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<script>
+  let loadedHtml = '';
+  let replacedHtml = '';
+
+  const loadBtn = document.getElementById('loadBtn') as HTMLButtonElement;
+  const replaceBtn = document.getElementById('replaceBtn') as HTMLButtonElement;
+  const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
+  const preview = document.getElementById('preview') as HTMLDivElement;
+  const result = document.getElementById('result') as HTMLDivElement;
+  const searchText = document.getElementById('searchText') as HTMLInputElement;
+  const replaceText = document.getElementById('replaceText') as HTMLInputElement;
+  const useRegex = document.getElementById('useRegex') as HTMLInputElement;
+  const caseSensitive = document.getElementById('caseSensitive') as HTMLInputElement;
+  const copyStatus = document.getElementById('copyStatus') as HTMLParagraphElement;
+
+  // クリップボードから読み込み
+  loadBtn.addEventListener('click', async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        if (item.types.includes('text/html')) {
+          const blob = await item.getType('text/html');
+          const html = await blob.text();
+          loadedHtml = html;
+          preview.innerHTML = html;
+          preview.style.color = '#333';
+          break;
+        } else if (item.types.includes('text/plain')) {
+          const blob = await item.getType('text/plain');
+          const text = await blob.text();
+          loadedHtml = text;
+          preview.textContent = text;
+          preview.style.color = '#333';
+          break;
+        }
+      }
+    } catch (err) {
+      alert('クリップボードの読み込みに失敗しました。\nブラウザの権限設定を確認してください。');
+      console.error(err);
+    }
+  });
+
+  // 置換実行
+  replaceBtn.addEventListener('click', () => {
+    const search = searchText.value;
+    const replace = replaceText.value;
+
+    if (!search) {
+      alert('置換前の文字列を入力してください');
+      return;
+    }
+
+    if (!loadedHtml) {
+      alert('まずクリップボードからテキストを読み込んでください');
+      return;
+    }
+
+    try {
+      // 一時的なDOM要素を作成
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = loadedHtml;
+
+      // テキストノードを走査して置換
+      replaceTextInNode(tempDiv, search, replace);
+
+      replacedHtml = tempDiv.innerHTML;
+      result.innerHTML = replacedHtml;
+      result.style.color = '#333';
+      copyBtn.disabled = false;
+      copyStatus.textContent = '';
+    } catch (err) {
+      alert('置換処理でエラーが発生しました');
+      console.error(err);
+    }
+  });
+
+  // テキストノードを再帰的に走査して置換
+  function replaceTextInNode(node: Node, search: string, replace: string) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      // テキストノードの場合
+      if (node.textContent) {
+        if (useRegex.checked) {
+          const flags = caseSensitive.checked ? 'g' : 'gi';
+          const regex = new RegExp(search, flags);
+          node.textContent = node.textContent.replace(regex, replace);
+        } else {
+          const flags = caseSensitive.checked ? 'g' : 'gi';
+          const regex = new RegExp(escapeRegExp(search), flags);
+          node.textContent = node.textContent.replace(regex, replace);
+        }
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // 要素ノードの場合、子ノードを再帰的に処理
+      for (let i = 0; i < node.childNodes.length; i++) {
+        replaceTextInNode(node.childNodes[i], search, replace);
+      }
+    }
+  }
+
+  // 正規表現の特殊文字をエスケープ
+  function escapeRegExp(string: string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // クリップボードにコピー
+  copyBtn.addEventListener('click', async () => {
+    try {
+      const blob = new Blob([replacedHtml], { type: 'text/html' });
+      const plainText = result.textContent || '';
+      const textBlob = new Blob([plainText], { type: 'text/plain' });
+      
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': blob,
+          'text/plain': textBlob
+        })
+      ]);
+      
+      copyStatus.textContent = '✅ クリップボードにコピーしました！';
+      copyStatus.style.color = '#28a745';
+      
+      setTimeout(() => {
+        copyStatus.textContent = '';
+      }, 3000);
+    } catch (err) {
+      alert('クリップボードへのコピーに失敗しました');
+      console.error(err);
+    }
+  });
+</script>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body {
+    color: #444;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .tool-container {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+
+  .tool-section {
+    margin-bottom: 2rem;
+  }
+
+  .tool-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-section h2 {
+    font-size: 1.2rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
+    color: #555 !important;
+    border: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .preview-box {
+    min-height: 120px;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow-y: auto;
+    max-height: 300px;
+    color: #999;
+    font-style: italic;
+  }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+
+  .input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .input-group input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .input-group input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .checkbox-group {
+    margin-bottom: 1rem;
+  }
+
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .primary-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .note {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.5rem;
+  }
+
+  .status-message {
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  .usage-section {
+    margin-top: 2rem;
+  }
+
+  .usage-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .usage-section ol, .usage-section ul {
+    padding-left: 2rem;
+  }
+
+  .usage-section li {
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .tool-container {
+      padding: 1rem;
+    }
+  }
+</style>

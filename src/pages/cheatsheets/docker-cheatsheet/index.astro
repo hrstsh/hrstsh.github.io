@@ -2,25 +2,25 @@
 import Layout from '../../../layouts/Layout.astro';
 ---
 
-<Layout title="Gitコマンドチートシート - 開発者向け完全ガイド">
+<Layout title="Dockerコマンドチートシート - 実務で使える完全ガイド">
   <main>
     <header class="page-header">
-      <h1>Gitコマンドチートシート</h1>
-      <p class="subtitle">開発者向けの完全リファレンス - 基礎から応用まで</p>
+      <h1>Dockerコマンドチートシート</h1>
+      <p class="subtitle">実務で使える完全リファレンス - 基礎から応用まで</p>
       <div class="meta">
-        <span>最終更新: 2026年2月7日</span>
+        <span>最終更新: 2026年2月9日</span>
       </div>
     </header>
 
     <section class="intro">
       <h2>このチートシートについて</h2>
       <p>
-        Gitはバージョン管理システムとして、ソフトウェア開発において不可欠なツールです。
+        Dockerはコンテナ技術を用いた開発環境として、現代のソフトウェア開発において必須のツールです。
         このチートシートでは、基本的なコマンドから高度な操作まで、
-        実務で役立つGitコマンドを網羅的に解説します。
+        実務で役立つDockerコマンドを網羅的に解説します。
       </p>
       <p>
-        初心者から上級者まで、日々の開発業務ですぐに参照できるよう、
+        初心者から中級者まで、日々の開発業務ですぐに参照できるよう、
         カテゴリ別に整理されたコマンド一覧と具体例を提供します。
       </p>
     </section>
@@ -29,57 +29,57 @@ import Layout from '../../../layouts/Layout.astro';
       <h2>カテゴリ一覧</h2>
       
       <div class="category-grid">
-        <a href="/tools/git-cheatsheet/basics" class="category-card">
-          <h3>🚀 基礎編</h3>
+        <a href="/cheatsheets/docker-cheatsheet/basics" class="category-card">
+          <h3>🚀 基本操作</h3>
           <ul>
-            <li>初期設定と構成</li>
-            <li>リポジトリの作成とクローン</li>
-            <li>基本的なワークフロー</li>
+            <li>Dockerの基本概念</li>
+            <li>インストール確認</li>
+            <li>基本コマンド</li>
+            <li>コンテナの起動と停止</li>
           </ul>
           <span class="read-more">詳しく見る →</span>
         </a>
 
-        <a href="/tools/git-cheatsheet/branches" class="category-card">
-          <h3>🌿 ブランチ・マージ編</h3>
+        <a href="/cheatsheets/docker-cheatsheet/images" class="category-card">
+          <h3>📦 イメージ管理</h3>
           <ul>
-            <li>ブランチ操作</li>
-            <li>マージと統合</li>
-            <li>Rebase（履歴の書き換え）</li>
+            <li>イメージの検索と取得</li>
+            <li>イメージの一覧・削除</li>
+            <li>イメージのビルド</li>
+            <li>イメージの保存・読込</li>
           </ul>
           <span class="read-more">詳しく見る →</span>
         </a>
 
-        <a href="/tools/git-cheatsheet/remote" class="category-card">
-          <h3>🌐 リモート・一時保存編</h3>
+        <a href="/cheatsheets/docker-cheatsheet/containers" class="category-card">
+          <h3>🔧 コンテナ操作</h3>
           <ul>
-            <li>リモートリポジトリ操作</li>
-            <li>一時保存（Stash）</li>
-            <li>履歴の確認</li>
-            <li>変更の取り消しと復元</li>
+            <li>コンテナの起動オプション</li>
+            <li>コンテナ内でのコマンド実行</li>
+            <li>ログとステータス確認</li>
+            <li>コンテナの停止・削除</li>
           </ul>
           <span class="read-more">詳しく見る →</span>
         </a>
 
-        <a href="/tools/git-cheatsheet/advanced" class="category-card">
-          <h3>⚡ タグ・高度な操作編</h3>
+        <a href="/cheatsheets/docker-cheatsheet/compose" class="category-card">
+          <h3>🐳 Docker Compose</h3>
           <ul>
-            <li>タグ管理</li>
-            <li>Cherry-pick</li>
-            <li>サブモジュール</li>
-            <li>ワークツリー</li>
-            <li>Bisect</li>
-            <li>高度な操作</li>
+            <li>docker-compose.ymlの基本</li>
+            <li>主要コマンド</li>
+            <li>よく使うオプション</li>
+            <li>実用例</li>
           </ul>
           <span class="read-more">詳しく見る →</span>
         </a>
 
-        <a href="/tools/git-cheatsheet/tips" class="category-card">
-          <h3>💡 設定・Tips編</h3>
+        <a href="/cheatsheets/docker-cheatsheet/tips" class="category-card">
+          <h3>💡 Tips</h3>
           <ul>
-            <li>.gitignoreの設定</li>
-            <li>Git Hooks</li>
-            <li>実務で役立つTips</li>
-            <li>GitHub固有の操作</li>
+            <li>クリーンアップコマンド</li>
+            <li>トラブルシューティング</li>
+            <li>ネットワーク・ボリューム管理</li>
+            <li>便利なTips</li>
           </ul>
           <span class="read-more">詳しく見る →</span>
         </a>

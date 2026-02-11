@@ -6,11 +6,11 @@ interface Props {
 const { currentPage } = Astro.props;
 
 const pages = [
-  { id: 'basics', title: '基礎編', url: '/tools/git-cheatsheet/basics' },
-  { id: 'branches', title: 'ブランチ・マージ編', url: '/tools/git-cheatsheet/branches' },
-  { id: 'remote', title: 'リモート・一時保存編', url: '/tools/git-cheatsheet/remote' },
-  { id: 'advanced', title: 'タグ・高度な操作編', url: '/tools/git-cheatsheet/advanced' },
-  { id: 'tips', title: '設定・Tips編', url: '/tools/git-cheatsheet/tips' },
+  { id: 'basics', title: '基礎編', url: '/cheatsheets/git-cheatsheet/basics' },
+  { id: 'branches', title: 'ブランチ・マージ編', url: '/cheatsheets/git-cheatsheet/branches' },
+  { id: 'remote', title: 'リモート・一時保存編', url: '/cheatsheets/git-cheatsheet/remote' },
+  { id: 'advanced', title: 'タグ・高度な操作編', url: '/cheatsheets/git-cheatsheet/advanced' },
+  { id: 'tips', title: '設定・Tips編', url: '/cheatsheets/git-cheatsheet/tips' },
 ];
 
 const currentIndex = pages.findIndex(p => p.id === currentPage);
@@ -32,7 +32,7 @@ const nextPage = currentIndex < pages.length - 1 ? pages[currentIndex + 1] : nul
       <div class="nav-button-placeholder"></div>
     )}
 
-    <a href="/tools/git-cheatsheet" class="nav-button index">
+    <a href="/cheatsheets/git-cheatsheet" class="nav-button index">
       <span class="nav-label">目次</span>
     </a>
 

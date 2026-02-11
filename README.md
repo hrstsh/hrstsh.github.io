@@ -17,22 +17,30 @@ https://hrstsh.github.io/
 ├── / ...................... Home (トップページ)
 │   https://hrstsh.github.io/
 │
-├── /tips/ ................. 小技集
-│   https://hrstsh.github.io/tips
-│   (twitter-image-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+├── /cheatsheets/ .......... チートシート (コマンド集)
+│   https://hrstsh.github.io/cheatsheets
+│   ├── /git-cheatsheet .... Gitコマンドチートシート
+│   │   https://hrstsh.github.io/cheatsheets/git-cheatsheet
+│   │   (basics, branches, remote, advanced, tips)
+│   │
+│   ├── /docker-cheatsheet . Dockerコマンドチートシート
+│   │   https://hrstsh.github.io/cheatsheets/docker-cheatsheet
+│   │   (basics, images, containers, compose, tips)
+│   │
+│   └── /sql-cheatsheet .... SQL基本コマンド集
+│       https://hrstsh.github.io/cheatsheets/sql-cheatsheet
+│       (basics, joins, manipulation, advanced)
 │
-└── /tools/ ................ Tools (ツール)
-    ├── /git-cheatsheet .... Gitコマンドチートシート
-    │   https://hrstsh.github.io/tools/git-cheatsheet
-    │   (basics, branches, remote, advanced, tips)
-    │
-    ├── /docker-cheatsheet . Dockerコマンドチートシート
-    │   https://hrstsh.github.io/tools/docker-cheatsheet
-    │   (basics, images, containers, compose, tips)
-    │
-    └── /sql-cheatsheet .... SQL基本コマンド集
-        https://hrstsh.github.io/tools/sql-cheatsheet
-        (basics, joins, manipulation, advanced)
+├── /tools/ ................ ツール (ブラウザ上で動作)
+│   https://hrstsh.github.io/tools
+│   ├── /styled-text-replacer ... スタイル付きテキスト置換
+│   │   https://hrstsh.github.io/tools/styled-text-replacer
+│   │   (書式を維持したまま文字列置換、クライアントサイドで動作)
+│   └── (今後追加予定)
+│
+└── /tips/ ................. 小技集
+    https://hrstsh.github.io/tips
+    (twitter-image-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 ```
 
 ## Tech Stack
