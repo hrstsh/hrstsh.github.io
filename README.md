@@ -39,9 +39,9 @@ https://hrstsh.github.io/
 │   ├── /sql-formatter ......... SQL整形ツール
 │   │   https://hrstsh.github.io/tools/sql-formatter
 │   │   (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
-│   └── /zero-width-breaker .... ゼロ幅文字でリンク化回避
+│   └── /zero-width-breaker .... ツイートのリンク化回避ツール
 │       https://hrstsh.github.io/tools/zero-width-breaker
-│       (X の @ や . のリンク化を防ぐ、クライアントサイドで動作)
+│       (ツイートのリンク化を防ぐ、クライアントサイドで動作)
 │
 └── /tips/ ................. 小技集
     https://hrstsh.github.io/tips
