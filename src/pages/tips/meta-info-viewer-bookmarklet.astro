@@ -1,0 +1,177 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const bookmarkletCode = `javascript:(function(){const id='meta-info-viewer';let o=document.getElementById(id);if(o){o.remove();return;}const g=function(n){var e=document.querySelector('meta[name="'+n+'"],meta[property="'+n+'"]');return e?e.getAttribute('content')||'':'';};var d=[['title',document.title],['description',g('description')],['keywords',g('keywords')],['og:title',g('og:title')],['og:description',g('og:description')],['og:image',g('og:image')],['og:url',g('og:url')],['twitter:title',g('twitter:title')],['twitter:description',g('twitter:description')],['twitter:image',g('twitter:image')],['canonical',(document.querySelector('link[rel="canonical"]')||{}).href||''],['h1',(document.querySelector('h1')||{}).textContent||'']];o=document.createElement('div');o.id=id;o.innerHTML='<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:999999;display:flex;align-items:center;justify-content:center;font-family:sans-serif"><div style="background:#fff;border-radius:8px;max-width:600px;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.3)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2 style="margin:0;font-size:1.2rem">メタ情報</h2><button id="meta-close" style="padding:6px 12px;cursor:pointer;background:#667eea;color:#fff;border:none;border-radius:4px">閉じる</button></div><div id="meta-list"></div></div></div>';document.body.appendChild(o);var l=document.getElementById('meta-list');d.forEach(function(item){var k=item[0],v=item[1];if(!v)return;var r=document.createElement('div');r.style.cssText='margin-bottom:12px;padding:8px;background:#f5f5f5;border-radius:4px;word-break:break-all';var esc=v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');r.innerHTML='<div style="font-size:0.75rem;color:#666;margin-bottom:4px">'+k+'</div><div style="display:flex;align-items:flex-start;gap:8px"><div style="flex:1;font-size:0.9rem">'+esc+'</div><button style="flex-shrink:0;padding:4px 8px;cursor:pointer;background:#667eea;color:#fff;border:none;border-radius:4px;font-size:0.8rem" data-copy="'+esc+'">コピー</button></div>';l.appendChild(r);});document.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',function(){navigator.clipboard.writeText(b.getAttribute('data-copy'));b.textContent='OK!';setTimeout(function(){b.textContent='コピー';},1000);});});document.getElementById('meta-close').onclick=function(){o.remove();};})();`;
+
+---
+
+<Layout title="ページのメタ情報を見やすく表示＆コピーするブックマークレット - 小技集">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← 小技集一覧</a>
+      <h1>ページのメタ情報を見やすく表示＆コピーするブックマークレット</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        表示中のページの title、description、OG タグ、Twitter カードなどのメタ情報を、
+        画面上に見やすく表示し、各項目をワンクリックでコピーできるブックマークレット。
+      </p>
+
+      <h2>こんな時に便利</h2>
+      <ul>
+        <li>SEO チェックでメタ情報を確認したい</li>
+        <li>SNS 投稿時のプレビュー内容を確認したい</li>
+        <li>他ページとメタ情報を比較したい</li>
+        <li>メタ情報をコピーして共有・記録したい</li>
+      </ul>
+
+      <h2>取得できる項目</h2>
+      <ul>
+        <li><strong>基本</strong>: title, description, keywords</li>
+        <li><strong>OG タグ</strong>: og:title, og:description, og:image, og:url</li>
+        <li><strong>Twitter カード</strong>: twitter:title, twitter:description, twitter:image</li>
+        <li><strong>その他</strong>: canonical, h1</li>
+      </ul>
+
+      <h2>ブックマークレットの登録</h2>
+      
+      <h3>1. ブックマークバーを表示</h3>
+      <p>
+        <code>Ctrl+Shift+B</code>（Mac は <code>Cmd+Shift+B</code>）でブックマークバーを表示。
+      </p>
+
+      <h3>2. ブックマークを追加</h3>
+      <p>
+        ブックマークバーを右クリック → 「ページを追加」。
+      </p>
+
+      <h3>3. 以下を設定</h3>
+      <ul>
+        <li>名前: <code>メタ情報表示</code>（任意）</li>
+        <li>URL: 以下のコードをコピーして貼り付け</li>
+      </ul>
+
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+      <p>
+        上記のコードを<strong>最初から最後まで全て</strong>コピーして、URL 欄に貼り付けてください。
+      </p>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>メタ情報を確認したいページを開く</li>
+        <li>ブックマークレットをクリック</li>
+        <li>オーバーレイが表示され、メタ情報が一覧表示される</li>
+        <li>各項目の「コピー」ボタンでクリップボードにコピー</li>
+        <li>「閉じる」ボタンでオーバーレイを閉じる</li>
+      </ol>
+
+      <h2>再度クリックで閉じる</h2>
+      <p>
+        同じブックマークレットをもう一度クリックすると、オーバーレイを閉じる。
+        トグル動作になっている。
+      </p>
+
+      <h2>注意事項</h2>
+      <ul>
+        <li>存在しない項目は表示されない</li>
+        <li>一部のサイトではクリップボードへのコピーに許可が必要な場合がある</li>
+        <li>iframe 内のページでは動作しない</li>
+      </ul>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ul, .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: #f4f4f4;
+    color: #d63384;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body strong {
+    font-weight: 600;
+    color: #333;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+</style>

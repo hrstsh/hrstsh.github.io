@@ -27,16 +27,71 @@ const escaped = escapeHtml(code);
 const langClass = language ? `language-${language}` : '';
 ---
 
-<pre class="code-block"><code class={langClass} set:html={escaped}></code></pre>
+<div class="code-block-wrapper">
+  <button type="button" class="copy-btn" title="コピー">コピー</button>
+  <pre class="code-block"><code class={langClass} set:html={escaped}></code></pre>
+</div>
+
+<script>
+  document.querySelectorAll('.code-block-wrapper .copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const pre = btn.nextElementSibling;
+      const codeEl = pre?.querySelector('code');
+      const text = codeEl?.textContent;
+      if (text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'コピーしました！';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = 'コピー';
+            btn.classList.remove('copied');
+          }, 2000);
+        } catch {
+          btn.textContent = 'コピー失敗';
+          setTimeout(() => (btn.textContent = 'コピー'), 2000);
+        }
+      }
+    });
+  });
+</script>
 
 <style>
+  .code-block-wrapper {
+    position: relative;
+    margin: 1rem 0;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.15);
+    color: #f8f8f2;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .copy-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .copy-btn.copied {
+    background: rgba(76, 175, 80, 0.6);
+    border-color: rgba(76, 175, 80, 0.8);
+  }
+
   .code-block {
     background: #2d2d2d;
     color: #f8f8f2;
     padding: 1rem 1.25rem;
+    padding-top: 2.5rem;
     border-radius: 8px;
     overflow-x: auto;
-    margin: 1rem 0;
     font-size: 0.85rem;
     line-height: 1.5;
   }
