@@ -197,7 +197,7 @@ import Layout from '../../../layouts/Layout.astro';
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-primary);
     text-decoration: none;
   }
 
@@ -208,43 +208,45 @@ import Layout from '../../../layouts/Layout.astro';
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .article-body {
-    color: #444;
+    color: var(--color-text-muted);
   }
 
   .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    color: #333;
-    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
     padding-bottom: 0.25rem;
   }
 
   .article-body p,
   .article-body ul {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text-muted);
   }
 
   .article-body code {
-    background: #f4f4f4;
-    color: #d63384;
+    background: rgba(30, 64, 175, 0.08);
+    color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
   }
 
   .tool-container {
-    background: #f8f9fa;
+    background: var(--color-bg-card);
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
     margin: 2rem 0;
   }
 
@@ -274,7 +276,7 @@ import Layout from '../../../layouts/Layout.astro';
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    color: #333;
+    color: var(--color-text);
     font-size: 0.95rem;
   }
 
@@ -297,13 +299,13 @@ import Layout from '../../../layouts/Layout.astro';
 
   textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-primary);
   }
 
   .preview-box {
     min-height: 100px;
     padding: 1rem;
-    background: white;
+    background: var(--color-bg-card);
     border: 2px solid #ddd;
     border-radius: 6px;
     margin-bottom: 1rem;
@@ -317,7 +319,7 @@ import Layout from '../../../layouts/Layout.astro';
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
     color: white;
     border: none;
     border-radius: 6px;
@@ -329,7 +331,7 @@ import Layout from '../../../layouts/Layout.astro';
 
   .primary-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: var(--shadow-hover);
   }
 
   .primary-btn:active:not(:disabled) {
@@ -396,7 +398,7 @@ import Layout from '../../../layouts/Layout.astro';
   .usage-section h2 {
     font-size: 1.3rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .usage-section h3 {

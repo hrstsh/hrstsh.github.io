@@ -43,7 +43,7 @@ https://hrstsh.github.io/
 │       https://hrstsh.github.io/tools/zero-width-breaker
 │       (ツイートのリンク化を防ぐ、クライアントサイドで動作)
 │
-└── /tips/ ................. 小技集
+└── /tips/ ................. Tips
     https://hrstsh.github.io/tips
     (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 ```
@@ -145,7 +145,7 @@ You can also trigger deployment manually:
 │   │   └── Layout.astro    # Base layout component
 │   ├── pages/
 │   │   ├── index.astro     # Home page
-│   │   ├── tips/           # 小技集 (tips & tricks)
+│   │   ├── tips/           # Tips (tips & tricks)
 │   │   └── tools/         # Tools (cheatsheets)
 │   │       ├── git-cheatsheet/   # Git (index, basics, branches, remote, advanced, tips)
 │   │       ├── docker-cheatsheet/# Docker (index, basics, images, containers, compose, tips)
