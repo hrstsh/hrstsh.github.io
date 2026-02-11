@@ -34,7 +34,8 @@ html {
 }
 
 body {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  /* ヒーロー画像の青〜紫トーンに合わせたグラデーション */
+  background: linear-gradient(180deg, #edf1ff 0%, #f5f7ff 25%, #f8fafc 50%, #f5f3ff 75%, #f0eaff 100%);
   background-attachment: fixed;
   color: var(--color-text);
   line-height: 1.7;
