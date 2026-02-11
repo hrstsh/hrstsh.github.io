@@ -11,15 +11,22 @@ const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
 console.log(urls.join('\\n'));
 console.log(\`取得件数: \${urls.length}件\`);`;
 
-const copyToClipboard = `// クリップボードにコピー
+const copyToClipboard = `// クリップボードにコピー（エラーハンドリング付き）
 const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
   .map(img => img.src.replace(/&name=\\w+/, '&name=orig'))
   .filter(url => url.includes('/media/'))
   .filter((v, i, a) => a.indexOf(v) === i);
 
-navigator.clipboard.writeText(urls.join('\\n')).then(() => {
-  alert(\`\${urls.length}件の画像URLをコピーしました！\`);
-});`;
+// クリップボードにコピー（失敗時はコンソールに出力）
+navigator.clipboard.writeText(urls.join('\\n'))
+  .then(() => {
+    alert(\`\${urls.length}件の画像URLをコピーしました！\`);
+  })
+  .catch(err => {
+    console.log('クリップボードへのコピーに失敗しました。以下のURLをコピーしてください：');
+    console.log(urls.join('\\n'));
+    alert(\`エラーが発生しました。コンソールに出力したURLをコピーしてください。\\n取得件数: \${urls.length}件\`);
+  });`;
 
 const bookmarkletCode = `javascript:(function(){const u=Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]')).map(i=>i.src.replace(/&name=\\w+/,'&name=orig')).filter(url=>url.includes('/media/')).filter((v,i,a)=>a.indexOf(v)===i);navigator.clipboard.writeText(u.join('\\n')).then(()=>alert(u.length+'件の画像URLをコピーしました！'));})();`;
 
@@ -137,6 +144,21 @@ async function downloadImages(urls) {
       <p>
         実行すると自動的にクリップボードにコピーされて、件数がアラートで表示される。
       </p>
+      
+      <div class="note-box">
+        <strong>⚠️ エラーが出る場合</strong>
+        <p>
+          「Document is not focused」というエラーが出る場合、以下を試してください：
+        </p>
+        <ol>
+          <li>コンソール以外の場所（ページ本体）を一度クリック</li>
+          <li>再度コンソールでスクリプトを実行</li>
+        </ol>
+        <p>
+          または、エラーハンドリング付きのスクリプト（上記）を使えば、
+          失敗してもコンソールに出力されるので手動でコピーできる。
+        </p>
+      </div>
 
       <h2>ブックマークレット版</h2>
       <p>
@@ -316,5 +338,34 @@ async function downloadImages(urls) {
     background: none;
     color: inherit;
     padding: 0;
+  }
+
+  .note-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+
+  .note-box strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #856404;
+  }
+
+  .note-box p {
+    margin: 0.5rem 0;
+    color: #856404;
+  }
+
+  .note-box ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    color: #856404;
+  }
+
+  .note-box li {
+    margin: 0.25rem 0;
   }
 </style>
