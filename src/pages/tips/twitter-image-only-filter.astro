@@ -2,7 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 
-const bookmarkletCode = `javascript:(function(){const style=document.getElementById('twitter-image-only-filter');if(style){style.remove();}else{const s=document.createElement('style');s.id='twitter-image-only-filter';s.textContent='article:not(:has(img)):not(:has(video)){display:none!important;}';document.head.appendChild(s);}})();`;
+const bookmarkletCode = `javascript:(function(){const id='twitter-image-only-filter';let s=document.getElementById(id);if(s){s.remove();}else{s=document.createElement('style');s.id=id;s.textContent='article[data-testid="tweet"]:not(:has(img)):not(:has(video)):not(:has([data-testid="tweetPhoto"])){display:none!important;}';document.head.appendChild(s);}})();`;
 
 const folderStructure = `twitter-image-only-filter/
 ├── manifest.json
@@ -57,7 +57,7 @@ function applyFilter() {
   style.id = 'twitter-image-only-filter';
   style.textContent = \\\`
     /* 画像・動画がないツイートを非表示 */
-    article:not(:has(img)):not(:has(video)) {
+    article[data-testid="tweet"]:not(:has(img)):not(:has(video)):not(:has([data-testid="tweetPhoto"])) {
       display: none !important;
     }
   \\\`;
@@ -207,7 +207,10 @@ const selector = allowedUsers.map(u =>
 
       <h2>仕組みの解説</h2>
       <p>
-        このフィルターは CSS の <code>:has()</code> 擬似クラスを使ってる。<code>article:not(:has(img)):not(:has(video))</code> は「<code>&lt;img&gt;</code> も <code>&lt;video&gt;</code> も含まない <code>&lt;article&gt;</code> 要素」を選択し、<code>display: none</code> で非表示にしてる。
+        このフィルターは CSS の <code>:has()</code> 擬似クラスを使ってる。<code>article[data-testid="tweet"]:not(:has(img)):not(:has(video)):not(:has([data-testid="tweetPhoto"]))</code> は「画像・動画を含まないツイート」を選択し、<code>display: none</code> で非表示にしてる。
+      </p>
+      <p>
+        X(Twitter) のツイートは <code>article[data-testid="tweet"]</code> として構造化されており、画像がある場合は <code>&lt;img&gt;</code> タグや <code>data-testid="tweetPhoto"</code> 属性を持つ要素が含まれる。
       </p>
 
       <h2>カスタマイズ</h2>
