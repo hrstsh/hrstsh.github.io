@@ -1,4 +1,4 @@
-# AI Development Rules for hrstsh.github.io
+# AI Development Rules for hrstsh.com
 
 このファイルは、AIアシスタント（Cursor、Perplexity、その他のAIツール）がこのリポジトリで作業する際のガイドラインです。
 
@@ -7,7 +7,7 @@
 - **目的**: GitHub Pages用の個人サイト
 - **技術スタック**: Astro 4.x, TypeScript
 - **デプロイ**: GitHub Actions (自動)
-- **URL**: https://hrstsh.github.io
+- **URL**: https://hrstsh.com
 
 ## 必須ルール
 

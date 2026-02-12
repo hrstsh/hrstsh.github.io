@@ -1,8 +1,8 @@
-# hrstsh.github.io
+# hrstsh.com
 
-Personal GitHub Pages site built with Astro.
+Personal site built with Astro. Hosted on GitHub Pages with custom domain.
 
-🌐 **Live Site**: https://hrstsh.github.io
+🌐 **Live Site**: https://hrstsh.com
 
 ## About
 
@@ -13,39 +13,39 @@ This repository hosts the source code for my personal website. The site is built
 Current pages available on the site:
 
 ```
-https://hrstsh.github.io/
+https://hrstsh.com/
 ├── / ...................... Home (トップページ)
-│   https://hrstsh.github.io/
+│   https://hrstsh.com/
 │   (最近の更新は src/data/recent.ts で手動管理)
 │
 ├── /cheatsheets/ .......... チートシート (コマンド集)
-│   https://hrstsh.github.io/cheatsheets
+│   https://hrstsh.com/cheatsheets
 │   ├── /git-cheatsheet .... Gitコマンドチートシート
-│   │   https://hrstsh.github.io/cheatsheets/git-cheatsheet
+│   │   https://hrstsh.com/cheatsheets/git-cheatsheet
 │   │   (basics, branches, remote, advanced, tips)
 │   │
 │   ├── /docker-cheatsheet . Dockerコマンドチートシート
-│   │   https://hrstsh.github.io/cheatsheets/docker-cheatsheet
+│   │   https://hrstsh.com/cheatsheets/docker-cheatsheet
 │   │   (basics, images, containers, compose, tips)
 │   │
 │   └── /sql-cheatsheet .... SQL基本コマンド集
-│       https://hrstsh.github.io/cheatsheets/sql-cheatsheet
+│       https://hrstsh.com/cheatsheets/sql-cheatsheet
 │       (basics, joins, manipulation, advanced)
 │
 ├── /tools/ ................ ツール (ブラウザ上で動作)
-│   https://hrstsh.github.io/tools
+│   https://hrstsh.com/tools
 │   ├── /styled-text-replacer ... スタイル付きテキスト置換
-│   │   https://hrstsh.github.io/tools/styled-text-replacer
+│   │   https://hrstsh.com/tools/styled-text-replacer
 │   │   (書式を維持したまま文字列置換、クライアントサイドで動作)
 │   ├── /sql-formatter ......... SQL整形ツール
-│   │   https://hrstsh.github.io/tools/sql-formatter
+│   │   https://hrstsh.com/tools/sql-formatter
 │   │   (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
 │   └── /zero-width-breaker .... ツイートのリンク化回避ツール
-│       https://hrstsh.github.io/tools/zero-width-breaker
+│       https://hrstsh.com/tools/zero-width-breaker
 │       (ツイートのリンク化を防ぐ、クライアントサイドで動作)
 │
 └── /tips/ ................. Tips
-    https://hrstsh.github.io/tips
+    https://hrstsh.com/tips
     (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 ```
 
@@ -104,7 +104,7 @@ Helper scripts for Git workflow (run from repository root):
   - Google Search Console のキャッシュ問題を回避するため v3 を使用
   - 各ページの `<lastmod>` タグに最終更新日を含む
   - 標準的な XML 形式（スキーマ定義、適切なインデント）
-- **robots.txt**: `public/robots.txt` allows all crawlers and points to `https://hrstsh.github.io/sitemap-v3.xml`.
+- **robots.txt**: `public/robots.txt` allows all crawlers and points to `https://hrstsh.com/sitemap-v3.xml`.
 
 ## Security
 
@@ -115,13 +115,21 @@ Helper scripts for Git workflow (run from repository root):
 
 The site is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
 
+### Custom Domain (hrstsh.com)
+
+1. **GitHub 設定**: リポジトリ → Settings → Pages → Custom domain に `hrstsh.com` を入力
+2. **DNS 設定**: ドメインの DNS で以下を設定
+   - A レコード: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+   - または CNAME: `hrstsh.github.io` へ（ apex の場合 CNAME 非対応のレジストラもあるため A レコード推奨）
+3. **CNAME ファイル**: `public/CNAME` に `hrstsh.com` を記載済み（ビルド時に dist へコピー）
+
 ### Deployment Process
 
 1. Push changes to `main` branch
 2. GitHub Actions workflow (`.github/workflows/deploy.yml`) is triggered
 3. Site is built using `npm run build`
 4. Build output (`dist/`) is deployed to GitHub Pages
-5. Site is live at https://hrstsh.github.io
+5. Site is live at https://hrstsh.com
 
 ### Manual Deployment
 
