@@ -10,7 +10,7 @@ interface Props {
 
 const { title, description, image, noindex = false } = Astro.props;
 const isProd = import.meta.env.PROD; // 本番環境判定
-const site = 'https://hrstsh.github.io';
+const site = 'https://hrstsh.com';
 const canonical = new URL(Astro.url.pathname || '/', site).href;
 const ogImage = image ? (image.startsWith('http') ? image : new URL(image, site).href) : `${site}/favicon.svg`;
 ---

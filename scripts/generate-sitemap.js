@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const distDir = join(__dirname, '..', 'dist');
-const site = 'https://hrstsh.github.io';
+const site = 'https://hrstsh.com';
 // Google Search Console のキャッシュ回避のため v3 を使用
 const sitemapFilename = 'sitemap-v3.xml';
 
