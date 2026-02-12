@@ -10,7 +10,8 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
-  { title: 'ツイートのリンク化回避ツール', href: '/tools/zero-width-breaker', date: '2025-02-07', showNew: true },
+  { title: 'X(Twitter)のタイムラインで画像・動画付きツイートを非表示にする', href: '/tips/twitter-text-only-filter', date: '2025-02-11', showNew: true },
+  { title: 'ツイートのリンク化回避ツール', href: '/tools/zero-width-breaker', date: '2025-02-07' },
   { title: 'ページのメタ情報を見やすく表示＆コピーするブックマークレット', href: '/tips/meta-info-viewer-bookmarklet', date: '2025-02-06' },
   { title: 'X(Twitter)のメディア欄から画像URLを一括取得する方法', href: '/tips/twitter-media-url-extractor', date: '2025-02-05' },
 ];
