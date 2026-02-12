@@ -1,0 +1,291 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const bookmarkletCode = `javascript:(function(){const id='twitter-text-only';let s=document.getElementById(id);if(s){s.remove();}else{s=document.createElement('style');s.id=id;s.textContent='div[data-testid="cellInnerDiv"]:has(article):has(div[data-testid="tweetPhoto"]),div[data-testid="cellInnerDiv"]:has(article):has(video){display:none!important;}';document.head.appendChild(s);}})();`;
+
+const manifestCode = `{
+  "manifest_version": 3,
+  "name": "Twitter Text Only Filter",
+  "version": "1.0",
+  "description": "X(Twitter)で画像・動画付きツイートを非表示にしてテキストのみ表示",
+  "permissions": ["storage", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}`;
+
+const contentJsCode = `chrome.storage.sync.get(['enabled'], function(result) {
+  if (result.enabled) applyFilter();
+});
+
+chrome.storage.onChanged.addListener(function(changes) {
+  if (changes.enabled) {
+    changes.enabled.newValue ? applyFilter() : removeFilter();
+  }
+});
+
+function applyFilter() {
+  const existing = document.getElementById('twitter-text-only-filter');
+  if (existing) existing.remove();
+
+  const style = document.createElement('style');
+  style.id = 'twitter-text-only-filter';
+  style.textContent = \`
+    div[data-testid="cellInnerDiv"]:has(article):has(div[data-testid="tweetPhoto"]),
+    div[data-testid="cellInnerDiv"]:has(article):has(video) {
+      display: none !important;
+    }
+  \`;
+  document.head.appendChild(style);
+}
+
+function removeFilter() {
+  const style = document.getElementById('twitter-text-only-filter');
+  if (style) style.remove();
+}`;
+
+const popupHtmlCode = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 200px; padding: 15px; font-family: sans-serif; }
+    label { display: flex; align-items: center; cursor: pointer; }
+    input[type="checkbox"] { margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <label>
+    <input type="checkbox" id="toggle">
+    テキストのみ表示
+  </label>
+  <script src="${'popup' + '.js'}"></script>
+</body>
+</html>`;
+
+const popupJsCode = `const toggle = document.getElementById('toggle');
+chrome.storage.sync.get(['enabled'], function(result) {
+  toggle.checked = result.enabled || false;
+});
+toggle.addEventListener('change', function() {
+  chrome.storage.sync.set({ enabled: toggle.checked });
+});`;
+---
+
+<Layout title="X(Twitter)のタイムラインで画像・動画付きツイートを非表示にする - hrの備忘録" description="X(Twitter) のタイムラインで画像・動画付きツイートを非表示にして、テキストツイートだけを表示する方法。ブックマークレットまたは Chrome 拡張で実現。">
+  <main>
+    <header class="article-header">
+      <a href="/tips" class="back-link">← Tips一覧</a>
+      <h1>X(Twitter)のタイムラインで画像・動画付きツイートを非表示にする</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter) でテキスト主体のタイムラインを見たい時、画像や動画付きツイートが邪魔になることがある。「画像のみ表示」の逆で、画像・動画付きツイートを非表示にしてテキストだけを表示する方法。
+      </p>
+
+      <h2>何ができるか</h2>
+      <ul>
+        <li>画像・動画が含まれるツイートを自動で非表示</li>
+        <li>テキストのみのツイートだけが表示される</li>
+        <li>読み物としてのタイムラインに集中できる</li>
+        <li>ワンクリックで ON/OFF 切り替え可能（拡張機能版）</li>
+      </ul>
+
+      <h2>方法1: ブックマークレット版</h2>
+      <p>
+        インストール不要で、ブックマークレットを作成するだけ。
+      </p>
+
+      <h3>手順</h3>
+      <ol>
+        <li>Chrome で新しいブックマークを作成（ブックマークバーを右クリック → 「ページを追加」）</li>
+        <li>名前を「Twitter テキストのみ」などに設定</li>
+        <li>URL に以下のコードを貼り付け：</li>
+      </ol>
+
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h3>使い方</h3>
+      <ol>
+        <li>X(Twitter) のタイムラインを開く</li>
+        <li>作成したブックマークレットをクリック</li>
+        <li>画像・動画付きツイートが非表示になる</li>
+        <li>もう一度クリックすると解除される（トグル動作）</li>
+      </ol>
+
+      <h2>方法2: Chrome 拡張機能版</h2>
+      <p>
+        ページを開くたびに自動で適用される拡張機能を作成する。
+      </p>
+
+      <h3>1. フォルダ構成</h3>
+      <pre><code class="language-text">twitter-text-only-filter/
+├── manifest.json
+├── content.js
+├── popup.html
+└── popup.js</code></pre>
+
+      <h3>2. manifest.json</h3>
+      <CodeBlock code={manifestCode} language="json" />
+
+      <h3>3. content.js</h3>
+      <CodeBlock code={contentJsCode} language="javascript" />
+
+      <h3>4. popup.html</h3>
+      <CodeBlock code={popupHtmlCode} language="html" />
+
+      <h3>5. popup.js</h3>
+      <CodeBlock code={popupJsCode} language="javascript" />
+
+      <h3>6. 拡張機能のインストール</h3>
+      <ol>
+        <li>Chrome で <code>chrome://extensions/</code> を開く</li>
+        <li>右上の「デベロッパーモード」をオン</li>
+        <li>「パッケージ化されていない拡張機能を読み込む」をクリック</li>
+        <li>作成したフォルダを選択</li>
+      </ol>
+
+      <h2>仕組み</h2>
+      <p>
+        CSS の <code>:has()</code> 擬似クラスで、画像・動画を含むツイートを特定して非表示にしている。
+      </p>
+      <ul>
+        <li><code>div[data-testid="tweetPhoto"]</code> を持つセル → 画像付きツイート</li>
+        <li><code>video</code> 要素を持つセル → 動画付きツイート</li>
+      </ul>
+
+      <h2>関連</h2>
+      <p>
+        逆の動き（<a href="/tips/twitter-image-only-filter">画像・動画のみ表示</a>）も同様の方法で実現できる。
+      </p>
+
+      <h2>注意</h2>
+      <ul>
+        <li>X(Twitter) の仕様変更で将来的に動作しなくなる可能性がある。</li>
+        <li>ブックマークレット版はページをリロードすると解除される。</li>
+      </ul>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 1.5rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>

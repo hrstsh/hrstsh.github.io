@@ -46,7 +46,7 @@ https://hrstsh.com/
 │
 └── /tips/ ................. Tips
     https://hrstsh.com/tips
-    (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+    (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 ```
 
 ## Tech Stack
