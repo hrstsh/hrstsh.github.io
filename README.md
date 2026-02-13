@@ -40,13 +40,27 @@ https://hrstsh.com/
 │   ├── /sql-formatter ......... SQL整形ツール
 │   │   https://hrstsh.com/tools/sql-formatter
 │   │   (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
-│   └── /zero-width-breaker .... ツイートのリンク化回避ツール
-│       https://hrstsh.com/tools/zero-width-breaker
-│       (ツイートのリンク化を防ぐ、クライアントサイドで動作)
+│   ├── /zero-width-breaker .... ツイートのリンク化回避ツール
+│   │   https://hrstsh.com/tools/zero-width-breaker
+│   │   (ツイートのリンク化を防ぐ、クライアントサイドで動作)
+│   └── /exif-editor ........... EXIF編集ツール
+│       https://hrstsh.com/tools/exif-editor
+│       (JPEGのEXIF情報を読み取り・編集・追加、piexifjs使用)
 │
-└── /tips/ ................. Tips
-    https://hrstsh.com/tips
-    (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+├── /tried/ ............... やってみた
+│   https://hrstsh.com/tried
+│   (github-pages-setup など)
+│
+├── /tips/ ................. Tips
+│   https://hrstsh.com/tips
+│   (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+│
+├── /privacy ............... プライバシーポリシー・免責事項
+│   https://hrstsh.com/privacy
+│
+└── /contact .............. お問い合わせ
+    https://hrstsh.com/contact
+    (Google Form へのリンク、運営者情報)
 ```
 
 ## Tech Stack
@@ -153,11 +167,13 @@ You can also trigger deployment manually:
 │   ├── layouts/
 │   │   └── Layout.astro    # Base layout component
 │   ├── data/
-│   │   └── recent.ts       # 最近の更新（手動管理・トップ画面右サイドバー）
+│   │   ├── recent.ts       # 最近の更新（手動管理・トップ画面右サイドバー）
+│   │   └── tried.ts        # やってみた記事一覧（手動管理）
 │   ├── pages/
 │   │   ├── index.astro     # Home page
+│   │   ├── tried/          # やってみた (tried / hand-written reports)
 │   │   ├── tips/           # Tips (tips & tricks)
-│   │   └── tools/         # Tools (cheatsheets)
+│   │   └── tools/          # Tools (cheatsheets)
 │   │       ├── git-cheatsheet/   # Git (index, basics, branches, remote, advanced, tips)
 │   │       ├── docker-cheatsheet/# Docker (index, basics, images, containers, compose, tips)
 │   │       └── sql-cheatsheet/   # SQL (index, basics, joins, manipulation, advanced)

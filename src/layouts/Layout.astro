@@ -64,7 +64,11 @@ const ogImage = image ? (image.startsWith('http') ? image : new URL(image, site)
       <slot />
     </div>
     <footer class="site-footer">
-      © 2026 hrstsh
+      <nav class="footer-nav">
+        <a href="/privacy">プライバシーポリシー</a>
+        <a href="/contact">お問い合わせ</a>
+      </nav>
+      <p class="footer-copy">© 2026 hrstsh</p>
     </footer>
   </body>
 </html>

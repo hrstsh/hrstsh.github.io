@@ -1,41 +1,26 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { triedPosts } from '../../data/tried';
 ---
 
-<Layout title="ツール - hrの備忘録" description="ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。">
+<Layout title="やってみた - hrの備忘録" description="実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。">
   <main>
     <header class="page-header">
-      <h1>ツール</h1>
-      <p class="subtitle">ブラウザ上で動作する便利なツール集</p>
+      <h1>やってみた</h1>
+      <p class="subtitle">実際に試したことの手記やレポート</p>
     </header>
 
-    <section class="tools-list">
-      <h2>ツール一覧</h2>
-      <ul class="tool-cards">
-        <li>
-          <a href="/tools/styled-text-replacer" class="tool-card">
-            <span class="tool-title">スタイル付きテキスト置換</span>
-            <span class="tool-desc">クリップボード内の書式（太字・色など）を維持したまま文字列を置換できるツール。Word や Google ドキュメントで便利。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/sql-formatter" class="tool-card">
-            <span class="tool-title">SQL整形ツール</span>
-            <span class="tool-desc">SQLを整形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/zero-width-breaker" class="tool-card">
-            <span class="tool-title">ツイートのリンク化回避ツール</span>
-            <span class="tool-desc">ツイートのメンション・URL・ハッシュタグのリンク化を防ぐ。見た目を変えずに Zero-Width 文字を挿入。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/exif-editor" class="tool-card">
-            <span class="tool-title">写真のメタデータ（EXIF）編集</span>
-            <span class="tool-desc">撮影日時・カメラ情報・GPS位置情報などをブラウザで編集。既存の変更や新規追加が可能。</span>
-          </a>
-        </li>
+    <section class="tips-list">
+      <h2>記事一覧</h2>
+      <ul class="tip-cards">
+        {triedPosts.map((post) => (
+          <li>
+            <a href={post.href} class="tip-card">
+              <span class="tip-title">{post.title}</span>
+              <span class="tip-desc">{post.desc}</span>
+            </a>
+          </li>
+        ))}
       </ul>
     </section>
 
@@ -76,14 +61,14 @@ import Layout from '../../layouts/Layout.astro';
     color: var(--color-text-muted);
   }
 
-  .tools-list h2 {
+  .tips-list h2 {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
     color: var(--color-text);
   }
 
-  .tool-cards {
+  .tip-cards {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -92,7 +77,7 @@ import Layout from '../../layouts/Layout.astro';
     gap: 1rem;
   }
 
-  .tool-card {
+  .tip-card {
     display: block;
     padding: 1.5rem 1.75rem;
     background: var(--color-bg-card);
@@ -105,13 +90,13 @@ import Layout from '../../layouts/Layout.astro';
       border-color var(--transition-normal);
   }
 
-  .tool-card:hover {
+  .tip-card:hover {
     transform: translateY(-2px);
     border-color: var(--color-primary);
     box-shadow: var(--shadow-hover);
   }
 
-  .tool-title {
+  .tip-title {
     font-weight: 600;
     color: var(--color-primary);
     display: block;
@@ -119,11 +104,11 @@ import Layout from '../../layouts/Layout.astro';
     transition: color var(--transition-fast);
   }
 
-  .tool-card:hover .tool-title {
+  .tip-card:hover .tip-title {
     color: var(--color-accent);
   }
 
-  .tool-desc {
+  .tip-desc {
     font-size: 0.95rem;
     color: var(--color-text-muted);
     display: block;

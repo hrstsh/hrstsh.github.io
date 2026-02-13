@@ -1,0 +1,272 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const folderTree = `├── .github/workflows/  ... デプロイ設定（GitHub Actions）
+├── src/
+│   ├── layouts/     ... 共通レイアウト（Layout.astro）
+│   ├── data/        ... 最近の更新・やってみた一覧（手動管理）
+│   ├── pages/       ... ページ（index, tried, tips, cheatsheets, tools）
+│   ├── components/  ... 再利用コンポーネント
+│   └── styles/      ... グローバルスタイル
+├── public/          ... 静的ファイル（CNAME, robots.txt, 画像）
+└── scripts/         ... ビルド・Git 用スクリプト`;
+
+const searchConsoleMeta = `<!-- Layout.astro の head 内 -->
+<meta name="google-site-verification" content="検証用コード" />`;
+
+const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
+{isProd && (
+  <>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+  </>
+)}`;
+---
+
+<Layout title="GitHub Pages を作成して公開してみた - hrの備忘録" description="GitHub Pages で個人サイトを立ち上げ、カスタムドメイン・Google Search Console・Google Analytics・Perplexity/Cursor を活用した開発までを手記形式でまとめました。">
+  <main>
+    <header class="article-header">
+      <a href="/tried" class="back-link">← やってみた一覧</a>
+      <h1>GitHub Pages を作成して公開してみた</h1>
+      <p class="article-meta">個人サイトを立ち上げてからカスタムドメインまで、実際にやったことの記録</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        このサイト（hrstsh.com）は GitHub Pages でホストしている。カスタムドメイン（Xserver でのドメイン取得）から Google Search Console・Google Analytics の設定、
+        そして Perplexity や Cursor といった AI ツールを活用した開発まで実際に行なったことを書いていく。
+      </p>
+
+      <h2>1. GitHub Pages の作成</h2>
+      <p>
+        まずは GitHub でリポジトリを作成し、静的サイトとして公開する。Astro でビルドした静的ファイルを
+        <code> dist/</code> に出力し、GitHub Actions で自動デプロイする構成にした。
+      </p>
+
+      <p>
+        GitHub リポジトリの Settings → Pages で、Source を「GitHub Actions」に設定する。
+        ワークフローが push のたびにビルドしてデプロイしてくれる。
+      </p>
+
+      <p>リポジトリ内の主要なフォルダ構成と役割は次のとおり。</p>
+      <CodeBlock code={folderTree} language="text" />
+
+      <h2>2. カスタムドメイン（Xserver でドメイン取得）</h2>
+      <p>
+        せっかくなので独自ドメインを取得した。
+        新しいアカウントを作成するのが面倒だったため、既にアカウントを持っている Xserver でドメインを契約した。
+      </p>
+
+      <h3>2.1 ドメイン取得（Xserver）</h3>
+      <p>
+        Xserver のドメイン取得サービスで希望のドメインを検索し、契約。
+        取得後、ドメインの DNS 管理画面にアクセスできる。
+      </p>
+
+      <h3>2.2 DNS 設定</h3>
+      <p>
+        apex ドメイン（例: hrstsh.com）の場合は、A レコードを 4 つ追加する。
+        GitHub Pages の公式 IP は次のとおり。
+      </p>
+      
+      <figure class="article-image">
+        <img src="/images/tried/github-pages-setup01.png" alt="DNSレコード設定" />
+      </figure>
+
+      <h3>2.3 GitHub でのカスタムドメイン設定</h3>
+      <p>
+        GitHub リポジトリの Settings → Pages → Custom domain に取得したドメインを入力する。
+        また、リポジトリの <code>public/CNAME</code> にドメイン名を書いておくと、ビルド時に自動で dist にコピーされる。
+      </p>
+  
+      <figure class="article-image">
+        <img src="/images/tried/github-pages-setup02.png" alt="GitHub Custom domain 設定" />
+      </figure>
+
+      <p>
+        DNS の反映には数分〜最大 48 時間かかることがある。反映されると、独自ドメインでサイトにアクセスできるようになる。
+      </p>
+
+      <h2>3. Google Search Console</h2>
+      <p>
+        検索エンジンにサイトを登録し、インデックス状況を確認するために Google Search Console を設定した。
+      </p>
+
+      <p>
+        Search Console でプロパティを追加する際、ドメイン指定（<code>hrstsh.com</code>）でプロパティを作成した。
+        所有権の確認は、DNS に TXT レコードを登録する方法で行った。Xserver の DNS 管理画面で、Search Console から指示された TXT レコードを追加し、反映を待って確認した。
+      </p>
+
+      <p>ドメイン指定の場合は DNS で確認する。HTML タグで確認する場合は <code>Layout.astro</code> の <code>&lt;head&gt;</code> に以下の meta タグを追加する。</p>
+      <CodeBlock code={searchConsoleMeta} language="html" />
+
+      <h2>4. Google Analytics</h2>
+      <p>
+        アクセス解析のため、Google Analytics 4（GA4）を導入した。
+        <code>Layout.astro</code> に gtag のスクリプトを追加し、本番環境でのみ読み込むようにした。
+      </p>
+
+      <p>
+        GA4 でプロパティを作成し、測定 ID（G-XXXXXXXXXX）を取得。その ID を Layout の gtag 設定に渡す。
+        本番環境でのみ読み込むように <code>import.meta.env.PROD</code> で分岐している。
+      </p>
+
+      <p><code>Layout.astro</code> の <code>&lt;head&gt;</code> に埋め込んでいるコード例。</p>
+      <CodeBlock code={analyticsCode} language="jsx" />
+
+      <h2>5. Perplexity での検索・コネクタソースを利用した PR 作成</h2>
+      <p>
+        記事の下書きや設計を考える際、Perplexity を活用した。検索機能で最新の情報を参照し、
+        コネクタソースを指定して、リポジトリの構成や README の内容を踏まえた提案を受け取ったり、記事の草案をリポジトリに作成させたりした。
+      </p>
+
+      <p>
+        「このリポジトリの構成に合わせて〇〇を作って」のような指示を出すと、
+        検索結果とリポジトリの内容を組み合わせたコードや説明文が返ってくる。
+        それをそのまま PR の説明文やコードのベースとして使うことができた。
+      </p>
+
+      <h2>6. Cursor でのコーディング</h2>
+      <p>
+        Perplexity の作成するコードは割とエラーだらけだったため、実際のコーディングは Cursor を使って行った。エディタ内で AI に質問しつつ、
+        ファイルの追加・修正を進められる。Astro のベストプラクティスや TypeScript の型定義も、
+        コンテキストに応じて提案してくれる。
+      </p>
+
+      <p>
+        <code>.cursorrules</code> にプロジェクトのルール（個人情報を書かない、README を更新する、
+        Astro のコードブロックで <code>&#123;</code> <code>&#125;</code> を直書きしないなど）を書いておくと、
+        AI がそれを守った提案をしてくれる。
+      </p>
+
+      <p>
+        Perplexity で「たたき」を作り、Cursor で仕上げる、という二段構えのやり方が効いていた。
+      </p>
+
+      <h2>まとめ</h2>
+      <p>
+        Perplexity のコネクタソースで GitHub に接続し、簡単なリポジトリ操作を試しているうちに Github Pages を作成させてみることを思いついたため、
+        Astro でのサイト作成や、 Google Search Console や Google Analytics での検索・アクセス確認をやってみた。
+        Cursor も併用することで Perplexity のコーディング能力を補ったり、深く理解していない Astro でサクサク記事作成ができた。        
+      </p>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-image {
+    margin: 1.5rem auto;
+    text-align: center;
+    max-width: 560px;
+  }
+
+  .article-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md), 0 4px 20px rgba(102, 126, 234, 0.12);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
