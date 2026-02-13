@@ -40,9 +40,12 @@ https://hrstsh.com/
 │   ├── /sql-formatter ......... SQL整形ツール
 │   │   https://hrstsh.com/tools/sql-formatter
 │   │   (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
-│   └── /zero-width-breaker .... ツイートのリンク化回避ツール
-│       https://hrstsh.com/tools/zero-width-breaker
-│       (ツイートのリンク化を防ぐ、クライアントサイドで動作)
+│   ├── /zero-width-breaker .... ツイートのリンク化回避ツール
+│   │   https://hrstsh.com/tools/zero-width-breaker
+│   │   (ツイートのリンク化を防ぐ、クライアントサイドで動作)
+│   └── /exif-editor ........... EXIF編集ツール
+│       https://hrstsh.com/tools/exif-editor
+│       (JPEGのEXIF情報を読み取り・編集・追加、piexifjs使用)
 │
 ├── /tried/ ............... やってみた
 │   https://hrstsh.com/tried

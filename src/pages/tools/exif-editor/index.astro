@@ -1,0 +1,563 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="EXIF編集ツール - hrの備忘録" description="JPEG画像のEXIF情報を読み取り・編集・追加できるツール。piexifjs使用。ブラウザ上で完結、データ送信なし。">
+  <main>
+    <header class="article-header">
+      <a href="/tools" class="back-link">← ツール一覧</a>
+      <h1>EXIF編集ツール</h1>
+    </header>
+
+    <article class="article-body">
+      <section class="usage-section intro-section">
+        <h2>このツールについて</h2>
+        <p>
+          JPEG画像のEXIF情報を読み取り、既存項目の編集や新しい項目の追加ができます。
+          <a href="https://github.com/hMatoba/piexifjs" target="_blank" rel="noopener">piexifjs</a> を使用し、ブラウザ上で完結します。データはサーバーに送信されません。
+        </p>
+        <h3>使い方</h3>
+        <ol>
+          <li>JPEG画像を選択する</li>
+          <li>表示されたEXIF項目を編集する（または削除）</li>
+          <li>「項目を追加」で新しいEXIFタグを追加する</li>
+          <li>「編集した画像をダウンロード」で保存する</li>
+        </ol>
+      </section>
+
+      <div class="tool-container">
+        <section class="tool-section">
+          <h2>1. 画像を選択</h2>
+          <input type="file" id="fileInput" accept="image/jpeg,image/jpg" />
+          <p class="note">※ JPEG形式のみ対応</p>
+          <div id="previewArea" class="preview-area"></div>
+        </section>
+
+        <section class="tool-section" id="exifSection" style="display: none;">
+          <h2>2. EXIF項目の表示・編集</h2>
+          <div id="exifList" class="exif-list"></div>
+
+          <div class="add-section">
+            <h3>項目を追加</h3>
+            <div class="add-form">
+              <select id="addIfd">
+                <option value="0th">0th IFD（画像情報）</option>
+                <option value="Exif">Exif IFD（撮影情報）</option>
+                <option value="GPS">GPS IFD</option>
+                <option value="Interop">Interop IFD</option>
+              </select>
+              <select id="addTag"></select>
+              <input type="text" id="addValue" placeholder="値（形式はタグにより異なります）" />
+              <button type="button" id="addBtn" class="secondary-btn">追加</button>
+            </div>
+            <p class="note">Rational形式は <code>[分子,分母]</code>、複数は <code>[[n,d],[n,d]]</code></p>
+          </div>
+        </section>
+
+        <section class="tool-section" id="downloadSection" style="display: none;">
+          <button id="downloadBtn" class="primary-btn">編集した画像をダウンロード</button>
+        </section>
+      </div>
+
+      <section class="usage-section">
+        <h2>注意事項</h2>
+        <ul>
+          <li>JPEG形式のみ対応です（PNGやHEICは非対応）</li>
+          <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
+          <li>EXIFの形式を誤ると画像が破損する場合があります。重要な画像はバックアップを取ってから編集してください</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<script src="https://unpkg.com/piexifjs@1.0.6/piexif.js"></script>
+<script is:inline>
+  (function() {
+    const IFD_LABELS = { '0th': '0th IFD', 'Exif': 'Exif IFD', 'GPS': 'GPS IFD', 'Interop': 'Interop IFD' };
+    const TAG_IFD_MAP = { '0th': 'Image', '1st': 'Image', 'Exif': 'Exif', 'GPS': 'GPS', 'Interop': 'Interop' };
+
+    let jpegDataUrl = '';
+    let exifObj = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const previewArea = document.getElementById('previewArea');
+    const exifSection = document.getElementById('exifSection');
+    const exifList = document.getElementById('exifList');
+    const addIfd = document.getElementById('addIfd');
+    const addTag = document.getElementById('addTag');
+    const addValue = document.getElementById('addValue');
+    const addBtn = document.getElementById('addBtn');
+    const downloadSection = document.getElementById('downloadSection');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    function getTagInfo(ifd, tagId) {
+      const tifd = TAG_IFD_MAP[ifd] || ifd;
+      const tags = piexif.TAGS[tifd];
+      if (!tags || !tags[tagId]) return { name: 'Unknown(' + tagId + ')', type: 'Ascii' };
+      return tags[tagId];
+    }
+
+    function formatValue(val) {
+      if (val === null || val === undefined) return '';
+      if (Array.isArray(val)) {
+        if (val.length === 2 && typeof val[0] === 'number' && typeof val[1] === 'number') return val.join(',');
+        return JSON.stringify(val);
+      }
+      return String(val);
+    }
+
+    function parseValue(str, type) {
+      const s = str.trim();
+      if (!s) return null;
+      if (type === 'Ascii' || type === 'Undefined') return s;
+      if (type === 'Byte' || type === 'Short' || type === 'Long' || type === 'SLong') {
+        const n = parseInt(s, 10);
+        return isNaN(n) ? null : n;
+      }
+      if (type === 'Rational' || type === 'SRational') {
+        try {
+          const parsed = JSON.parse(s);
+          if (Array.isArray(parsed)) {
+            if (parsed.length === 2 && typeof parsed[0] === 'number' && typeof parsed[1] === 'number') return parsed;
+            if (parsed.every(a => Array.isArray(a) && a.length === 2)) return parsed;
+          }
+        } catch (_) {}
+        const m = s.match(/^(\d+)\s*,\s*(\d+)$/);
+        if (m) return [parseInt(m[1], 10), parseInt(m[2], 10)];
+      }
+      return s;
+    }
+
+    function ensureExifStyles() {
+      if (document.getElementById('exif-editor-styles')) return;
+      const style = document.createElement('style');
+      style.id = 'exif-editor-styles';
+      style.textContent = `
+        .exif-list { margin-bottom: 1.5rem; }
+        .exif-list .exif-ifd-section {
+          margin-bottom: 1.5rem;
+          background: linear-gradient(135deg, #fafbff 0%, #f8f9ff 100%);
+          border: 1px solid rgba(102, 126, 234, 0.2);
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .exif-list .exif-ifd-section:last-child { margin-bottom: 0; }
+        .exif-list .exif-ifd-section h4 {
+          font-size: 1rem; font-weight: 600; color: #667eea;
+          margin: 0; padding: 0.75rem 1rem;
+          background: rgba(102, 126, 234, 0.08);
+          border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+        }
+        .exif-list .exif-items { list-style: none; padding: 0; margin: 0; }
+        .exif-list .exif-item {
+          display: grid;
+          grid-template-columns: 140px 70px 1fr auto;
+          gap: 0.75rem; align-items: center;
+          padding: 0.6rem 1rem;
+          border-bottom: 1px solid rgba(0,0,0,0.06);
+          font-size: 0.9rem;
+        }
+        .exif-list .exif-item:last-child { border-bottom: none; }
+        .exif-list .exif-item:hover { background: rgba(102, 126, 234, 0.05); }
+        .exif-list .exif-name { font-weight: 500; color: #1a1a2e; }
+        .exif-list .exif-type { font-size: 0.8rem; color: #4a5568; }
+        .exif-list .exif-value {
+          padding: 0.4rem 0.6rem; border: 1px solid #e2e8f0;
+          border-radius: 6px; font-size: 0.9rem; background: #fff;
+        }
+        .exif-list .exif-value:focus {
+          outline: none; border-color: #667eea;
+          box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+        }
+        .exif-list .exif-remove {
+          width: 28px; height: 28px; padding: 0;
+          border: 1px solid #e2e8f0; border-radius: 6px;
+          background: #fff; color: #4a5568; font-size: 1.2rem;
+          cursor: pointer;
+        }
+        .exif-list .exif-remove:hover {
+          background: #fef2f2; color: #dc2626; border-color: #fecaca;
+        }
+        @media (max-width: 600px) {
+          .exif-list .exif-item {
+            grid-template-columns: 1fr; gap: 0.35rem; padding: 0.75rem 1rem;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    function renderExif() {
+      ensureExifStyles();
+      exifList.innerHTML = '';
+      const ifds = ['0th', 'Exif', 'GPS', 'Interop'];
+      for (const ifd of ifds) {
+        const data = exifObj[ifd];
+        if (!data || Object.keys(data).length === 0) continue;
+        const tifd = TAG_IFD_MAP[ifd];
+        const section = document.createElement('div');
+        section.className = 'exif-ifd-section';
+        section.innerHTML = '<h4>' + IFD_LABELS[ifd] || ifd + '</h4>';
+        const ul = document.createElement('ul');
+        ul.className = 'exif-items';
+        for (const tagId of Object.keys(data)) {
+          const tagIdNum = parseInt(tagId, 10);
+          if ([34665, 34853, 40965, 513, 514].indexOf(tagIdNum) >= 0) continue;
+          const info = getTagInfo(ifd, tagIdNum);
+          const val = data[tagId];
+          const li = document.createElement('li');
+          li.className = 'exif-item';
+          li.dataset.ifd = ifd;
+          li.dataset.tag = tagId;
+          li.innerHTML = '<span class="exif-name">' + info.name + '</span>' +
+            '<span class="exif-type">(' + info.type + ')</span>' +
+            '<input type="text" class="exif-value" value="' + formatValue(val).replace(/"/g, '&quot;') + '" />' +
+            '<button type="button" class="exif-remove" title="削除">×</button>';
+          ul.appendChild(li);
+        }
+        section.appendChild(ul);
+        exifList.appendChild(section);
+      }
+      bindExifEvents();
+      updateAddTagOptions();
+    }
+
+    function bindExifEvents() {
+      exifList.querySelectorAll('.exif-value').forEach(input => {
+        input.addEventListener('change', function() {
+          const li = this.closest('.exif-item');
+          const ifd = li.dataset.ifd;
+          const tag = parseInt(li.dataset.tag, 10);
+          const info = getTagInfo(ifd, tag);
+          const parsed = parseValue(this.value, info.type);
+          if (parsed !== null) exifObj[ifd][tag] = parsed;
+        });
+      });
+      exifList.querySelectorAll('.exif-remove').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const li = this.closest('.exif-item');
+          const ifd = li.dataset.ifd;
+          const tag = parseInt(li.dataset.tag, 10);
+          delete exifObj[ifd][tag];
+          li.remove();
+        });
+      });
+    }
+
+    function getUsedTags() {
+      const used = {};
+      for (const ifd of ['0th', 'Exif', 'GPS', 'Interop']) {
+        used[ifd] = new Set(Object.keys(exifObj[ifd] || {}).map(Number));
+      }
+      return used;
+    }
+
+    function updateAddTagOptions() {
+      const used = getUsedTags();
+      const ifd = addIfd.value;
+      const tifd = TAG_IFD_MAP[ifd];
+      const tags = piexif.TAGS[tifd];
+      addTag.innerHTML = '';
+      if (!tags) return;
+      for (const tagId of Object.keys(tags)) {
+        const id = parseInt(tagId, 10);
+        if ([34665, 34853, 40965, 513, 514].indexOf(id) >= 0) continue;
+        if (used[ifd] && used[ifd].has(id)) continue;
+        const opt = document.createElement('option');
+        opt.value = tagId;
+        opt.textContent = tags[tagId].name + ' (' + tags[tagId].type + ')';
+        addTag.appendChild(opt);
+      }
+    }
+
+    addIfd.addEventListener('change', updateAddTagOptions);
+
+    addBtn.addEventListener('click', () => {
+      const ifd = addIfd.value;
+      const tagId = parseInt(addTag.value, 10);
+      const info = getTagInfo(ifd, tagId);
+      const parsed = parseValue(addValue.value, info.type);
+      if (parsed === null) {
+        alert('値の形式が正しくありません。型: ' + info.type);
+        return;
+      }
+      if (!exifObj[ifd]) exifObj[ifd] = {};
+      exifObj[ifd][tagId] = parsed;
+      addValue.value = '';
+      renderExif();
+    });
+
+    fileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file || !file.type.match(/image\/jpe?g/)) {
+        alert('JPEG画像を選択してください');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        jpegDataUrl = e.target.result;
+        try {
+          exifObj = piexif.load(jpegDataUrl);
+          if (exifObj['0th']) delete exifObj['0th'].first_ifd_pointer;
+        } catch (err) {
+          alert('EXIFの読み込みに失敗しました: ' + err.message);
+          return;
+        }
+        previewArea.innerHTML = '<img src="' + jpegDataUrl + '" alt="プレビュー" class="preview-img" style="width:100%;height:auto;display:block;" />';
+        exifSection.style.display = 'block';
+        downloadSection.style.display = 'block';
+        renderExif();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!jpegDataUrl || !exifObj) return;
+      try {
+        const exifBytes = piexif.dump(exifObj);
+        const newJpeg = piexif.insert(exifBytes, jpegDataUrl);
+        const a = document.createElement('a');
+        a.href = newJpeg;
+        a.download = 'edited_' + (fileInput.files[0]?.name || 'image.jpg');
+        a.click();
+      } catch (err) {
+        alert('画像の保存に失敗しました: ' + err.message);
+      }
+    });
+  })();
+</script>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body {
+    color: var(--color-text-muted);
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .tool-container {
+    background: var(--color-bg-card);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    margin: 2rem 0;
+  }
+
+  .tool-section {
+    margin-bottom: 2rem;
+  }
+
+  .tool-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-section h2 {
+    font-size: 1.2rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
+    color: #555 !important;
+    border: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .preview-area {
+    margin-top: 1rem;
+    min-height: 80px;
+  }
+
+  .preview-area img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+  }
+
+  .note {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .add-section h3 {
+    font-size: 1.1rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .add-section {
+    padding: 1rem;
+    background: rgba(102, 126, 234, 0.06);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+  }
+
+  .add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .add-form select,
+  .add-form input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+
+  .add-form select {
+    min-width: 120px;
+  }
+
+  .add-form input {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .primary-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .secondary-btn {
+    padding: 0.5rem 1rem;
+    background: #e9ecef;
+    color: #495057;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .secondary-btn:hover {
+    background: #dee2e6;
+    border-color: #adb5bd;
+  }
+
+  .usage-section {
+    margin-top: 2rem;
+  }
+
+  .intro-section {
+    margin-top: 0;
+  }
+
+  .usage-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .usage-section h3 {
+    font-size: 1.1rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .usage-section ul,
+  .usage-section ol {
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .usage-section li {
+    margin-bottom: 0.35rem;
+  }
+
+  @media (max-width: 768px) {
+    .tool-container {
+      padding: 1rem;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .add-form {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
