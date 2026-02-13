@@ -1,0 +1,174 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// お問い合わせフォーム（Google Form）のURL。実際のフォームURLに差し替えてください。
+const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdQZ2lHjLpBHKmMvCz3HVznwyddu1pPmeaFYuIG-DWqGL0OiQ/viewform?usp=header';
+---
+
+<Layout title="お問い合わせ - hrの備忘録" description="hrの備忘録へのお問い合わせは、Google フォームからお送りください。">
+  <main>
+    <header class="page-header">
+      <h1>お問い合わせ</h1>
+      <p class="subtitle">ご質問・ご連絡は下記フォームからお送りください</p>
+    </header>
+
+    <section class="contact-section">
+      <p>
+        お問い合わせは Google フォームで受け付けています。下記ボタンからフォームを開いてご記入ください。
+      </p>
+      <p class="form-link-wrap">
+        <a href={CONTACT_FORM_URL} target="_blank" rel="noopener noreferrer" class="primary-btn">
+          お問い合わせフォームを開く
+        </a>
+      </p>
+    </section>
+
+    <section class="operator-section">
+      <h2>運営者情報</h2>
+      <dl class="operator-list">
+        <dt>サイト名</dt>
+        <dd>hrの備忘録（hrstsh.com）</dd>
+
+        <dt>内容</dt>
+        <dd>チートシート、ツール、Tips、やってみたなど、開発や日常で役立つ情報をまとめた個人サイト</dd>
+
+        <dt>ホスティング</dt>
+        <dd>GitHub Pages</dd>
+      </dl>
+    </section>
+
+    <footer class="page-footer">
+      <a href="/">トップに戻る</a>
+      <span class="footer-sep">|</span>
+      <a href="/privacy">プライバシーポリシー・免責事項</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    line-height: 1.8;
+  }
+
+  .page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--color-primary), var(--color-accent)) 1;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .contact-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .contact-section p {
+    margin-bottom: 1rem;
+  }
+
+  .form-link-wrap {
+    margin-top: 1.5rem;
+  }
+
+  .primary-btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .operator-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .operator-list {
+    display: grid;
+    gap: 0.75rem 1rem;
+    margin: 0;
+  }
+
+  .operator-list dt {
+    font-weight: 600;
+    color: var(--color-text-muted);
+    grid-column: 1;
+  }
+
+  .operator-list dd {
+    margin: 0;
+    grid-column: 2;
+  }
+
+  @media (min-width: 480px) {
+    .operator-list {
+      grid-template-columns: auto 1fr;
+    }
+  }
+
+  @media (max-width: 479px) {
+    .operator-list dt {
+      grid-column: 1 / -1;
+    }
+
+    .operator-list dd {
+      grid-column: 1 / -1;
+      padding-left: 0;
+    }
+  }
+
+  .operator-list a {
+    color: var(--color-primary);
+  }
+
+  .operator-list a:hover {
+    color: var(--color-accent);
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+  }
+
+  .page-footer a:hover {
+    color: var(--color-accent);
+  }
+
+  .footer-sep {
+    margin: 0 0.5rem;
+    color: var(--color-text-muted);
+  }
+</style>

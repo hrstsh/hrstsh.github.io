@@ -1,0 +1,140 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="プライバシーポリシー・免責事項 - hrの備忘録" description="hrの備忘録（hrstsh.com）のプライバシーポリシーと免責事項です。">
+  <main>
+    <header class="page-header">
+      <h1>プライバシーポリシー・免責事項</h1>
+      <p class="subtitle">hrの備忘録（hrstsh.com）における個人情報の取り扱いと免責事項</p>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>プライバシーポリシー</h2>
+
+        <h3>1. アクセス解析について</h3>
+        <p>
+          当サイトでは、Google Analytics を用いてアクセス状況を解析しています。Google Analytics は Cookie を使用し、匿名でアクセス情報を収集します。収集したデータはサイトの改善目的でのみ利用し、個人を特定する情報は含みません。
+        </p>
+        <p>
+          詳細は
+          <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">Google のサービスを使用するサイトやアプリから収集した情報の Google による使用</a>
+          をご確認ください。
+        </p>
+
+        <h3>2. Cookie について</h3>
+        <p>
+          当サイトでは、上記のアクセス解析のため Cookie を使用しています。ブラウザの設定で Cookie を無効にすることも可能です。その場合、一部の機能が正常に動作しない可能性があります。
+        </p>
+
+        <h3>3. 個人情報の取り扱い</h3>
+        <p>
+          当サイトは基本的に静的コンテンツを提供しており、フォーム入力等による個人情報の収集は行っていません。お問い合わせは Google フォーム等の外部サービスを利用する場合があり、その際のデータは各サービスのプライバシーポリシーに従います。
+        </p>
+
+        <h3>4. 第三者への提供</h3>
+        <p>
+          当サイトで収集した情報を、法令に基づく場合を除き、第三者に提供することはありません。
+        </p>
+
+        <h3>5. お問い合わせ</h3>
+        <p>
+          ご質問・ご連絡は<a href="/contact">お問い合わせページ</a>からお願いします。
+        </p>
+      </section>
+
+      <section>
+        <h2>免責事項</h2>
+        <ul>
+          <li>当サイトの情報は、正確性を心がけていますが、誤りや古い情報が含まれる可能性があります。利用の結果について、当サイトは一切の責任を負いかねます。</li>
+          <li>当サイトで提供するツール（EXIF編集、SQL整形、テキスト置換など）の利用および編集後のダウンロードは、ご自身の責任でお願いします。</li>
+          <li>当サイトのコンテンツを参考にした行為により生じた損害について、当サイトは責任を負いません。</li>
+        </ul>
+      </section>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    line-height: 1.8;
+  }
+
+  .page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--color-primary), var(--color-accent)) 1;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .article-body {
+    margin-bottom: 2.5rem;
+  }
+
+  .article-body h2 {
+    font-size: 1.35rem;
+    margin: 2rem 0 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body h3 {
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .article-body a:hover {
+    color: var(--color-accent);
+  }
+
+  .page-footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+  }
+
+  .page-footer a:hover {
+    color: var(--color-accent);
+  }
+</style>

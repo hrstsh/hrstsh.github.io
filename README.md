@@ -51,9 +51,16 @@ https://hrstsh.com/
 │   https://hrstsh.com/tried
 │   (github-pages-setup など)
 │
-└── /tips/ ................. Tips
-    https://hrstsh.com/tips
-    (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+├── /tips/ ................. Tips
+│   https://hrstsh.com/tips
+│   (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+│
+├── /privacy ............... プライバシーポリシー・免責事項
+│   https://hrstsh.com/privacy
+│
+└── /contact .............. お問い合わせ
+    https://hrstsh.com/contact
+    (Google Form へのリンク、運営者情報)
 ```
 
 ## Tech Stack
