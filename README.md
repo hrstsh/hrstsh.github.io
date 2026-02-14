@@ -49,7 +49,7 @@ https://hrstsh.com/
 │
 ├── /tried/ ............... やってみた
 │   https://hrstsh.com/tried
-│   (github-pages-setup など)
+│   (video-fps-checker, github-pages-setup など)
 │
 ├── /tips/ ................. Tips
 │   https://hrstsh.com/tips
