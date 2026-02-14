@@ -183,7 +183,7 @@ You can also trigger deployment manually:
 │   │   └── sql-cheatsheet/
 │   └── styles/
 │       └── global.css      # Global styles
-├── public/                 # Static assets (e.g. robots.txt)
+├── public/                 # Static assets (favicon, robots.txt, etc.)
 ├── .cursorrules            # AI development guidelines
 ├── astro.config.mjs        # Astro configuration
 ├── package.json
@@ -195,6 +195,7 @@ You can also trigger deployment manually:
 
 - **Color Theme**: Purple gradient (#667eea → #764ba2)
 - **Layout**: Max-width 800px, centered
+- **Favicon**: SVG + PNG (48x48, 192x192) for search results. PNG 再生成: `rsvg-convert -w 48 -h 48 public/favicon.svg -o public/favicon-48.png` および 192px 版（librsvg 要）
 - **Typography**: System font stack
 - **Responsive**: Mobile-first design
 
