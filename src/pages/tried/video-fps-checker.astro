@@ -1,0 +1,298 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+
+const manifestJson = `{
+  "manifest_version": 3,
+  "name": "Video FPS & Resolution Display",
+  "version": "1.0.0",
+  "description": "Webページで再生中の動画のFPSと解像度をリアルタイム表示します",
+  "permissions": ["storage", "activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "css": ["content.css"],
+    "run_at": "document_idle"
+  }],
+  "options_page": "options.html"
+}`;
+---
+
+<Layout title="動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた - hrの備忘録" description="Webページで再生中の動画のFPSと解像度をリアルタイム表示するChrome拡張機能「Video FPS & Resolution Display」を作成した手記。導入方法と仕組みを解説。">
+  <main>
+    <header class="article-header">
+      <a href="/tried" class="back-link">← やってみた一覧</a>
+      <h1>動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた</h1>
+      <p class="article-meta">YouTube・ニコニコ動画などで動画のFPSと解像度をオーバーレイ表示する拡張機能</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        Webページで再生中の動画の<strong>FPS（フレームレート）</strong>と<strong>解像度</strong>をリアルタイムで表示するChrome拡張機能を作りました。
+        YouTube、ニコニコ動画、その他HTML5動画に対応しています。
+      </p>
+
+      <p>
+        ソースコードは <a href="https://github.com/hrstsh/video-fps-checker" target="_blank" rel="noopener noreferrer">GitHub</a> で公開しています。
+      </p>
+
+      <h2>機能</h2>
+      <ul>
+        <li><strong>FPS表示</strong>: 動画の実際のフレームレートをリアルタイム表示</li>
+        <li><strong>解像度表示</strong>: 動画の幅×高さを表示</li>
+        <li><strong>ON/OFF切り替え</strong>: 拡張機能アイコンをクリックして表示の有効/無効を切り替え</li>
+        <li><strong>カスタマイズ</strong>: 表示位置（左上/右上/左下/右下）と文字色を設定可能</li>
+      </ul>
+
+      <h2>表示例</h2>
+      <p>
+        動画再生中、画面上にオーバーレイでFPSと解像度が表示されます。デフォルトは右上、緑色の文字です。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/video-fps-checker/display.png" alt="YouTubeで動画再生中、右上にFPS: 30.0、解像度: 1920×1080 と表示されている様子" />
+        <figcaption>動画再生時の表示例（YouTube）</figcaption>
+      </figure>
+
+      <h2>インストール方法</h2>
+      <p>
+        リポジトリをクローンするかZIPでダウンロードし、Chromeに読み込みます。
+      </p>
+
+      <h3>1. リポジトリを取得</h3>
+      <pre><code class="language-bash">git clone https://github.com/hrstsh/video-fps-checker.git</code></pre>
+      <p>
+        または、GitHubの「Code」→「Download ZIP」でダウンロードして解凍してください。
+      </p>
+
+      <h3>2. Chromeに拡張機能を読み込む</h3>
+      <ol>
+        <li>Chromeで <code>chrome://extensions/</code> を開く</li>
+        <li>右上の「デベロッパーモード」をONにする</li>
+        <li>「パッケージ化されていない拡張機能を読み込む」をクリック</li>
+        <li>クローン（または解凍）したフォルダを選択</li>
+      </ol>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>動画が再生されているWebページ（YouTube、ニコニコ動画など）を開く</li>
+        <li>画面右上（デフォルト）にFPSと解像度が表示される</li>
+        <li>拡張機能アイコンをクリックして、表示のON/OFFを切り替えられる</li>
+        <li>「設定を開く」から表示位置と文字色を変更できる</li>
+      </ol>
+
+      <h3>ポップアップ（ON/OFF）</h3>
+      <figure class="article-image">
+        <img src="/images/tried/video-fps-checker/popup.png" alt="拡張機能のポップアップ。表示のトグルスイッチと「設定を開く」リンクがある" />
+        <figcaption>アイコンクリックで表示されるポップアップ</figcaption>
+      </figure>
+
+      <h3>設定画面</h3>
+      <p>
+        表示位置は「左上」「右上」「左下」「右下」から選択。文字色はカラーピッカーまたはHEXコードで指定できます。
+      </p>
+      <figure class="article-image article-image--65">
+        <img src="/images/tried/video-fps-checker/options.png" alt="設定画面。表示位置のセレクトボックスと文字色のカラーピッカー、プレビューが表示されている" />
+        <figcaption>オプション画面（表示位置・文字色の設定）</figcaption>
+      </figure>
+
+      <h2>仕組み</h2>
+
+      <h3>FPS計測</h3>
+      <p>
+        FPS計測には次の2つのAPIを使い分けています。
+      </p>
+      <ul>
+        <li>
+          <strong><code>requestVideoFrameCallback</code></strong>: 対応ブラウザではこちらを優先。動画の各フレーム描画時にコールバックが呼ばれ、<code>metadata.presentedFrames</code> から経過フレーム数を取得してFPSを計算します。
+        </li>
+        <li>
+          <strong><code>getVideoPlaybackQuality</code></strong>: 非対応環境ではフォールバックとして使用。<code>totalVideoFrames</code> を一定間隔でサンプリングし、差分からFPSを算出します。
+        </li>
+      </ul>
+      <p>
+        <code>requestVideoFrameCallback</code> は Chrome 83+ などで利用可能で、より正確な計測ができます。
+      </p>
+
+      <h3>解像度</h3>
+      <p>
+        動画要素の <code>videoWidth</code> と <code>videoHeight</code> を参照しています。再生開始後（<code>loadedmetadata</code> 以降）に値が入ります。
+      </p>
+
+      <h3>構成</h3>
+      <ul>
+        <li><strong>content.js</strong>: ページ内の <code>&lt;video&gt;</code> を監視し、オーバーレイを表示。MutationObserver で動的に追加される動画にも対応</li>
+        <li><strong>content.css</strong>: オーバーレイのスタイル（固定表示、半透明背景など）</li>
+        <li><strong>popup.html / popup.js</strong>: アイコンクリック時のポップアップ。ON/OFFトグルと設定へのリンク</li>
+        <li><strong>options.html / options.js</strong>: 表示位置・文字色の設定。chrome.storage.sync で保存</li>
+        <li><strong>background.js</strong>: 初回インストール時にデフォルト設定を保存</li>
+      </ul>
+
+      <h3>manifest.json（抜粋）</h3>
+      <CodeBlock code={manifestJson} language="json" />
+
+      <h2>注意事項</h2>
+      <ul>
+        <li>動画が一時停止中はFPS計測を停止し、表示は「停止中」のままになります</li>
+        <li>一部のサイトでは動画の実装により正しく計測できない場合があります</li>
+        <li>Chrome（Chromium系）での動作を想定しています</li>
+      </ul>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-image {
+    margin: 1.5rem auto;
+    text-align: center;
+    max-width: 560px;
+  }
+
+  .article-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md), 0 4px 20px rgba(102, 126, 234, 0.12);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+  }
+
+  .article-image--65 img {
+    max-width: 65%;
+  }
+
+  .article-image figcaption {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-top: 0.5rem;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 1.25rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
