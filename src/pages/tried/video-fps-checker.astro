@@ -44,16 +44,17 @@ const manifestJson = `{
       <ul>
         <li><strong>FPS表示</strong>: 動画の実際のフレームレートをリアルタイム表示</li>
         <li><strong>解像度表示</strong>: 動画の幅×高さを表示</li>
+        <li><strong>ドロップフレーム表示</strong>: 直近1秒間のドロップフレーム数を表示</li>
         <li><strong>ON/OFF切り替え</strong>: 拡張機能アイコンをクリックして表示の有効/無効を切り替え</li>
         <li><strong>カスタマイズ</strong>: 表示位置（左上/右上/左下/右下）と文字色を設定可能</li>
       </ul>
 
       <h2>表示例</h2>
       <p>
-        動画再生中、画面上にオーバーレイでFPSと解像度が表示されます。デフォルトは右上、緑色の文字です。
+        動画再生中、画面上にオーバーレイでFPS・解像度・ドロップフレーム数が表示されます。デフォルトは右上、緑色の文字です。
       </p>
       <figure class="article-image">
-        <img src="/images/tried/video-fps-checker/display.png" alt="YouTubeで動画再生中、右上にFPS: 30.0、解像度: 1920×1080 と表示されている様子" />
+        <img src="/images/tried/video-fps-checker/display.png" alt="YouTubeで動画再生中、右上にFPS・解像度・ドロップフレーム数が表示されている様子" />
         <figcaption>動画再生時の表示例（YouTube）</figcaption>
       </figure>
 
@@ -79,7 +80,7 @@ const manifestJson = `{
       <h2>使い方</h2>
       <ol>
         <li>動画が再生されているWebページ（YouTube、ニコニコ動画など）を開く</li>
-        <li>画面右上（デフォルト）にFPSと解像度が表示される</li>
+        <li>画面右上（デフォルト）にFPS・解像度・ドロップフレーム数が表示される</li>
         <li>拡張機能アイコンをクリックして、表示のON/OFFを切り替えられる</li>
         <li>「設定を開く」から表示位置と文字色を変更できる</li>
       </ol>
@@ -122,6 +123,11 @@ const manifestJson = `{
         動画要素の <code>videoWidth</code> と <code>videoHeight</code> を参照しています。再生開始後（<code>loadedmetadata</code> 以降）に値が入ります。
       </p>
 
+      <h3>ドロップフレーム</h3>
+      <p>
+        <code>getVideoPlaybackQuality()</code> の <code>droppedVideoFrames</code> を1秒ごとにサンプリングし、直近1秒間の増分を表示しています。再生の滑らかさを確認する目安になります。
+      </p>
+
       <h3>構成</h3>
       <ul>
         <li><strong>content.js</strong>: ページ内の <code>&lt;video&gt;</code> を監視し、オーバーレイを表示。MutationObserver で動的に追加される動画にも対応</li>
@@ -136,7 +142,7 @@ const manifestJson = `{
 
       <h2>注意事項</h2>
       <ul>
-        <li>動画が一時停止中はFPS計測を停止し、表示は「停止中」のままになります</li>
+        <li>動画が一時停止中はFPS計測を停止し、FPSは「停止」と表示されます</li>
         <li>一部のサイトでは動画の実装により正しく計測できない場合があります</li>
         <li>Chrome（Chromium系）での動作を想定しています</li>
       </ul>
