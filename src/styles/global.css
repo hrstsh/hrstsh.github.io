@@ -92,6 +92,12 @@ code {
   color: var(--color-accent) !important;
 }
 
+.article-date {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
 .article-body h2,
 .usage-section h2 {
   color: var(--color-text) !important;
