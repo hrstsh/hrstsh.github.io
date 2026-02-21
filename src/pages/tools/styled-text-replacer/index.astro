@@ -1,8 +1,13 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import { webApplication } from '../../../utils/jsonLd';
+
+const title = 'スタイル付きテキスト置換 - hrの備忘録';
+const description = 'クリップボード内の書式（太字・色など）を維持したまま文字列を置換できるツール。Word や Google ドキュメントで便利。ブラウザ上で完結、データ送信なし。';
+const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/styled-text-replacer');
 ---
 
-<Layout title="スタイル付きテキスト置換 - hrの備忘録" description="クリップボード内の書式（太字・色など）を維持したまま文字列を置換できるツール。Word や Google ドキュメントで便利。ブラウザ上で完結、データ送信なし。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tools" class="back-link">← ツール一覧</a>

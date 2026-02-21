@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'GitHub Pages を作成して公開してみた - hrの備忘録';
+const description = 'GitHub Pages で個人サイトを立ち上げ、カスタムドメイン・Google Search Console・Google Analytics・Perplexity/Cursor を活用した開発までを手記形式でまとめました。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/github-pages-setup', toIsoDate('2026.02'), 'tried');
 
 const folderTree = `├── .github/workflows/  ... デプロイ設定（GitHub Actions）
 ├── src/
@@ -29,7 +34,7 @@ const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
 )}`;
 ---
 
-<Layout title="GitHub Pages を作成して公開してみた - hrの備忘録" description="GitHub Pages で個人サイトを立ち上げ、カスタムドメイン・Google Search Console・Google Analytics・Perplexity/Cursor を活用した開発までを手記形式でまとめました。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tried" class="back-link">← やってみた一覧</a>

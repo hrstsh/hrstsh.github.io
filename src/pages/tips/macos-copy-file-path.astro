@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'macOSでファイルパスを一発でターミナルにコピーする - hrの備忘録';
+const description = 'macOS で Finder のファイルパスをターミナルに簡単にコピーする5つの方法。Option+右クリック、ドラッグ&ドロップなど。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/macos-copy-file-path', toIsoDate('2026.02'), 'tips');
 
 const applescriptCode = `on run {input, parameters}
     set thePath to POSIX path of input
@@ -26,7 +31,7 @@ Documents/project/file.txt
 const openCommandCode = `open .`;
 ---
 
-<Layout title="macOSでファイルパスを一発でターミナルにコピーする - hrの備忘録" description="macOS で Finder のファイルパスをターミナルに簡単にコピーする5つの方法。Option+右クリック、ドラッグ&ドロップなど。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

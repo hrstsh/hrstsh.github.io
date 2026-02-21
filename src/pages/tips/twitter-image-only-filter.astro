@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X(Twitter)のタイムラインを「画像のみ」表示に切り替える - hrの備忘録';
+const description = 'X(Twitter) のタイムラインでテキストツイートを非表示にして、画像・動画だけを表示する方法。ブックマークレットまたは Chrome 拡張で実現。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-image-only-filter', toIsoDate('2026.02'), 'tips');
 
 const bookmarkletCode = `javascript:(function(){const id='twitter-img-filter';let s=document.getElementById(id);if(s){s.remove();}else{s=document.createElement('style');s.id=id;s.textContent='div[data-testid="cellInnerDiv"]:has(article):not(:has(div[data-testid="tweetPhoto"])):not(:has(video)){display:none!important;}';document.head.appendChild(s);}})();`;
 
@@ -128,7 +133,7 @@ const styleText = \\\`
 \\\`;`;
 ---
 
-<Layout title="X(Twitter)のタイムラインを「画像のみ」表示に切り替える - hrの備忘録" description="X(Twitter) のタイムラインでテキストツイートを非表示にして、画像・動画だけを表示する方法。ブックマークレットまたは Chrome 拡張で実現。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

@@ -1,11 +1,16 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X(Twitter)の画像をオリジナル画質で保存する方法 - hrの備忘録';
+const description = 'X(Twitter) の画像をオリジナル画質で保存する方法。URL に :orig を付けるだけで高画質保存。ブックマークレット化の手順も紹介。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-image-original-quality', toIsoDate('2026.02'), 'tips');
 
 const bookmarkletCode = `javascript:(function(){var u=location.href;if(u.match(/pbs\\.twimg\\.com\\/media/)){if(u.includes('?')){location.href=u.replace(/name=[^&]+/,'name=orig');}else{location.href=u.split(':')[0]+':orig';}}else{alert('Twitter/Xの画像URLで実行してください');}})();`;
 ---
 
-<Layout title="X(Twitter)の画像をオリジナル画質で保存する方法 - hrの備忘録" description="X(Twitter) の画像をオリジナル画質で保存する方法。URL に :orig を付けるだけで高画質保存。ブックマークレット化の手順も紹介。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

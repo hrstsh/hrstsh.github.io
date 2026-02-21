@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = '動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた - hrの備忘録';
+const description = 'Webページで再生中の動画のFPSと解像度をリアルタイム表示するChrome拡張機能「Video FPS & Resolution Display」を作成した手記。導入方法と仕組みを解説。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/video-fps-checker', toIsoDate('2026.02'), 'tried');
 
 const manifestJson = `{
   "manifest_version": 3,
@@ -22,7 +27,7 @@ const manifestJson = `{
 }`;
 ---
 
-<Layout title="動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた - hrの備忘録" description="Webページで再生中の動画のFPSと解像度をリアルタイム表示するChrome拡張機能「Video FPS & Resolution Display」を作成した手記。導入方法と仕組みを解説。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tried" class="back-link">← やってみた一覧</a>

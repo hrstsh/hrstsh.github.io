@@ -1,8 +1,13 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import { webApplication } from '../../../utils/jsonLd';
+
+const title = '写真のメタデータ（EXIF）編集ツール - 撮影日時・カメラ情報をブラウザで編集 - hrの備忘録';
+const description = 'JPEG写真の撮影日時・カメラ情報・GPS位置情報などをブラウザで簡単に編集。既存項目の変更や新規追加が可能。無料・データ送信なし。';
+const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/exif-editor');
 ---
 
-<Layout title="写真のメタデータ（EXIF）編集ツール - 撮影日時・カメラ情報をブラウザで編集 - hrの備忘録" description="JPEG写真の撮影日時・カメラ情報・GPS位置情報などをブラウザで簡単に編集。既存項目の変更や新規追加が可能。無料・データ送信なし。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tools" class="back-link">← ツール一覧</a>

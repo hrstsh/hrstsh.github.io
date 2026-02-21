@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X(Twitter)の長文ツイートを自動で非表示にするChrome拡張 - hrの備忘録';
+const description = 'X(Twitter) の長文ツイートを自動で非表示にする Chrome 拡張の作り方。ON/OFF トグル付きで、DOM 判定で長文をフィルタリング。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-long-tweet-filter', toIsoDate('2026.02'), 'tips');
 
 const manifestCode = `{
   "name": "X長文フィルタ",
@@ -117,7 +122,7 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
 });`;
 ---
 
-<Layout title="X(Twitter)の長文ツイートを自動で非表示にするChrome拡張 - hrの備忘録" description="X(Twitter) の長文ツイートを自動で非表示にする Chrome 拡張の作り方。ON/OFF トグル付きで、DOM 判定で長文をフィルタリング。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>
