@@ -1,11 +1,17 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
-import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'GitHub Pages を作成して公開してみた - hrの備忘録';
 const description = 'GitHub Pages で個人サイトを立ち上げ、カスタムドメイン・Google Search Console・Google Analytics・Perplexity/Cursor を活用した開発までを手記形式でまとめました。';
-const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/github-pages-setup', toIsoDate('2026.02'), 'tried');
+const path = '/tried/github-pages-setup';
+const faqItems = [
+  { question: 'GitHub Pages の作り方は？', answer: 'GitHubでリポジトリを作成し、静的サイトのソースをpushする。Settings → Pages で Source を「GitHub Actions」に設定。Astro などのビルドツールを使う場合は、.github/workflows にデプロイ用のワークフローを用意し、pushのたびに自動デプロイされるようにする。' },
+  { question: 'カスタムドメインの設定方法は？', answer: 'ドメイン取得後、DNS で A レコードを GitHub Pages の IP（185.199.108.153 など4つ）に向ける。GitHub の Settings → Pages → Custom domain にドメインを入力。リポジトリの public/CNAME にドメイン名を記載する。反映には数分〜最大48時間かかることがある。' },
+  { question: 'Xserverでドメインだけ取得できる？', answer: 'できる。Xserverのドメイン取得サービスで契約し、DNS管理画面から GitHub 向けに A レコードを設定する。Xserverのホスティング契約は不要で、ドメインだけ取得する形で利用できる。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tried'), faqPage(faqItems, path)];
 
 const folderTree = `├── .github/workflows/  ... デプロイ設定（GitHub Actions）
 ├── src/
@@ -159,8 +165,18 @@ const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
       <p>
         Perplexity のコネクタソースで GitHub に接続し、簡単なリポジトリ操作を試しているうちに Github Pages を作成させてみることを思いついたため、
         Astro でのサイト作成や、 Google Search Console や Google Analytics での検索・アクセス確認をやってみた。
-        Cursor も併用することで Perplexity のコーディング能力を補ったり、深く理解していない Astro でサクサク記事作成ができた。        
+        Cursor も併用することで Perplexity のコーディング能力を補ったり、深く理解していない Astro でサクサク記事作成ができた。
       </p>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>GitHub Pages の作り方は？</dt>
+        <dd>GitHubでリポジトリを作成し、静的サイトのソースをpushする。Settings → Pages で Source を「GitHub Actions」に設定。Astro などのビルドツールを使う場合は、.github/workflows にデプロイ用のワークフローを用意し、pushのたびに自動デプロイされるようにする。</dd>
+        <dt>カスタムドメインの設定方法は？</dt>
+        <dd>ドメイン取得後、DNS で A レコードを GitHub Pages の IP（185.199.108.153 など4つ）に向ける。GitHub の Settings → Pages → Custom domain にドメインを入力。リポジトリの public/CNAME にドメイン名を記載する。反映には数分〜最大48時間かかることがある。</dd>
+        <dt>Xserverでドメインだけ取得できる？</dt>
+        <dd>できる。Xserverのドメイン取得サービスで契約し、DNS管理画面から GitHub 向けに A レコードを設定する。Xserverのホスティング契約は不要で、ドメインだけ取得する形で利用できる。</dd>
+      </dl>
     </article>
 
     <footer class="page-footer">
@@ -274,5 +290,18 @@ const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
 
   .page-footer a + a {
     margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--color-text);
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
   }
 </style>

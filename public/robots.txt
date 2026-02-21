@@ -1,3 +1,8 @@
+# AI検索・引用クローラー（Perplexity など）は許可
+User-agent: PerplexityBot
+Allow: /
+
+# 汎用クローラー
 User-agent: *
 Allow: /
 

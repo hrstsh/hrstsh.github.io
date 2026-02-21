@@ -1,11 +1,17 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
-import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'YouTube動画を2倍速以上で再生する方法（Chrome） - hrの備忘録';
 const description = 'YouTube の再生速度を Chrome の開発者コンソールから自由に変更する方法。3倍速・4倍速の高速再生、0.1倍速のスロー再生も可能。Premium 不要。';
-const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/youtube-playback-speed', toIsoDate('2026.02'), 'tips');
+const path = '/tips/youtube-playback-speed';
+const faqItems = [
+  { question: 'YouTube無料で3倍速は可能？', answer: '可能。Chromeの開発者ツール（Command+Option+J / Ctrl+Shift+J）を開き、Console に document.querySelector("video").playbackRate = 3; と入力して Enter する。UI上は2倍速までだが、コンソールから直接設定すれば3倍速・4倍速も再生できる。' },
+  { question: 'Premiumなしで2倍速以上は？', answer: 'Chromeの開発者コンソールを使えば、Premium会員でなくても2倍速以上で再生できる。動画を切り替えたりリロードすると速度はリセットされるので、毎回設定し直す必要がある。' },
+  { question: 'YouTubeの再生速度の変更方法は？', answer: '開発者ツールのConsoleで document.querySelector("video").playbackRate = 数値; を実行する。数値は 0.25（0.25倍速）～16 まで指定可能。ブックマークレットにしておくと1クリックで速度変更できる。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
 const basicCommand = `document.querySelector("video").playbackRate = 3;`;
 const checkCommand = `document.querySelector("video").playbackRate;`;
@@ -133,6 +139,16 @@ const bookmarkletCode = `javascript:(function(){var s=prompt("再生速度を入
         <li>複雑な操作手順を細かく追いたい</li>
       </ul>
 
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>YouTube無料で3倍速は可能？</dt>
+        <dd>可能。Chromeの開発者ツール（Command+Option+J / Ctrl+Shift+J）を開き、Console に document.querySelector("video").playbackRate = 3; と入力して Enter する。UI上は2倍速までだが、コンソールから直接設定すれば3倍速・4倍速も再生できる。</dd>
+        <dt>Premiumなしで2倍速以上は？</dt>
+        <dd>Chromeの開発者コンソールを使えば、Premium会員でなくても2倍速以上で再生できる。動画を切り替えたりリロードすると速度はリセットされるので、毎回設定し直す必要がある。</dd>
+        <dt>YouTubeの再生速度の変更方法は？</dt>
+        <dd>開発者ツールのConsoleで document.querySelector("video").playbackRate = 数値; を実行する。数値は 0.25（0.25倍速）～16 まで指定可能。ブックマークレットにしておくと1クリックで速度変更できる。</dd>
+      </dl>
+
     </article>
 
     <footer class="page-footer">
@@ -242,5 +258,18 @@ const bookmarkletCode = `javascript:(function(){var s=prompt("再生速度を入
 
   .page-footer a + a {
     margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>

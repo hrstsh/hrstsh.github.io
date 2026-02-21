@@ -1,11 +1,16 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
-import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'macOSでファイルパスを一発でターミナルにコピーする - hrの備忘録';
 const description = 'macOS で Finder のファイルパスをターミナルに簡単にコピーする5つの方法。Option+右クリック、ドラッグ&ドロップなど。';
-const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/macos-copy-file-path', toIsoDate('2026.02'), 'tips');
+const path = '/tips/macos-copy-file-path';
+const faqItems = [
+  { question: 'macOSでファイルパスをコピーする方法は？', answer: 'Option+右クリックで「～のパス名をコピー」を選ぶ。または Cmd+Option+C のショートカット。ターミナルに直接貼りたい場合は、Finderからファイルをターミナルにドラッグ&ドロップするとパスが入力される。' },
+  { question: 'Option+右クリックで何ができる？', answer: 'Finderでファイルを選択した状態で Option キーを押しながら右クリックすると、メニューに「～のパス名をコピー」が追加される。クリックするとフルパスがクリップボードにコピーされる。macOS標準の機能。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
 const applescriptCode = `on run {input, parameters}
     set thePath to POSIX path of input
@@ -170,6 +175,14 @@ const openCommandCode = `open .`;
         <li>Automator やショートカットで作成したサービスは、初回実行時にアクセス許可を求められることがある。</li>
       </ul>
 
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>macOSでファイルパスをコピーする方法は？</dt>
+        <dd>Option+右クリックで「～のパス名をコピー」を選ぶ。または Cmd+Option+C のショートカット。ターミナルに直接貼りたい場合は、Finderからファイルをターミナルにドラッグ&ドロップするとパスが入力される。</dd>
+        <dt>Option+右クリックで何ができる？</dt>
+        <dd>Finderでファイルを選択した状態で Option キーを押しながら右クリックすると、メニューに「～のパス名をコピー」が追加される。クリックするとフルパスがクリップボードにコピーされる。macOS標準の機能。</dd>
+      </dl>
+
     </article>
 
     <footer class="page-footer">
@@ -290,5 +303,18 @@ const openCommandCode = `open .`;
 
   .page-footer a + a {
     margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>
