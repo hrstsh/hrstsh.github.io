@@ -108,6 +108,11 @@ code {
 .usage-section p {
   color: var(--color-text-muted) !important;
 }
+.article-body ul,
+.article-body ol {
+  padding-left: 2rem;
+}
+
 .article-body code,
 .usage-section code {
   color: var(--color-code) !important;
