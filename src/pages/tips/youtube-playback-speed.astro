@@ -1,13 +1,18 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'YouTube動画を2倍速以上で再生する方法（Chrome） - hrの備忘録';
+const description = 'YouTube の再生速度を Chrome の開発者コンソールから自由に変更する方法。3倍速・4倍速の高速再生、0.1倍速のスロー再生も可能。Premium 不要。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/youtube-playback-speed', toIsoDate('2026.02'), 'tips');
 
 const basicCommand = `document.querySelector("video").playbackRate = 3;`;
 const checkCommand = `document.querySelector("video").playbackRate;`;
 const bookmarkletCode = `javascript:(function(){var s=prompt("再生速度を入力（例: 3）","3");if(s){document.querySelector("video").playbackRate=parseFloat(s);}})();`;
 ---
 
-<Layout title="YouTube動画を2倍速以上で再生する方法（Chrome） - hrの備忘録" description="YouTube の再生速度を Chrome の開発者コンソールから自由に変更する方法。3倍速・4倍速の高速再生、0.1倍速のスロー再生も可能。Premium 不要。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

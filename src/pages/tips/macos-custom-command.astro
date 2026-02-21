@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'Macで自作コマンドを作って登録する方法 - hrの備忘録';
+const description = 'Mac のターミナルで自作コマンドを作成・登録する方法。ファイル名一括変換コマンドを例に、シェルスクリプト、Python、PATH 設定を解説。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/macos-custom-command', toIsoDate('2026.02'), 'tips');
 
 const shellScript = `#!/bin/zsh
 
@@ -80,7 +85,7 @@ const directoryStructure = `~/MyCommands/
 const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
 ---
 
-<Layout title="Macで自作コマンドを作って登録する方法 - hrの備忘録" description="Mac のターミナルで自作コマンドを作成・登録する方法。ファイル名一括変換コマンドを例に、シェルスクリプト、Python、PATH 設定を解説。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

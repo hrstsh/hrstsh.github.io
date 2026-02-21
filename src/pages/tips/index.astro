@@ -1,8 +1,24 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { itemList } from '../../utils/jsonLd';
+
+const tips = [
+  { name: 'ページのメタ情報を見やすく表示＆コピーするブックマークレット', url: '/tips/meta-info-viewer-bookmarklet', desc: 'title、description、OGタグ、Twitterカードなどを一覧表示し、ワンクリックでコピーできる。' },
+  { name: 'X(Twitter)のメディア欄から画像URLを一括取得する方法', url: '/tips/twitter-media-url-extractor', desc: 'メディアタブの画像URLをまとめて取得。開発者コンソールまたはブックマークレットで実行。' },
+  { name: 'X(Twitter)のタイムラインを「画像のみ」表示に切り替える', url: '/tips/twitter-image-only-filter', desc: 'テキストツイートを非表示にして、画像・動画だけを表示。ブックマークレットまたはChrome拡張で実現。' },
+  { name: 'X(Twitter)のタイムラインで画像・動画付きツイートを非表示にする', url: '/tips/twitter-text-only-filter', desc: '画像・動画付きツイートを非表示にして、テキストツイートだけを表示。ブックマークレットまたはChrome拡張で実現。' },
+  { name: 'macOSでファイルパスを一発でターミナルにコピーする', url: '/tips/macos-copy-file-path', desc: 'Option+右クリックやドラッグ&ドロップで簡単コピー。5つの方法を紹介。' },
+  { name: 'Macで自作コマンドを作って登録する方法', url: '/tips/macos-custom-command', desc: 'ファイル名一括変換コマンドを例に自作コマンドの作り方と PATH 設定を解説。' },
+  { name: 'X(Twitter)の画像をオリジナル画質で保存する方法', url: '/tips/twitter-image-original-quality', desc: 'URLに :orig を付けるだけで高画質保存。ブックマークレット化も。' },
+  { name: 'YouTube動画の再生速度を自由に変更する方法（Chrome）', url: '/tips/youtube-playback-speed', desc: 'Chromeのコンソールから3倍速・4倍速の高速再生、0.1倍速の超スロー再生も可能。Premium不要。' },
+  { name: 'Chromeのブックマークレットにアイコン（ファビコン）を追加する', url: '/tips/chrome-bookmarklet-favicon', desc: 'javascript: のブックマークはアイコンが出ないので、ファビコンを付けるやり方。' },
+  { name: 'X(Twitter)の長文ツイートを自動で非表示にする', url: '/tips/twitter-long-tweet-filter', desc: '長文ツイートだけ隠す Chrome 拡張の作り方（ON/OFF トグル付き）。' },
+  { name: 'Mac Terminal（zsh）の表示をカスタマイズする', url: '/tips/mac-terminal-customize', desc: 'ディレクトリ・Gitブランチ・日時・プロンプト表示を ~/.zshrc で整える。' },
+];
+const jsonLd = itemList('Tips', 'ブラウザや開発で使えるちょっとしたテクニック。ブックマークレット、Chrome拡張、macOSの便利機能などを紹介しています。', 'https://hrstsh.com/tips', tips);
 ---
 
-<Layout title="Tips - hrの備忘録" description="ブラウザや開発で使えるちょっとしたテクニック。ブックマークレット、Chrome拡張、macOSの便利機能などを紹介しています。">
+<Layout title="Tips - hrの備忘録" description="ブラウザや開発で使えるちょっとしたテクニック。ブックマークレット、Chrome拡張、macOSの便利機能などを紹介しています。" jsonLd={jsonLd}>
   <main>
     <header class="page-header">
       <h1>Tips</h1>
@@ -12,72 +28,14 @@ import Layout from '../../layouts/Layout.astro';
     <section class="tips-list">
       <h2>記事一覧</h2>
       <ul class="tip-cards">
-        <li>
-          <a href="/tips/meta-info-viewer-bookmarklet" class="tip-card">
-            <span class="tip-title">ページのメタ情報を見やすく表示＆コピーするブックマークレット</span>
-            <span class="tip-desc">title、description、OGタグ、Twitterカードなどを一覧表示し、ワンクリックでコピーできる。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/twitter-media-url-extractor" class="tip-card">
-            <span class="tip-title">X(Twitter)のメディア欄から画像URLを一括取得する方法</span>
-            <span class="tip-desc">メディアタブの画像URLをまとめて取得。開発者コンソールまたはブックマークレットで実行。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/twitter-image-only-filter" class="tip-card">
-            <span class="tip-title">X(Twitter)のタイムラインを「画像のみ」表示に切り替える</span>
-            <span class="tip-desc">テキストツイートを非表示にして、画像・動画だけを表示。ブックマークレットまたはChrome拡張で実現。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/twitter-text-only-filter" class="tip-card">
-            <span class="tip-title">X(Twitter)のタイムラインで画像・動画付きツイートを非表示にする</span>
-            <span class="tip-desc">画像・動画付きツイートを非表示にして、テキストツイートだけを表示。ブックマークレットまたはChrome拡張で実現。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/macos-copy-file-path" class="tip-card">
-            <span class="tip-title">macOSでファイルパスを一発でターミナルにコピーする</span>
-            <span class="tip-desc">Option+右クリックやドラッグ&ドロップで簡単コピー。5つの方法を紹介。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/macos-custom-command" class="tip-card">
-            <span class="tip-title">Macで自作コマンドを作って登録する方法</span>
-            <span class="tip-desc">ファイル名一括変換コマンドを例に自作コマンドの作り方と PATH 設定を解説。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/twitter-image-original-quality" class="tip-card">
-            <span class="tip-title">X(Twitter)の画像をオリジナル画質で保存する方法</span>
-            <span class="tip-desc">URLに :orig を付けるだけで高画質保存。ブックマークレット化も。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/youtube-playback-speed" class="tip-card">
-            <span class="tip-title">YouTube動画の再生速度を自由に変更する方法（Chrome）</span>
-            <span class="tip-desc">Chromeのコンソールから3倍速・4倍速の高速再生、0.1倍速の超スロー再生も可能。Premium不要。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/chrome-bookmarklet-favicon" class="tip-card">
-            <span class="tip-title">Chromeのブックマークレットにアイコン（ファビコン）を追加する</span>
-            <span class="tip-desc">javascript: のブックマークはアイコンが出ないので、ファビコンを付けるやり方。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/twitter-long-tweet-filter" class="tip-card">
-            <span class="tip-title">X(Twitter)の長文ツイートを自動で非表示にする</span>
-            <span class="tip-desc">長文ツイートだけ隠す Chrome 拡張の作り方（ON/OFF トグル付き）。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tips/mac-terminal-customize" class="tip-card">
-            <span class="tip-title">Mac Terminal（zsh）の表示をカスタマイズする</span>
-            <span class="tip-desc">ディレクトリ・Gitブランチ・日時・プロンプト表示を ~/.zshrc で整える。</span>
-          </a>
-        </li>
+        {tips.map((tip) => (
+          <li>
+            <a href={tip.url} class="tip-card">
+              <span class="tip-title">{tip.name}</span>
+              <span class="tip-desc">{tip.desc}</span>
+            </a>
+          </li>
+        ))}
       </ul>
     </section>
 

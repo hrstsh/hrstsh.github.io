@@ -1,8 +1,13 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import { webApplication } from '../../../utils/jsonLd';
+
+const title = 'ツイートのリンク化回避ツール - hrの備忘録';
+const description = 'X(Twitter)のツイートのメンション・URL・ハッシュタグのリンク化を防ぐツール。見た目を変えずに Zero-Width 文字を挿入。ブラウザ上で完結、データ送信なし。';
+const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/zero-width-breaker');
 ---
 
-<Layout title="ツイートのリンク化回避ツール - hrの備忘録" description="X(Twitter)のツイートのメンション・URL・ハッシュタグのリンク化を防ぐツール。見た目を変えずに Zero-Width 文字を挿入。ブラウザ上で完結、データ送信なし。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tools" class="back-link">← ツール一覧</a>

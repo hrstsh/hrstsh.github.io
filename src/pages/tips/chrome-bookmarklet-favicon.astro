@@ -1,8 +1,13 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'Chromeのブックマークレットにアイコン（ファビコン）を追加する - hrの備忘録';
+const description = 'javascript: のブックマークレットはデフォルトでアイコンが表示されないので、ファビコンを付ける方法を紹介。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/chrome-bookmarklet-favicon', toIsoDate('2026.02'), 'tips');
 ---
 
-<Layout title="Chromeのブックマークレットにアイコン（ファビコン）を追加する - hrの備忘録" description="javascript: のブックマークレットはデフォルトでアイコンが表示されないので、ファビコンを付ける方法を紹介。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

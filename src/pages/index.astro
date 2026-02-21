@@ -1,14 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { recentUpdates } from '../data/recent';
+import { webSite, organization } from '../utils/jsonLd';
 
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split('-');
   return `${y}.${m}.${d}`;
 }
+
+const siteName = 'hrの備忘録';
+const siteDesc = 'いろいろ雑多メモ。チートシート、ツール、Tipsなど開発や日常で役立つ情報をまとめています。';
+const jsonLd = [webSite(siteName, siteDesc), organization(siteName)];
 ---
 
-<Layout title="hrの備忘録" description="いろいろ雑多メモ。チートシート、ツール、Tipsなど開発や日常で役立つ情報をまとめています。">
+<Layout title={siteName} description={siteDesc} jsonLd={jsonLd}>
   <main>
     <section class="hero">
       <div class="hero-bg" aria-hidden="true"></div>

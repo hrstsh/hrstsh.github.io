@@ -167,6 +167,7 @@ README.mdには以下を含めること：
 - ページタイトルは適切に設定
 - メタディスクリプションを追加
 - セマンティックHTMLを使用
+- **JSON-LD**: 各ページに適切な構造化データを追加。`Layout` の `jsonLd` プロップで渡す。`src/utils/jsonLd.ts` のヘルパー（webSite, article, itemList, webApplication, tipArticle など）を使用。未指定時は WebPage が自動出力される。
 
 ### 開発フロー
 

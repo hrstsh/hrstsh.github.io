@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X(Twitter)のメディア欄から画像URLを一括取得する方法 - hrの備忘録';
+const description = 'X(Twitter) のメディアタブから画像URLを一括取得する方法。ブックマークレットまたは開発者コンソールで実行。オリジナル画質URL、ダウンロード方法も解説。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-media-url-extractor', toIsoDate('2026.02'), 'tips');
 
 const basicScript = `// 現在表示されている画像URLを取得
 const urls = Array.from(document.querySelectorAll('img[src*="pbs.twimg.com"]'))
@@ -129,7 +134,7 @@ async function openAllMedia() {
 openAllMedia();`;
 ---
 
-<Layout title="X(Twitter)のメディア欄から画像URLを一括取得する方法 - hrの備忘録" description="X(Twitter) のメディアタブから画像URLを一括取得する方法。ブックマークレットまたは開発者コンソールで実行。オリジナル画質URL、ダウンロード方法も解説。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

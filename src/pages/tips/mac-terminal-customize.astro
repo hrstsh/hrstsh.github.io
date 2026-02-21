@@ -1,6 +1,11 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'Mac の terminal の表示をカスタマイズする（zsh） - hrの備忘録';
+const description = 'Mac の Terminal（zsh）のプロンプト表示をカスタマイズする方法。ディレクトリ、Git ブランチ、日時表示を ~/.zshrc で整える。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/mac-terminal-customize', toIsoDate('2026.02'), 'tips');
 
 const zshSnippet = `autoload -Uz vcs_info
 zstyle ':vcs_info:*' formats '[%b]'
@@ -49,7 +54,7 @@ nano ~/.zshrc
 source ~/.zshrc`;
 ---
 
-<Layout title="Mac の terminal の表示をカスタマイズする（zsh） - hrの備忘録" description="Mac の Terminal（zsh）のプロンプト表示をカスタマイズする方法。ディレクトリ、Git ブランチ、日時表示を ~/.zshrc で整える。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips" class="back-link">← Tips一覧</a>

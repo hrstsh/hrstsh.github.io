@@ -1,8 +1,17 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { itemList } from '../../utils/jsonLd';
+
+const tools = [
+  { name: 'スタイル付きテキスト置換', url: '/tools/styled-text-replacer' },
+  { name: 'SQL整形ツール', url: '/tools/sql-formatter' },
+  { name: 'ツイートのリンク化回避ツール', url: '/tools/zero-width-breaker' },
+  { name: '写真のメタデータ（EXIF）編集', url: '/tools/exif-editor' },
+];
+const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。', 'https://hrstsh.com/tools', tools);
 ---
 
-<Layout title="ツール - hrの備忘録" description="ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。">
+<Layout title="ツール - hrの備忘録" description="ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。" jsonLd={jsonLd}>
   <main>
     <header class="page-header">
       <h1>ツール</h1>

@@ -1,8 +1,13 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import { webApplication } from '../../../utils/jsonLd';
+
+const title = 'SQL整形ツール - hrの備忘録';
+const description = 'SQLを整形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。ブラウザ上で完結、データ送信なし。';
+const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/sql-formatter');
 ---
 
-<Layout title="SQL整形ツール - hrの備忘録" description="SQLを整形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。ブラウザ上で完結、データ送信なし。">
+<Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tools" class="back-link">← ツール一覧</a>

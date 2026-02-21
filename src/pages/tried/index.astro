@@ -1,9 +1,13 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { triedPosts } from '../../data/tried';
+import { itemList } from '../../utils/jsonLd';
+
+const items = triedPosts.map((p) => ({ name: p.title, url: p.href }));
+const jsonLd = itemList('やってみた', '実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。', 'https://hrstsh.com/tried', items);
 ---
 
-<Layout title="やってみた - hrの備忘録" description="実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。">
+<Layout title="やってみた - hrの備忘録" description="実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。" jsonLd={jsonLd}>
   <main>
     <header class="page-header">
       <h1>やってみた</h1>
