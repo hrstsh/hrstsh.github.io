@@ -132,6 +132,24 @@ export function tipArticle(
   return article(headline, description, url, datePublished, undefined, breadcrumbs);
 }
 
+/** FAQ スキーマ（AI検索・引用向け） */
+export function faqPage(
+  questions: { question: string; answer: string }[],
+  url: string
+) {
+  const fullUrl = url.startsWith('http') ? url : new URL(url, SITE).href;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: questions.map((q) => ({
+      '@type': 'Question',
+      name: q.question,
+      acceptedAnswer: { '@type': 'Answer', text: q.answer },
+    })),
+    url: fullUrl,
+  };
+}
+
 export function webApplication(
   name: string,
   description: string | undefined,

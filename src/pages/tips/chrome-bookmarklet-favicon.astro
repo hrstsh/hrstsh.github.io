@@ -1,10 +1,15 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'Chromeのブックマークレットにアイコン（ファビコン）を追加する - hrの備忘録';
 const description = 'javascript: のブックマークレットはデフォルトでアイコンが表示されないので、ファビコンを付ける方法を紹介。';
-const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/chrome-bookmarklet-favicon', toIsoDate('2026.02'), 'tips');
+const path = '/tips/chrome-bookmarklet-favicon';
+const faqItems = [
+  { question: 'ブックマークレットにアイコンが付かない理由は？', answer: 'URLが javascript:... だから、普通のページのようにHTMLを読まない。Chromeはアイコンを取得できず、共通の📄のようなアイコンになる。' },
+  { question: 'ブックマークレットにファビコンを付ける方法は？', answer: 'エクスポート→編集→インポートの3ステップ。使いたいファビコンのページを1つブックマークし、ブックマークをエクスポートしてHTMLを編集。そのHTMLのICON属性をブックマークレットの行にコピーし、インポートする。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -73,6 +78,14 @@ const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, 
       <ul>
         <li>インポートで既存と重なったりフォルダ構成が変わることがある。心配ならエクスポート前にバックアップか、テスト用フォルダで試すといい。</li>
       </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>ブックマークレットにアイコンが付かない理由は？</dt>
+        <dd>URLが javascript:... だから、普通のページのようにHTMLを読まない。Chromeはアイコンを取得できず、共通の📄のようなアイコンになる。</dd>
+        <dt>ブックマークレットにファビコンを付ける方法は？</dt>
+        <dd>エクスポート→編集→インポートの3ステップ。使いたいファビコンのページを1つブックマークし、ブックマークをエクスポートしてHTMLを編集。そのHTMLのICON属性をブックマークレットの行にコピーし、インポートする。</dd>
+      </dl>
 
     </article>
 
@@ -183,5 +196,18 @@ const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, 
 
   .page-footer a + a {
     margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>

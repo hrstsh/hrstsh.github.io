@@ -1,11 +1,17 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
-import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'X(Twitter)の画像をオリジナル画質で保存する方法 - hrの備忘録';
 const description = 'X(Twitter) の画像をオリジナル画質で保存する方法。URL に :orig を付けるだけで高画質保存。ブックマークレット化の手順も紹介。';
-const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-image-original-quality', toIsoDate('2026.02'), 'tips');
+const path = '/tips/twitter-image-original-quality';
+const faqItems = [
+  { question: 'Twitterの画像を高画質で保存するには？', answer: '画像URLの末尾に :orig を追加する。例: https://pbs.twimg.com/media/xxx.jpg の場合は https://pbs.twimg.com/media/xxx.jpg:orig にアクセスして右クリックで保存する。新しい形式のURLでは ?name=orig をパラメータとして追加する。' },
+  { question: 'なぜTwitterの画像は劣化するのか？', answer: 'X(Twitter)は表示速度を優先して、画像を自動的に圧縮・リサイズして配信している。右クリックで保存した画像はこの圧縮版になるため、本来の画質より劣化している。' },
+  { question: ':orig とは？', answer: 'X(Twitter)の画像URLに付けるパラメータで、オリジナル画質の画像を取得するための指定。:large、:medium、:small など他のサイズ指定もあるが、:orig が最高画質。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
 const bookmarkletCode = `javascript:(function(){var u=location.href;if(u.match(/pbs\\.twimg\\.com\\/media/)){if(u.includes('?')){location.href=u.replace(/name=[^&]+/,'name=orig');}else{location.href=u.split(':')[0]+':orig';}}else{alert('Twitter/Xの画像URLで実行してください');}})();`;
 ---
@@ -130,6 +136,16 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
         自動的にオリジナル画質で保存できる Chrome 拡張機能もいくつか公開されてるけど、ブックマークレットなら拡張機能をインストールせずに使える。
       </p>
 
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>Twitterの画像を高画質で保存するには？</dt>
+        <dd>画像URLの末尾に :orig を追加する。例: https://pbs.twimg.com/media/xxx.jpg の場合は https://pbs.twimg.com/media/xxx.jpg:orig にアクセスして右クリックで保存する。新しい形式のURLでは ?name=orig をパラメータとして追加する。</dd>
+        <dt>なぜTwitterの画像は劣化するのか？</dt>
+        <dd>X(Twitter)は表示速度を優先して、画像を自動的に圧縮・リサイズして配信している。右クリックで保存した画像はこの圧縮版になるため、本来の画質より劣化している。</dd>
+        <dt>:orig とは？</dt>
+        <dd>X(Twitter)の画像URLに付けるパラメータで、オリジナル画質の画像を取得するための指定。:large、:medium、:small など他のサイズ指定もあるが、:orig が最高画質。</dd>
+      </dl>
+
     </article>
 
     <footer class="page-footer">
@@ -250,5 +266,18 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
 
   .page-footer a + a {
     margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>
