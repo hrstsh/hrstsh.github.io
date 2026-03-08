@@ -1,0 +1,228 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = '外出先から自宅の Mac を操作する Telegram Bot を作ってみた - hrの備忘録';
+const description = '外出先のスマートフォンから自宅の Mac の処理を実行するため、Telegram Bot 基盤を構築した手記。初回は yt-dlp による YouTube 動画・音声ダウンロードを実装。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/telegram-bot-mac-dl', toIsoDate('2026.03'), 'tried');
+
+const projectStructure = `bot/
+├── main.py           # エントリポイント・ハンドラ登録
+├── config.py         # 環境変数・設定
+├── handlers/
+│   ├── dl_handler.py    # /dl コマンド
+│   ├── help_handler.py # /help
+│   ├── status_handler.py # /status
+│   └── ...
+└── commands/
+    ├── dl_runner.py   # yt-dlp によるダウンロード実行
+    └── dl_state.py    # 実行中タスクの状態管理`;
+
+const ydlOptsVideo = `ydl_opts = {
+    "format": "bestvideo+bestaudio/best",
+    "merge_output_format": "mp4",
+    "restrictfilenames": True,  # パストラバーサル対策
+    ...
+}`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tried" class="back-link">← やってみた一覧</a>
+      <h1>外出先から自宅の Mac を操作する Telegram Bot を作ってみた</h1>
+      <p class="article-meta">スマホから自宅の Mac を操作する基盤を Telegram Bot で構築し、例として yt-dlp で動画ダウンロードを実装した</p>
+      <p class="article-date">2026.03</p>
+    </header>
+
+    <article class="article-body">
+      <h2>経緯</h2>
+      <p>
+        外出先から自宅の Mac で動画をダウンロードしたいことがあって、作ってみることにしました。ローカルネットワークの外だと Mac に直接触れないので、<strong>Telegram Bot</strong> を経由して Mac 上の処理を動かす形にしています。
+      </p>
+      <p>
+        スマホから URL を貼るだけで済むのが便利だなと思いつつ、ひとつの機能だけじゃなく「あとから機能を足しやすい基盤」として作ることにしました。まずは <strong>yt-dlp</strong> で YouTube の動画・音声ダウンロードを実装して、将来は他の Mac 機能も足せるようにしておくつもりです。
+      </p>
+
+      <h2>作成の流れ</h2>
+
+      <h3>目的と構成</h3>
+      <p>
+        やりたいことは「Mac 上の処理を外出先のスマホから実行する」ことです。Mac 上で Bot を常時起動しておいて、Telegram サーバーをポーリングしてメッセージを受け取ります。許可したユーザーがコマンドを送ると、Bot が Mac 上で処理を実行して結果を返す、という流れです。
+      </p>
+      <p>
+        ダウンロードは yt-dlp を Python から直接呼ぶ形にして、既存のコマンドには頼っていません。YouTube に絞ったのは、まずは手を動かせる範囲で進めたかったからで、Bilibili や Twitter などはあとで検討する予定です。
+      </p>
+
+      <h3>アーキテクチャ</h3>
+      <p>
+        ハンドラ（<code>handlers/</code>）とコマンド実行ロジック（<code>commands/</code>）を分けて、コマンドを足しやすい構成にしました。
+      </p>
+      <CodeBlock code={projectStructure} language="text" />
+
+      <p>
+        <code>/dl</code> は引数（<code>-s</code> で音声のみ、<code>-l</code> でライブ配信）を解析して、<code>download_video</code> か <code>download_audio</code> を呼び出します。yt-dlp はブロッキングなので、<code>asyncio.to_thread</code> で別スレッドに任せて、ダウンロード中も他のリクエストを処理できるようにしました。
+      </p>
+
+      <h3>技術的な工夫</h3>
+      <p>
+        動画ダウンロードは、最高画質・音声をマージして mp4 で出す設定にしています。<code>restrictfilenames</code> でファイル名をサニタイズして、パストラバーサル対策も入れました。
+      </p>
+      <CodeBlock code={ydlOptsVideo} language="python" />
+
+      <p>
+        Bot 終了時（Ctrl+C など）に実行中の yt-dlp をちゃんと止めるため、シグナルハンドラと <code>atexit</code> を登録しています。並列ダウンロードにも対応できるよう、プロセスをまとめて管理する形にしました。
+      </p>
+
+      <h3>セキュリティ</h3>
+      <p>
+        ユーザー ID のホワイトリスト（<code>ALLOWED_USER_IDS</code>）で、許可した人だけがコマンドを打てるようにしています。YouTube の URL（youtube.com, youtu.be, music.youtube.com など）だけ受け付けて、他サイトは弾くようにしました。
+      </p>
+
+      <h2>実装した機能</h2>
+      <ul>
+        <li><strong>/dl &lt;URL&gt;</strong>: YouTube 動画を mp4 でダウンロード</li>
+        <li><strong>/dl -s &lt;URL&gt;</strong>: YouTube 音声を opus でダウンロード</li>
+        <li><strong>/dl -l &lt;URL&gt;</strong>: ライブ配信を配信終了まで録画</li>
+        <li><strong>/dl -l -s &lt;URL&gt;</strong>: ライブ配信を配信終了まで録音</li>
+        <li><strong>/status</strong>: 実行中のダウンロード一覧</li>
+        <li><strong>/help</strong>: コマンド一覧</li>
+        <li><strong>/whoami</strong>: 自分のユーザー ID 表示（認証設定用）</li>
+      </ul>
+
+      <p>
+        技術スタックは <code>python-telegram-bot</code>、<code>yt-dlp</code>、<code>python-dotenv</code> です。Phase 1 として動く Bot ができたので、今後は Mac 上だからこそできる処理を足していく予定です。ローカル LLM の実行や、音声の文字起こし・要約、画像・動画の解析など、Mac のリソースを活かした AI 系の処理が候補です。
+      </p>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 1.25rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
