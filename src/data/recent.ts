@@ -10,7 +10,8 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
-  { title: '動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた', href: '/tried/video-fps-checker', date: '2025-02-12', showNew: true },
+  { title: '外出先から自宅の Mac を操作する Telegram Bot を作ってみた', href: '/tried/telegram-bot-mac-dl', date: '2026-03-08', showNew: true },
+  { title: '動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた', href: '/tried/video-fps-checker', date: '2025-02-12' },
   { title: 'X(Twitter)のタイムラインで画像・動画付きツイートを非表示にする', href: '/tips/twitter-text-only-filter', date: '2025-02-11' },
   { title: 'ツイートのリンク化回避ツール', href: '/tools/zero-width-breaker', date: '2025-02-07' },
   { title: 'ページのメタ情報を見やすく表示＆コピーするブックマークレット', href: '/tips/meta-info-viewer-bookmarklet', date: '2025-02-06' },
