@@ -14,6 +14,49 @@ const archOverview = `[テキスト入力]
 [音声合成]
       ↓
 [再生: afplay]`;
+
+const voicevoxSynthesize = `# 1. audio_query でクエリ取得
+query_resp = requests.post(
+    f"{self.base_url}/audio_query",
+    params={"text": text, "speaker": self.speaker_id},
+    timeout=self.timeout,
+)
+audio_query = query_resp.json()
+
+# 2. synthesis で WAV 取得
+synth_resp = requests.post(
+    f"{self.base_url}/synthesis",
+    params={"speaker": self.speaker_id},
+    json=audio_query,
+    timeout=self.timeout,
+)
+wav_data = synth_resp.content`;
+
+const kokoroModelDir = `cmd = ["kokoro-tts", tmp_input, out_path, "--lang", self.lang, "--voice", self.voice]
+if self.model_dir:
+    model_path = model_dir / "kokoro-v1.0.onnx"
+    voices_path = model_dir / "voices-v1.0.bin"
+    cmd.extend(["--model", str(model_path), "--voices", str(voices_path)])
+result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)`;
+
+const langDetect = `def detect(text: str, threshold: float = 0.3) -> Lang:
+    japanese_count = sum(1 for c in chars if _JAPANESE_PATTERN.match(c))
+    ratio = japanese_count / len(chars)
+    return "ja" if ratio >= threshold else "en"
+
+def extract_for_english_tts(text: str) -> tuple[str, list[str]]:
+    skipped = _JAPANESE_BLOCK.findall(text)
+    text_for_tts = _JAPANESE_BLOCK.sub("", text).strip()
+    return text_for_tts, skipped`;
+
+const coreSpeak = `lang = detect(text)
+if lang == "ja":
+    adapter = VoicevoxAdapter(...)
+    text_for_tts = text
+else:
+    text_for_tts, skipped_japanese = extract_for_english_tts(text)
+    adapter = KokoroAdapter(model_dir=..., voice=..., speed=...)
+    # 英語時: VOICEVOX で前置き再生しつつ Kokoro 合成を並列実行`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -26,61 +69,52 @@ const archOverview = `[テキスト入力]
     </header>
 
     <article class="article-body">
-      <h2>経緯</h2>
       <p>
-        Mac 上で動かしている bot ツールのログ監視結果や各種通知を、音声で受け取りたくなりました。定期的な監視結果の読み上げや通知用途で、テキスト→音声の変換基盤が必要だったので、ローカルで動く TTS を検討することにしました。
-      </p>
-      <p>
-        条件として「ローカル・永年無料」「日本語の流暢さを最優先」「カスタム性を重視」を決め、VOICEVOX を主軸に、英語向けのフォールバックとして Kokoro を組み合わせる構成にしました。
+        Mac 上で動かしている bot のログ監視結果や通知を音声で受け取りたくなりました。定期的な読み上げや通知用途でテキスト→音声の変換基盤が必要だったので、ローカルで動く TTS を検討しました。「ローカル・永年無料」「日本語の流暢さを最優先」「カスタム性を重視」を条件に、VOICEVOX を主軸に、英語向けのフォールバックとして Kokoro を組み合わせる構成にしました。
       </p>
 
-      <h2>作成の流れ</h2>
-
-      <h3>TTS の選定</h3>
+      <h2>設計</h2>
       <p>
-        候補として VOICEVOX、Kokoro、piper-plus、say、Edge TTS などを比較しました。say は追加インストール不要ですが、カスタム性がなく基盤を作る意義が薄いと判断して除外。Edge TTS はオフライン不可のため、ローカル必須の条件に合わず除外しました。
-      </p>
-      <p>
-        日本語の流暢さでは VOICEVOX が最上位で、英語は Kokoro が強みでした。用途に応じてフォールバック構成を検討する設計にすれば、両方の良さを活かせると考えました。
-      </p>
-
-      <h3>設計と実装</h3>
-      <p>
-        全体の流れは、テキスト入力 → 言語判定 → VOICEVOX（日本語）または Kokoro（英語）で音声合成 → afplay で再生、という形です。
+        全体の流れは次のとおりです。
       </p>
       <CodeBlock code={archOverview} language="text" />
 
       <p>
-        言語判定は「複数方式を試してから決めたい」という意向があったため、設計書では TODO として残し、まずは文字種比率による仮実装で進めました。後から差し替え可能な設計にしておいたので、検証しやすかったです。
-      </p>
-      <p>
-        VOICEVOX は HTTP API、Kokoro は CLI 経由で呼び出すアダプターを実装。Kokoro は当初「実行時の cwd にモデルを置く」必要がありましたが、<code>--model</code> / <code>--voices</code> オプションがあることが判明し、任意ディレクトリから実行できるように改善しました。ツールの <code>--help</code> を確認すると、想定外のオプションが見つかることがある、という学びでした。
+        候補として VOICEVOX、Kokoro、piper-plus、say、Edge TTS などを比較しました。say は追加インストール不要ですがカスタム性がなく基盤を作る意義が薄いと判断して除外。Edge TTS はオフライン不可のためローカル必須の条件に合わず除外しました。日本語の流暢さでは VOICEVOX が最上位で、英語は Kokoro が強みでした。
       </p>
 
-      <h3>uv への切り替えと運用</h3>
       <p>
-        pip ではなく uv を使う方針にしたので、<code>pyproject.toml</code> と README を uv 用に統一しました。<code>uv tool install</code> でグローバルにインストールすれば、任意のディレクトリからコマンドで実行できます。
+        VOICEVOX は HTTP API 経由で、<code>audio_query</code> でクエリを取得してから <code>synthesis</code> で WAV を取得する 2 段階の流れです。
       </p>
+      <CodeBlock code={voicevoxSynthesize} language="python" />
+
       <p>
-        <code>uv run</code> と <code>uv tool install</code> では実行コンテキストが異なり、<code>.env</code> の読み込み先も変わります。プロジェクトの <code>.env</code> に加えて <code>~/.config/voice-feed/.env</code> も読み込むようにして、両方のパターンで動くようにしました。
+        Kokoro は CLI 経由で呼び出すアダプターを実装しました。当初「実行時の cwd にモデルを置く」必要があると読んでいたのですが、<code>--help</code> を確認したら <code>--model</code> / <code>--voices</code> オプションがあり、任意ディレクトリから実行できることが判明しました。<code>model_dir</code> を指定すれば、<code>kokoro-v1.0.onnx</code> と <code>voices-v1.0.bin</code> のパスを渡して実行できます。
+      </p>
+      <CodeBlock code={kokoroModelDir} language="python" />
+
+      <p>
+        言語判定は「複数方式を試してから決めたい」という意向があったため、設計書では TODO として残し、まずは文字種比率による仮実装で進めました。日本語文字（ひらがな・カタカナ・漢字）の割合が threshold（デフォルト 0.3）以上なら日本語、未満なら英語と判定。英語判定時は <code>extract_for_english_tts</code> で日本語ブロックを除去し、Kokoro に渡すテキストとスキップした日本語のリストを返しています。後から差し替え可能な設計にしておいたので検証しやすかったです。
+      </p>
+      <CodeBlock code={langDetect} language="python" />
+
+      <p>
+        オーケストレーター（<code>core.py</code>）では、<code>detect</code> の結果に応じてアダプターを切り替え、英語判定時は VOICEVOX で「英語モデルで読み上げます」などの前置きを再生しつつ、Kokoro の合成を ThreadPoolExecutor で並列実行して待ち時間を短縮しています。
+      </p>
+      <CodeBlock code={coreSpeak} language="python" />
+
+      <h2>実装の工夫</h2>
+      <p>
+        pip ではなく uv を使う方針にしたので、<code>pyproject.toml</code> と README を uv 用に統一しました。<code>uv run</code> と <code>uv tool install</code> では実行コンテキストが異なり、<code>.env</code> の読み込み先も変わります。プロジェクトの <code>.env</code> に加えて <code>~/.config/voice-feed/.env</code> も読み込むようにして、両方のパターンで動くようにしました。
       </p>
 
-      <h3>英語判定時の日本語スキップ</h3>
       <p>
-        Kokoro は日本語を "japanese character" と読んでしまうため、英語判定時に日本語が含まれていると不自然になります。日本語部分を除去して英語のみ Kokoro に渡し、スキップした内容は stderr でフィードバック。さらに VOICEVOX で「英文内に含まれていた日本語をスキップしました」と音声で案内するようにしました。
+        Kokoro は日本語を "japanese character" と読んでしまうため、英語判定時に日本語が含まれていると不自然になります。日本語部分を除去して英語のみ Kokoro に渡し、スキップした内容は stderr でフィードバック。        さらに VOICEVOX で「英文内に含まれていた日本語をスキップしました」と音声で案内するようにしました。
       </p>
 
       <h2>実装した機能</h2>
-      <ul>
-        <li><strong>VOICEVOX アダプター</strong>: HTTP API 経由で音声合成、話者 ID 指定可能</li>
-        <li><strong>Kokoro アダプター</strong>: CLI 経由、音声・速度のオプション対応</li>
-        <li><strong>言語判定</strong>: 文字種比率による仮実装（後から差し替え可能）</li>
-        <li><strong>CLI</strong>: <code>voice-feed "読み上げたいテキスト"</code> で実行</li>
-        <li><strong>VOICEVOX Engine 単体</strong>: GUI なし・launchctl で自動起動する運用も可能</li>
-      </ul>
-
       <p>
-        設計段階で未決定事項を TODO として明示しておくと、後から検証・意思決定しやすくなりました。
+        実装した機能は、VOICEVOX アダプター（HTTP API・話者 ID 指定）、Kokoro アダプター（CLI・音声・速度オプション）、言語判定（文字種比率の仮実装・後から差し替え可能）、CLI（<code>voice-feed "読み上げたいテキスト"</code>）、VOICEVOX Engine 単体（GUI なし・launchctl で自動起動）です。
       </p>
     </article>
 
