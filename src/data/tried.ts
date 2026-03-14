@@ -9,18 +9,28 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'X の検索を保存する Chrome 拡張を作ってみた',
+    href: '/tried/twitter-search-save/',
+    desc: 'X(Twitter) の公式検索保存が新規追加できなくなったため、検索クエリを保存・管理する Chrome 拡張を作成した手記。',
+  },
+  {
+    title: 'Mac でローカル TTS 基盤（VOICEVOX + Kokoro）を作ってみた',
+    href: '/tried/voice-feed-tts/',
+    desc: 'bot のログ監視や通知を音声で受け取るため、VOICEVOX と Kokoro を使い分けるローカル TTS 基盤を構築した手記。',
+  },
+  {
     title: '外出先から自宅の Mac を操作する Telegram Bot を作ってみた',
-    href: '/tried/telegram-bot-mac-dl',
+    href: '/tried/telegram-bot-mac-dl/',
     desc: '外出先のスマートフォンから自宅の Mac を操作する Telegram Bot 基盤を構築した手記。初回は yt-dlp で YouTube ダウンロードを実装。',
   },
   {
     title: '動画のFPSと解像度をリアルタイム表示するChrome拡張機能を作ってみた',
-    href: '/tried/video-fps-checker',
+    href: '/tried/video-fps-checker/',
     desc: 'YouTube・ニコニコ動画などで動画のFPSと解像度をオーバーレイ表示するChrome拡張機能の開発手記。',
   },
   {
     title: 'GitHub Pages を作成して公開してみた',
-    href: '/tried/github-pages-setup',
+    href: '/tried/github-pages-setup/',
     desc: 'GitHub Pages で個人サイトを立ち上げ、カスタムドメインまで設定した手記。',
   },
 ];

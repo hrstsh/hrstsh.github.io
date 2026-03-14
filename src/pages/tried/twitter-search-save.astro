@@ -1,0 +1,203 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X の検索を保存する Chrome 拡張を作ってみた - hrの備忘録';
+const description = 'X(Twitter) の公式検索保存が新規追加できなくなったため、検索クエリを保存・管理できる Chrome 拡張を作成した手記。ツイート右クリックで画像を開く機能も実装。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/twitter-search-save', toIsoDate('2026.03'), 'tried');
+
+const storageStructure = `savedSearches: [
+  { id, query, createdAt },
+  ...
+]`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>X の検索を保存する Chrome 拡張を作ってみた</h1>
+      <p class="article-meta">X(Twitter) の検索クエリを保存・管理し、ツイート右クリックで画像をまとめて開ける Chrome 拡張</p>
+      <p class="article-date">2026.03</p>
+    </header>
+
+    <article class="article-body">
+      <h2>経緯</h2>
+      <p>
+        X（旧 Twitter）の公式「検索の保存」機能が、昔登録したものの参照しかできなくなり、新規追加や削除ができなくなっていました。よく使う検索を自分で管理したくて、代替になる Chrome 拡張を作ることにしました。
+      </p>
+      <p>
+        あわせて、ツイートに含まれる画像をまとめて別タブで開きたい場面も多かったので、右クリックメニューから「画像をすべて開く」や「ツイートのリンクをコピー」ができる機能も足しました。
+      </p>
+
+      <h2>作成の流れ</h2>
+
+      <h3>検索保存の構成</h3>
+      <p>
+        検索保存の UI をどこに置くか検討しました。ポップアップだけだと実装はシンプルですが、検索ページにいる最中にワンクリックで保存できると便利です。一方で、検索入力欄の近くにボタンを挿入する案は、X の DOM 構造に強く依存し、UI 変更で壊れやすいと判断して却下しました。
+      </p>
+      <p>
+        採用したのは、<code>[data-testid="primaryColumn"]</code> の右端に動的に配置するフローティングボタンです。DOM の深い部分に依存せず、<code>getBoundingClientRect</code> で位置を取得して 2 秒ごとに再計算する形にしました。X は SPA なので、検索ページへの遷移で content script が再実行されないため、定期的な URL チェックが必要でした。
+      </p>
+
+      <h3>ポップアップと storage</h3>
+      <p>
+        Phase 1 として、ポップアップにテキスト入力と追加ボタン、保存済み一覧を実装しました。データは <code>chrome.storage.local</code> の <code>savedSearches</code> に配列で保存しています。
+      </p>
+      <CodeBlock code={storageStructure} language="text" />
+
+      <p>
+        削除ボタンクリック時に <code>stopPropagation</code> を入れないと、親要素のクリック（検索実行）も発火してしまうことに気づきました。また、ドラッグ並び替えは HTML5 Drag and Drop API で実装し、ハンドルを分離することで「クリックで検索を開く」と「ドラッグで並び替え」を明確に区別できるようにしました。
+      </p>
+
+      <h3>ツイート右クリックメニュー</h3>
+      <p>
+        ツイート右クリックで画像をまとめて開く機能では、Chrome 標準の <code>contextMenus</code> API を使う案を検討しました。ただ、メニュー表示時点では「どのツイートか」の情報が background に渡せず、画像 0 枚のツイートでメニューを非表示にする動的制御が難しいと判断しました。
+      </p>
+      <p>
+        採用したのはカスタムコンテキストメニューです。content script で <code>contextmenu</code> を <code>preventDefault</code> し、右クリック時に同期的にツイートを特定して画像 URL を取得。画像が 1 枚以上あるときだけ自前の div メニューを表示する形にしました。画像 URL は <code>pbs.twimg.com/media/</code> を含むものだけ対象にし、<code>/profile_images/</code> のプロフィールアイコンは除外しています。
+      </p>
+
+      <h2>実装した機能</h2>
+      <ul>
+        <li><strong>検索の保存</strong>: ポップアップから追加、検索ページの「検索を保存」ボタンでワンクリック追加</li>
+        <li><strong>保存検索の管理</strong>: 一覧表示、ドラッグ並び替え、削除、クリックで現在のタブで検索を開く</li>
+        <li><strong>ツイート右クリック</strong>: 「画像をすべて開く」（原寸）、「ツイートのリンクをコピー」</li>
+      </ul>
+
+      <p>
+        技術的には、<code>contextMenus</code> API はメニュー表示時に DOM 情報を持てないため、動的に表示を切り替えたい場合はカスタムメニューが有効でした。fixed 要素でも <code>left</code> / <code>top</code> を JS で動的に設定すれば、親要素のレイアウト変化に追従できます。
+      </p>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 1.25rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
