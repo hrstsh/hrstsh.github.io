@@ -114,10 +114,12 @@ Helper scripts for Git workflow (run from repository root):
 
 ## SEO
 
+- **trailingSlash**: `astro.config.mjs` で `trailingSlash: 'always'` を指定。GitHub Pages の directory 形式（`/path/index.html`）と一致させ、サイトマップ・canonical の URL が実 URL と揃うようにしている。これにより Search Console のリダイレクトエラーを防ぐ。
 - **Sitemap**: Generated at build time by `scripts/generate-sitemap.js` (output: `/sitemap-v3.xml`). The script runs after `astro build` and scans `dist/` for pages.
   - Google Search Console のキャッシュ問題を回避するため v3 を使用
   - 各ページの `<lastmod>` タグに最終更新日を含む
   - 標準的な XML 形式（スキーマ定義、適切なインデント）
+  - URL はトレーディングスラッシュ付きで出力（`trailingSlash: 'always'` に合わせる）
 - **robots.txt**: `public/robots.txt` allows all crawlers and points to `https://hrstsh.com/sitemap-v3.xml`.
 
 ## Security

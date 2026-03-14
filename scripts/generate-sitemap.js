@@ -32,7 +32,9 @@ function collectPaths(dir, base = '') {
 }
 
 function pathToUrl(path) {
-  const p = path === '/' ? '' : path;
+  // trailingSlash: 'always' に合わせ、ルート以外は末尾スラッシュを付与
+  // （GitHub Pages の directory 形式と一致させ、Search Console のリダイレクトエラーを防ぐ）
+  const p = path === '/' ? '' : path.endsWith('/') ? path : `${path}/`;
   return new URL(p || '/', site).href;
 }
 
