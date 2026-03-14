@@ -49,7 +49,7 @@ https://hrstsh.com/
 │
 ├── /tried/ ............... やってみた
 │   https://hrstsh.com/tried
-│   (telegram-bot-mac-dl, video-fps-checker, github-pages-setup など)
+│   (twitter-search-save, voice-feed-tts, telegram-bot-mac-dl, video-fps-checker, github-pages-setup など)
 │
 ├── /tips/ ................. Tips
 │   https://hrstsh.com/tips

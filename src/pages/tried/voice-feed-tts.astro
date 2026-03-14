@@ -1,0 +1,216 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'Mac でローカル TTS 基盤（VOICEVOX + Kokoro）を作ってみた - hrの備忘録';
+const description = 'bot のログ監視結果や通知を音声で受け取るため、VOICEVOX と Kokoro を使い分けるローカル TTS 基盤を Mac 上に構築した手記。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/voice-feed-tts', toIsoDate('2026.03'), 'tried');
+
+const archOverview = `[テキスト入力]
+      ↓
+[言語判定] → 日本語 → VOICEVOX
+      ↓      → 英語  → Kokoro
+[音声合成]
+      ↓
+[再生: afplay]`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>Mac でローカル TTS 基盤（VOICEVOX + Kokoro）を作ってみた</h1>
+      <p class="article-meta">bot のログ監視や通知を音声で受け取るため、VOICEVOX と Kokoro を使い分ける TTS 基盤を構築した</p>
+      <p class="article-date">2026.03</p>
+    </header>
+
+    <article class="article-body">
+      <h2>経緯</h2>
+      <p>
+        Mac 上で動かしている bot ツールのログ監視結果や各種通知を、音声で受け取りたくなりました。定期的な監視結果の読み上げや通知用途で、テキスト→音声の変換基盤が必要だったので、ローカルで動く TTS を検討することにしました。
+      </p>
+      <p>
+        条件として「ローカル・永年無料」「日本語の流暢さを最優先」「カスタム性を重視」を決め、VOICEVOX を主軸に、英語向けのフォールバックとして Kokoro を組み合わせる構成にしました。
+      </p>
+
+      <h2>作成の流れ</h2>
+
+      <h3>TTS の選定</h3>
+      <p>
+        候補として VOICEVOX、Kokoro、piper-plus、say、Edge TTS などを比較しました。say は追加インストール不要ですが、カスタム性がなく基盤を作る意義が薄いと判断して除外。Edge TTS はオフライン不可のため、ローカル必須の条件に合わず除外しました。
+      </p>
+      <p>
+        日本語の流暢さでは VOICEVOX が最上位で、英語は Kokoro が強みでした。用途に応じてフォールバック構成を検討する設計にすれば、両方の良さを活かせると考えました。
+      </p>
+
+      <h3>設計と実装</h3>
+      <p>
+        全体の流れは、テキスト入力 → 言語判定 → VOICEVOX（日本語）または Kokoro（英語）で音声合成 → afplay で再生、という形です。
+      </p>
+      <CodeBlock code={archOverview} language="text" />
+
+      <p>
+        言語判定は「複数方式を試してから決めたい」という意向があったため、設計書では TODO として残し、まずは文字種比率による仮実装で進めました。後から差し替え可能な設計にしておいたので、検証しやすかったです。
+      </p>
+      <p>
+        VOICEVOX は HTTP API、Kokoro は CLI 経由で呼び出すアダプターを実装。Kokoro は当初「実行時の cwd にモデルを置く」必要がありましたが、<code>--model</code> / <code>--voices</code> オプションがあることが判明し、任意ディレクトリから実行できるように改善しました。ツールの <code>--help</code> を確認すると、想定外のオプションが見つかることがある、という学びでした。
+      </p>
+
+      <h3>uv への切り替えと運用</h3>
+      <p>
+        pip ではなく uv を使う方針にしたので、<code>pyproject.toml</code> と README を uv 用に統一しました。<code>uv tool install</code> でグローバルにインストールすれば、任意のディレクトリからコマンドで実行できます。
+      </p>
+      <p>
+        <code>uv run</code> と <code>uv tool install</code> では実行コンテキストが異なり、<code>.env</code> の読み込み先も変わります。プロジェクトの <code>.env</code> に加えて <code>~/.config/voice-feed/.env</code> も読み込むようにして、両方のパターンで動くようにしました。
+      </p>
+
+      <h3>英語判定時の日本語スキップ</h3>
+      <p>
+        Kokoro は日本語を "japanese character" と読んでしまうため、英語判定時に日本語が含まれていると不自然になります。日本語部分を除去して英語のみ Kokoro に渡し、スキップした内容は stderr でフィードバック。さらに VOICEVOX で「英文内に含まれていた日本語をスキップしました」と音声で案内するようにしました。
+      </p>
+
+      <h2>実装した機能</h2>
+      <ul>
+        <li><strong>VOICEVOX アダプター</strong>: HTTP API 経由で音声合成、話者 ID 指定可能</li>
+        <li><strong>Kokoro アダプター</strong>: CLI 経由、音声・速度のオプション対応</li>
+        <li><strong>言語判定</strong>: 文字種比率による仮実装（後から差し替え可能）</li>
+        <li><strong>CLI</strong>: <code>voice-feed "読み上げたいテキスト"</code> で実行</li>
+        <li><strong>VOICEVOX Engine 単体</strong>: GUI なし・launchctl で自動起動する運用も可能</li>
+      </ul>
+
+      <p>
+        設計段階で未決定事項を TODO として明示しておくと、後から検証・意思決定しやすくなりました。
+      </p>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 1.25rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
