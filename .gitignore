@@ -41,3 +41,6 @@ coverage/
 # Misc
 .cache/
 .temp/
+
+# Dev log rule (contains user-specific paths)
+.cursor/rules/dev-log-rule.mdc

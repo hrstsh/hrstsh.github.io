@@ -1,0 +1,43 @@
+---
+description: 秘密情報・APIキーなどのセキュリティ基本方針
+alwaysApply: true
+---
+# セキュリティ基本ルール
+
+## 秘密情報の扱い
+
+- **APIキー、パスワード、トークン、秘密鍵**をソースコードにハードコードしてはならない。
+- 環境変数または `.env` ファイルで管理し、実行時に読み込む。
+- `.env` は必ず `.gitignore` に含め、リポジトリにコミットしない。
+
+## 推奨パターン
+
+```
+# ❌ BAD
+const apiKey = "sk-xxxxxxxxxxxxxxxx";
+
+# ✅ GOOD
+const apiKey = process.env.API_KEY;
+if (!apiKey) throw new Error("API_KEY is required");
+```
+
+```
+# ❌ BAD
+password = "secret123"
+
+# ✅ GOOD
+password = os.environ.get("DB_PASSWORD")
+if not password:
+    raise ValueError("DB_PASSWORD must be set")
+```
+
+## 新規プロジェクトで確認すること
+
+- [ ] `.env.example` を用意し、必要な変数名を記載（値は空でよい）
+- [ ] `.env` を `.gitignore` に追加
+- [ ] README に環境変数の設定手順を記載
+
+## 例外
+
+- テスト用のダミー値（例: `"test"`）は、テストファイル内に限り許容する。
+- 本番・開発で使う実際の秘密情報は常に環境変数から取得する。
