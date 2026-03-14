@@ -16,15 +16,58 @@ const projectStructure = `bot/
 │   ├── status_handler.py # /status
 │   └── ...
 └── commands/
-    ├── dl_runner.py   # yt-dlp によるダウンロード実行
-    └── dl_state.py    # 実行中タスクの状態管理`;
+    ├── dl_dispatch.py   # URL 判定とプラットフォーム振り分け
+    ├── dl_youtube.py   # yt-dlp による YouTube 動画・音声
+    ├── dl_twitter.py   # Twitter 動画
+    ├── dl_common.py    # シグナルハンドラ・サブプロセス終了
+    └── dl_state.py     # 実行中タスクの状態管理`;
 
 const ydlOptsVideo = `ydl_opts = {
     "format": "bestvideo+bestaudio/best",
     "merge_output_format": "mp4",
+    "outtmpl": str(DL_OUTPUT_DIR / "%(id)s.%(ext)s"),
     "restrictfilenames": True,  # パストラバーサル対策
-    ...
-}`;
+    "quiet": True,
+    "no_warnings": True,
+}
+if live_stream:
+    ydl_opts["live_from_start"] = True`;
+
+const dlHandlerThread = `# ブロッキング処理を別スレッドで実行
+download_id = register_download(url, media_type, live_stream, user_id)
+try:
+    success, message = await asyncio.to_thread(
+        download, url, audio_only, live_stream
+    )
+    await update.message.reply_text(message)
+finally:
+    unregister_download(download_id)`;
+
+const dlDispatch = `def download(url, audio_only, live_stream) -> tuple[bool, str]:
+    if dl_youtube.is_youtube_url(url):
+        if audio_only:
+            return dl_youtube.download_audio(url, live_stream=live_stream)
+        return dl_youtube.download_video(url, live_stream=live_stream)
+    if dl_twitter.is_twitter_url(url):
+        return dl_twitter.download_video(url)
+    return False, "対応していない URL です。"`;
+
+const dlCommonSignal = `# Ctrl+C 等で Bot 終了時にサブプロセスを確実に終了
+def _terminate_active_subprocesses():
+    for proc in _active_ytdlp_processes:
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+signal.signal(signal.SIGINT, _signal_handler)
+atexit.register(_terminate_active_subprocesses)`;
+
+const configAllowed = `# 許可するユーザー ID のリスト（カンマ区切り）
+_raw_ids = os.getenv("ALLOWED_USER_IDS", "").strip()
+ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip()]`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -37,62 +80,49 @@ const ydlOptsVideo = `ydl_opts = {
     </header>
 
     <article class="article-body">
-      <h2>経緯</h2>
       <p>
-        外出先から自宅の Mac で動画をダウンロードしたいことがあって、作ってみることにしました。ローカルネットワークの外だと Mac に直接触れないので、<strong>Telegram Bot</strong> を経由して Mac 上の処理を動かす形にしています。
-      </p>
-      <p>
-        スマホから URL を貼るだけで済むのが便利だなと思いつつ、ひとつの機能だけじゃなく「あとから機能を足しやすい基盤」として作ることにしました。まずは <strong>yt-dlp</strong> で YouTube の動画・音声ダウンロードを実装して、将来は他の Mac 機能も足せるようにしておくつもりです。
+        外出先から自宅の Mac で動画をダウンロードしたいのに、ローカルネットワークの外だと Mac に触れない。そこで <strong>Telegram Bot</strong> を経由して Mac 上の処理を動かす形にしました。スマホから URL を貼るだけで済むので、外出先でも気軽に使えます。
       </p>
 
-      <h2>作成の流れ</h2>
-
-      <h3>目的と構成</h3>
+      <h2>構成</h2>
       <p>
-        やりたいことは「Mac 上の処理を外出先のスマホから実行する」ことです。Mac 上で Bot を常時起動しておいて、Telegram サーバーをポーリングしてメッセージを受け取ります。許可したユーザーがコマンドを送ると、Bot が Mac 上で処理を実行して結果を返す、という流れです。
-      </p>
-      <p>
-        ダウンロードは yt-dlp を Python から直接呼ぶ形にして、既存のコマンドには頼っていません。YouTube に絞ったのは、まずは手を動かせる範囲で進めたかったからで、Bilibili や Twitter などはあとで検討する予定です。
-      </p>
-
-      <h3>アーキテクチャ</h3>
-      <p>
-        ハンドラ（<code>handlers/</code>）とコマンド実行ロジック（<code>commands/</code>）を分けて、コマンドを足しやすい構成にしました。
+        構成はこんな感じです。ハンドラとコマンド実行ロジックを分けて、あとから機能を足しやすくしています。
       </p>
       <CodeBlock code={projectStructure} language="text" />
 
+      <h2>動画ダウンロード</h2>
       <p>
-        <code>/dl</code> は引数（<code>-s</code> で音声のみ、<code>-l</code> でライブ配信）を解析して、<code>download_video</code> か <code>download_audio</code> を呼び出します。yt-dlp はブロッキングなので、<code>asyncio.to_thread</code> で別スレッドに任せて、ダウンロード中も他のリクエストを処理できるようにしました。
+        <code>/dl</code> は <code>-s</code> で音声のみ、<code>-l</code> でライブ配信を指定できます。URL に応じて YouTube か Twitter に振り分ける処理は <code>dl_dispatch.py</code> で行っています。
       </p>
+      <CodeBlock code={dlDispatch} language="python" />
 
-      <h3>技術的な工夫</h3>
       <p>
-        動画ダウンロードは、最高画質・音声をマージして mp4 で出す設定にしています。<code>restrictfilenames</code> でファイル名をサニタイズして、パストラバーサル対策も入れました。
+        yt-dlp はブロッキングなので、<code>asyncio.to_thread</code> で別スレッドに任せて、ダウンロード中も他のリクエストを処理できるようにしました。
+      </p>
+      <CodeBlock code={dlHandlerThread} language="python" />
+
+      <p>
+        動画は最高画質・音声をマージして mp4 で出す設定です。ライブ配信の場合は <code>live_from_start</code> で配信終了まで録画します。
       </p>
       <CodeBlock code={ydlOptsVideo} language="python" />
 
       <p>
-        Bot 終了時（Ctrl+C など）に実行中の yt-dlp をちゃんと止めるため、シグナルハンドラと <code>atexit</code> を登録しています。並列ダウンロードにも対応できるよう、プロセスをまとめて管理する形にしました。
+        ファイル名は <code>restrictfilenames</code> でサニタイズしてパストラバーサル対策を入れました。Bot 終了時（Ctrl+C など）に実行中の yt-dlp をちゃんと止めるため、シグナルハンドラと <code>atexit</code> を登録しています。登録済みのサブプロセスを一括で terminate し、5 秒待っても終わらなければ kill する形にしました。
       </p>
+      <CodeBlock code={dlCommonSignal} language="python" />
 
-      <h3>セキュリティ</h3>
+      <h2>セキュリティとコマンド</h2>
       <p>
-        ユーザー ID のホワイトリスト（<code>ALLOWED_USER_IDS</code>）で、許可した人だけがコマンドを打てるようにしています。YouTube の URL（youtube.com, youtu.be, music.youtube.com など）だけ受け付けて、他サイトは弾くようにしました。
+        ユーザー ID のホワイトリスト（<code>ALLOWED_USER_IDS</code>）で許可した人だけがコマンドを打てるようにしています。<code>.env</code> でカンマ区切りで指定し、<code>/whoami</code> で自分の ID を確認してから追加する運用にしました。
       </p>
-
-      <h2>実装した機能</h2>
-      <ul>
-        <li><strong>/dl &lt;URL&gt;</strong>: YouTube 動画を mp4 でダウンロード</li>
-        <li><strong>/dl -s &lt;URL&gt;</strong>: YouTube 音声を opus でダウンロード</li>
-        <li><strong>/dl -l &lt;URL&gt;</strong>: ライブ配信を配信終了まで録画</li>
-        <li><strong>/dl -l -s &lt;URL&gt;</strong>: ライブ配信を配信終了まで録音</li>
-        <li><strong>/status</strong>: 実行中のダウンロード一覧</li>
-        <li><strong>/help</strong>: コマンド一覧</li>
-        <li><strong>/whoami</strong>: 自分のユーザー ID 表示（認証設定用）</li>
-      </ul>
+      <CodeBlock code={configAllowed} language="python" />
 
       <p>
-        技術スタックは <code>python-telegram-bot</code>、<code>yt-dlp</code>、<code>python-dotenv</code> です。Phase 1 として動く Bot ができたので、今後は Mac 上だからこそできる処理を足していく予定です。ローカル LLM の実行や、音声の文字起こし・要約、画像・動画の解析など、Mac のリソースを活かした AI 系の処理が候補です。
+        YouTube と Twitter の URL だけ受け付け、他サイトは弾くようにしました。技術スタックは <code>python-telegram-bot</code>、<code>yt-dlp</code>、<code>python-dotenv</code> です。
+      </p>
+
+      <p>
+        使えるコマンドは <code>/dl</code>（動画・音声・ライブ）、<code>/status</code>、<code>/help</code>、<code>/whoami</code> です。Phase 1 として動く Bot ができたので、今後は Mac 上だからこそできる処理（ローカル LLM、音声の文字起こし、画像・動画の解析など）を足していく予定です。
       </p>
     </article>
 

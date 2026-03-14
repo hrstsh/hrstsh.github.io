@@ -11,6 +11,50 @@ const storageStructure = `savedSearches: [
   { id, query, createdAt },
   ...
 ]`;
+
+const updateSaveButtonPosition = `function updateSaveButtonPosition() {
+    const wrapper = document.getElementById(SAVE_BUTTON_ID);
+    if (!wrapper) return;
+    const primaryColumn = document.querySelector('[data-testid="primaryColumn"]');
+    if (!primaryColumn) return;
+    const rect = primaryColumn.getBoundingClientRect();
+    wrapper.style.left = (rect.right + 12) + 'px';
+    wrapper.style.top = (rect.top + 16) + 'px';
+}
+setInterval(() => {
+    if (document.visibilityState === 'visible') updateSearchSaveUI();
+}, 2000);`;
+
+const deleteStopPropagation = `div.querySelector('.search-item-delete').addEventListener('click', (e) => {
+    e.stopPropagation();  // 親のクリック（検索実行）を防ぐ
+    deleteSearch(item.id);
+});`;
+
+const getImageUrls = `function getImageUrlsFromTweet(article) {
+    const imgs = article.querySelectorAll('[data-testid="tweetPhoto"] img');
+    const seen = new Set();
+    const urls = [];
+    imgs.forEach((img) => {
+        const src = img.src || img.getAttribute('data-src');
+        if (src && src.includes('pbs.twimg.com/media/') && !seen.has(src)) {
+            seen.add(src);
+            urls.push(toOrigUrl(src));  // name=orig で原寸
+        }
+    });
+    return urls;
+}`;
+
+const contextMenuPrevent = `document.addEventListener('contextmenu', (e) => {
+    const article = e.target.closest('article[data-testid="tweet"]');
+    if (!article) return;
+    const imageUrls = getImageUrlsFromTweet(article);
+    const tweetLink = getTweetLink(article);
+    if (imageUrls.length > 0 || tweetLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        showTweetContextMenu(e.clientX, e.clientY, imageUrls, tweetLink);
+    }
+}, true);`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -23,51 +67,43 @@ const storageStructure = `savedSearches: [
     </header>
 
     <article class="article-body">
-      <h2>経緯</h2>
       <p>
-        X（旧 Twitter）の公式「検索の保存」機能が、昔登録したものの参照しかできなくなり、新規追加や削除ができなくなっていました。よく使う検索を自分で管理したくて、代替になる Chrome 拡張を作ることにしました。
-      </p>
-      <p>
-        あわせて、ツイートに含まれる画像をまとめて別タブで開きたい場面も多かったので、右クリックメニューから「画像をすべて開く」や「ツイートのリンクをコピー」ができる機能も足しました。
+        X の公式「検索の保存」が新規追加・削除できなくなり、よく使う検索を自分で管理できなくなっていました。代替として Chrome 拡張を作ることにしました。あわせて、ツイートの画像をまとめて別タブで開きたい場面も多かったので、右クリックで「画像をすべて開く」「ツイートのリンクをコピー」ができる機能も足しました。
       </p>
 
-      <h2>作成の流れ</h2>
-
-      <h3>検索保存の構成</h3>
+      <h2>検索の保存</h2>
       <p>
-        検索保存の UI をどこに置くか検討しました。ポップアップだけだと実装はシンプルですが、検索ページにいる最中にワンクリックで保存できると便利です。一方で、検索入力欄の近くにボタンを挿入する案は、X の DOM 構造に強く依存し、UI 変更で壊れやすいと判断して却下しました。
-      </p>
-      <p>
-        採用したのは、<code>[data-testid="primaryColumn"]</code> の右端に動的に配置するフローティングボタンです。DOM の深い部分に依存せず、<code>getBoundingClientRect</code> で位置を取得して 2 秒ごとに再計算する形にしました。X は SPA なので、検索ページへの遷移で content script が再実行されないため、定期的な URL チェックが必要でした。
-      </p>
-
-      <h3>ポップアップと storage</h3>
-      <p>
-        Phase 1 として、ポップアップにテキスト入力と追加ボタン、保存済み一覧を実装しました。データは <code>chrome.storage.local</code> の <code>savedSearches</code> に配列で保存しています。
+        保存データは <code>chrome.storage.local</code> にこんな形で持っています。
       </p>
       <CodeBlock code={storageStructure} language="text" />
 
       <p>
-        削除ボタンクリック時に <code>stopPropagation</code> を入れないと、親要素のクリック（検索実行）も発火してしまうことに気づきました。また、ドラッグ並び替えは HTML5 Drag and Drop API で実装し、ハンドルを分離することで「クリックで検索を開く」と「ドラッグで並び替え」を明確に区別できるようにしました。
+        ポップアップにテキスト入力と追加ボタン、保存済み一覧を実装しました。検索ページにいる最中にワンクリックで保存できるようにしたくて、UI の配置を検討しました。検索入力欄の近くにボタンを挿入する案は、X の DOM 構造に強く依存し、UI 変更で壊れやすいと判断して却下。採用したのは <code>[data-testid="primaryColumn"]</code> の右端に動的配置するフローティングボタンです。<code>getBoundingClientRect</code> で primaryColumn の位置を取得し、fixed でボタンを配置。X は SPA なので検索ページへの遷移で content script が再実行されないため、2 秒ごとに URL をチェックしてボタンの表示・位置を更新しています。
       </p>
-
-      <h3>ツイート右クリックメニュー</h3>
-      <p>
-        ツイート右クリックで画像をまとめて開く機能では、Chrome 標準の <code>contextMenus</code> API を使う案を検討しました。ただ、メニュー表示時点では「どのツイートか」の情報が background に渡せず、画像 0 枚のツイートでメニューを非表示にする動的制御が難しいと判断しました。
-      </p>
-      <p>
-        採用したのはカスタムコンテキストメニューです。content script で <code>contextmenu</code> を <code>preventDefault</code> し、右クリック時に同期的にツイートを特定して画像 URL を取得。画像が 1 枚以上あるときだけ自前の div メニューを表示する形にしました。画像 URL は <code>pbs.twimg.com/media/</code> を含むものだけ対象にし、<code>/profile_images/</code> のプロフィールアイコンは除外しています。
-      </p>
-
-      <h2>実装した機能</h2>
-      <ul>
-        <li><strong>検索の保存</strong>: ポップアップから追加、検索ページの「検索を保存」ボタンでワンクリック追加</li>
-        <li><strong>保存検索の管理</strong>: 一覧表示、ドラッグ並び替え、削除、クリックで現在のタブで検索を開く</li>
-        <li><strong>ツイート右クリック</strong>: 「画像をすべて開く」（原寸）、「ツイートのリンクをコピー」</li>
-      </ul>
+      <CodeBlock code={updateSaveButtonPosition} language="javascript" />
 
       <p>
-        技術的には、<code>contextMenus</code> API はメニュー表示時に DOM 情報を持てないため、動的に表示を切り替えたい場合はカスタムメニューが有効でした。fixed 要素でも <code>left</code> / <code>top</code> を JS で動的に設定すれば、親要素のレイアウト変化に追従できます。
+        削除ボタンクリック時に <code>stopPropagation</code> を入れ忘れたら、親要素のクリック（検索を開く）も発火してしまいます。ドラッグ並び替えはハンドル（⋮⋮）を分離することで、「クリックで検索を開く」と「ドラッグで並び替え」を明確に区別できるようにしています。
+      </p>
+      <CodeBlock code={deleteStopPropagation} language="javascript" />
+
+      <h2>ツイート右クリック</h2>
+      <p>
+        ツイート右クリックで画像をまとめて開く機能では、Chrome 標準の <code>contextMenus</code> API を検討しました。ただ、メニュー表示時点では「どのツイートか」の情報が background に渡せず、画像 0 枚のツイートでメニューを非表示にする動的制御が難しいと判断しました。採用したのはカスタムコンテキストメニューです。content script で <code>contextmenu</code> を <code>preventDefault</code> し、右クリック時に同期的にツイートを特定して画像 URL を取得。画像が 1 枚以上あるときだけ自前の div メニューを表示する形にしました。
+      </p>
+
+      <p>
+        画像 URL は <code>[data-testid="tweetPhoto"] img</code> から取得し、<code>pbs.twimg.com/media/</code> を含むものだけ対象にしています。<code>/profile_images/</code> のプロフィールアイコンは除外。原寸表示のため URL に <code>name=orig</code> を付与しています。
+      </p>
+      <CodeBlock code={getImageUrls} language="javascript" />
+
+      <p>
+        右クリック時に <code>e.target.closest('article[data-testid="tweet"]')</code> でツイートを特定し、画像・リンクがあれば <code>preventDefault</code> してカスタムメニューを表示します。
+      </p>
+      <CodeBlock code={contextMenuPrevent} language="javascript" />
+
+      <p>
+        実装した機能は、検索の保存（ポップアップ・検索ページのワンクリック）、保存検索の管理（一覧・ドラッグ並び替え・削除・クリックで検索を開く）、ツイート右クリック（画像をすべて開く・リンクをコピー）です。
       </p>
     </article>
 
