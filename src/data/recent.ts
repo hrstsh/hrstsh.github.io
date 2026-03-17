@@ -10,6 +10,7 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
+  { title: 'JSON整形・バリデーションツール', href: '/tools/json-formatter/', date: '2026-03-17', showNew: true },
   { title: 'X の検索を保存する Chrome 拡張を作ってみた', href: '/tried/twitter-search-save/', date: '2026-03-14', showNew: true },
   { title: 'Mac でローカル TTS 基盤（VOICEVOX + Kokoro）を作ってみた', href: '/tried/voice-feed-tts/', date: '2026-03-14', showNew: true },
   { title: '外出先から自宅の Mac を操作する Telegram Bot を作ってみた', href: '/tried/telegram-bot-mac-dl/', date: '2026-03-08' },
