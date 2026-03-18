@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { itemList } from '../../utils/jsonLd';
 
 const tools = [
+  { name: 'JSON整形・バリデーション', url: '/tools/json-formatter' },
   { name: 'スタイル付きテキスト置換', url: '/tools/styled-text-replacer' },
   { name: 'SQL整形ツール', url: '/tools/sql-formatter' },
   { name: 'ツイートのリンク化回避ツール', url: '/tools/zero-width-breaker' },
@@ -21,6 +22,12 @@ const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツ
     <section class="tools-list">
       <h2>ツール一覧</h2>
       <ul class="tool-cards">
+        <li>
+          <a href="/tools/json-formatter/" class="tool-card">
+            <span class="tool-title">JSON整形・バリデーション</span>
+            <span class="tool-desc">JSONの整形（フォーマット）・圧縮（ミニファイ）・構文チェックをブラウザで実行。外部送信なし。</span>
+          </a>
+        </li>
         <li>
           <a href="/tools/styled-text-replacer/" class="tool-card">
             <span class="tool-title">スタイル付きテキスト置換</span>

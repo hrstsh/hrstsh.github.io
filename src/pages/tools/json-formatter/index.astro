@@ -1,0 +1,435 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { webApplication } from '../../../utils/jsonLd';
+
+const title = 'JSON整形・バリデーションツール - hrの備忘録';
+const description = 'JSONの整形（フォーマット）・圧縮（ミニファイ）・構文チェックをブラウザで実行。外部送信なし。';
+const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/json-formatter');
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tools/" class="back-link">← ツール一覧</a>
+      <h1>JSON整形・バリデーションツール</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        JSONの整形（フォーマット）・圧縮（ミニファイ）・構文チェックをブラウザ上で実行できるツールです。
+        <strong>データはサーバーに送信されません</strong>。
+      </p>
+
+      <div class="tool-container">
+        <section class="tool-section">
+          <h2>1. オプション</h2>
+          <div class="input-group">
+            <label for="indentType">インデント幅:</label>
+            <select id="indentType">
+              <option value="2">2スペース</option>
+              <option value="4" selected>4スペース</option>
+              <option value="tab">タブ</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="tool-section">
+          <h2>2. JSONを入力</h2>
+          <textarea id="inputJson" placeholder='整形したいJSONをここに貼り付けてください&#10;&#10;例: {"name":"太郎","age":30,"tags":["Go","TypeScript"]}'></textarea>
+        </section>
+
+        <section class="tool-section btn-group">
+          <button id="formatBtn" class="primary-btn">✨ 整形する</button>
+          <button id="minifyBtn" class="primary-btn secondary">🗜️ 圧縮する</button>
+        </section>
+
+        <section class="tool-section">
+          <h2>3. バリデーション結果</h2>
+          <div id="validationResult" class="validation-result">
+            ここにバリデーション結果が表示されます
+          </div>
+        </section>
+
+        <section class="tool-section">
+          <h2>4. 整形結果</h2>
+          <div id="output" class="preview-box" contenteditable="false">
+            整形結果がここに表示されます
+          </div>
+          <button id="copyBtn" class="primary-btn" disabled>📋 クリップボードにコピー</button>
+          <p id="copyStatus" class="status-message"></p>
+        </section>
+      </div>
+
+      <section class="usage-section">
+        <h2>使い方</h2>
+        <ol>
+          <li>テキストエリアにJSONを貼り付けます</li>
+          <li>インデント幅を選択します（デフォルト: 4スペース）</li>
+          <li>「整形する」ボタンで整形、「圧縮する」ボタンでミニファイします</li>
+          <li>バリデーション結果で構文が正しいか確認できます</li>
+          <li>「クリップボードにコピー」で結果をコピーします</li>
+        </ol>
+      </section>
+
+      <section class="usage-section">
+        <h2>注意事項</h2>
+        <ul>
+          <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
+          <li>非常に大きなJSONファイルの場合、ブラウザの性能に影響する可能性があります</li>
+          <li>JSON5やJSONLなどの拡張形式には対応していません</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<script>
+  let formattedJson = '';
+
+  const inputJson = document.getElementById('inputJson') as HTMLTextAreaElement;
+  const output = document.getElementById('output') as HTMLDivElement;
+  const formatBtn = document.getElementById('formatBtn') as HTMLButtonElement;
+  const minifyBtn = document.getElementById('minifyBtn') as HTMLButtonElement;
+  const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
+  const indentSelect = document.getElementById('indentType') as HTMLSelectElement;
+  const copyStatus = document.getElementById('copyStatus') as HTMLParagraphElement;
+  const validationResult = document.getElementById('validationResult') as HTMLDivElement;
+
+  /** インデント値を取得 */
+  function getIndent(): string | number {
+    const val = indentSelect.value;
+    return val === 'tab' ? '\t' : Number(val);
+  }
+
+  /** エラーメッセージから行番号を抽出 */
+  function extractLineInfo(json: string, error: SyntaxError): string {
+    const match = error.message.match(/position\s+(\d+)/i);
+    if (match) {
+      const pos = Number(match[1]);
+      const lines = json.substring(0, pos).split('\n');
+      const line = lines.length;
+      const col = lines[lines.length - 1].length + 1;
+      return `${line}行目、${col}列目付近`;
+    }
+    return '';
+  }
+
+  /** バリデーション結果を表示 */
+  function showValidation(isValid: boolean, message: string) {
+    validationResult.textContent = message;
+    if (isValid) {
+      validationResult.className = 'validation-result valid';
+    } else {
+      validationResult.className = 'validation-result invalid';
+    }
+  }
+
+  /** 整形処理 */
+  formatBtn.addEventListener('click', () => {
+    const json = inputJson.value.trim();
+    if (!json) {
+      alert('JSONを入力してください');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(json);
+      formattedJson = JSON.stringify(parsed, null, getIndent());
+      output.textContent = formattedJson;
+      output.style.color = '#333';
+      output.style.fontStyle = 'normal';
+      copyBtn.disabled = false;
+      copyStatus.textContent = '';
+      showValidation(true, '✅ 有効なJSONです');
+    } catch (err) {
+      const error = err as SyntaxError;
+      const lineInfo = extractLineInfo(json, error);
+      const detail = lineInfo ? `（${lineInfo}）` : '';
+      output.textContent = `エラー: ${error.message}`;
+      output.style.color = '#e53e3e';
+      copyBtn.disabled = true;
+      formattedJson = '';
+      showValidation(false, `❌ 無効なJSON: ${error.message}${detail}`);
+    }
+  });
+
+  /** 圧縮処理 */
+  minifyBtn.addEventListener('click', () => {
+    const json = inputJson.value.trim();
+    if (!json) {
+      alert('JSONを入力してください');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(json);
+      formattedJson = JSON.stringify(parsed);
+      output.textContent = formattedJson;
+      output.style.color = '#333';
+      output.style.fontStyle = 'normal';
+      copyBtn.disabled = false;
+      copyStatus.textContent = '';
+      showValidation(true, '✅ 有効なJSONです（圧縮済み）');
+    } catch (err) {
+      const error = err as SyntaxError;
+      const lineInfo = extractLineInfo(json, error);
+      const detail = lineInfo ? `（${lineInfo}）` : '';
+      output.textContent = `エラー: ${error.message}`;
+      output.style.color = '#e53e3e';
+      copyBtn.disabled = true;
+      formattedJson = '';
+      showValidation(false, `❌ 無効なJSON: ${error.message}${detail}`);
+    }
+  });
+
+  /** コピー処理 */
+  copyBtn.addEventListener('click', async () => {
+    if (!formattedJson) return;
+
+    try {
+      await navigator.clipboard.writeText(formattedJson);
+      copyStatus.textContent = '✅ クリップボードにコピーしました！';
+      copyStatus.style.color = '#38a169';
+      setTimeout(() => {
+        copyStatus.textContent = '';
+      }, 3000);
+    } catch (err) {
+      alert('クリップボードへのコピーに失敗しました');
+      console.error(err);
+    }
+  });
+</script>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body {
+    color: #444;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .tool-container {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+
+  .tool-section {
+    margin-bottom: 2rem;
+  }
+
+  .tool-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-section h2 {
+    font-size: 1.2rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1rem !important;
+    color: #555 !important;
+    border: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+
+  .input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .input-group select {
+    width: 100%;
+    max-width: 280px;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  .input-group select:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    box-sizing: border-box;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .preview-box {
+    min-height: 120px;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow-y: auto;
+    max-height: 400px;
+    color: #999;
+    font-style: italic;
+    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn.secondary {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .primary-btn.secondary:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(74, 85, 104, 0.3);
+  }
+
+  .primary-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .validation-result {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    background: #f7fafc;
+    border: 2px solid #ddd;
+    color: #999;
+    font-style: italic;
+  }
+
+  .validation-result.valid {
+    background: #f0fff4;
+    border-color: #38a169;
+    color: #38a169;
+    font-style: normal;
+  }
+
+  .validation-result.invalid {
+    background: #fff5f5;
+    border-color: #e53e3e;
+    color: #e53e3e;
+    font-style: normal;
+  }
+
+  .status-message {
+    margin-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  .usage-section {
+    margin-top: 2rem;
+  }
+
+  .usage-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .usage-section ul,
+  .usage-section ol {
+    padding-left: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .tool-container {
+      padding: 1rem;
+    }
+
+    .btn-group {
+      flex-direction: column;
+    }
+  }
+</style>
