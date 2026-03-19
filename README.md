@@ -40,6 +40,9 @@ https://hrstsh.com/
 │   ├── /sql-formatter ......... SQL整形ツール
 │   │   https://hrstsh.com/tools/sql-formatter
 │   │   (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
+│   ├── /x-search-builder ...... X（Twitter）検索ツール
+│   │   https://hrstsh.com/tools/x-search-builder
+│   │   (画像・ユーザー・期間で絞り込み検索、無料・登録不要)
 │   ├── /zero-width-breaker .... ツイートのリンク化回避ツール
 │   │   https://hrstsh.com/tools/zero-width-breaker
 │   │   (ツイートのリンク化を防ぐ、クライアントサイドで動作)
