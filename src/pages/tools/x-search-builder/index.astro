@@ -1,0 +1,1016 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
+
+const title = 'X（Twitter）検索ツール - 画像・ユーザー・期間で絞り込み | hrの備忘録';
+const description = 'X で画像付きツイートや特定ユーザーの投稿を簡単に検索。無料・登録不要・ブラウザで完結。検索コマンドを覚えなくても、フォーム操作だけで高度な検索が可能です。';
+const jsonLd = [
+  webApplication('X（Twitter）検索ツール', description, 'https://hrstsh.com/tools/x-search-builder/'),
+  faqPage(
+    [
+      { question: 'X で画像付きツイートだけを検索する方法は？', answer: 'このツールで「メディア・フィルター」を展開し「画像」にチェックを入れて検索を実行すると、画像付きのツイートのみが表示されます。' },
+      { question: 'X で特定のユーザーの投稿だけを検索する方法は？', answer: '「ユーザー・ハッシュタグ」を展開し、from 欄にユーザー名を入力して検索を実行すると、そのユーザーの投稿のみが表示されます。' },
+      { question: 'X の検索ツールは無料ですか？', answer: 'はい、無料です。ブラウザ上で動作し、データの送信も行いません。' },
+    ],
+    'https://hrstsh.com/tools/x-search-builder/'
+  ),
+];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tools/" class="back-link">← ツール一覧</a>
+      <h1>X（Twitter）検索ツール</h1>
+    </header>
+
+    <article class="article-body">
+      <p>画像付きツイートだけ検索したい、特定の人の投稿を探したい…そんなときに使えるツールです。検索コマンドを覚えなくても、フォーム操作だけで高度な検索ができます。</p>
+
+      <div class="tool-container">
+        <section class="tool-section">
+          <div class="keyword-header">
+            <h2>キーワード</h2>
+            <button type="button" class="info-btn" aria-label="キーワード形式について" id="keywordInfoBtn" aria-expanded="false" aria-haspopup="true">
+              <span aria-hidden="true">i</span>
+            </button>
+            <div id="keywordInfoTooltip" class="info-tooltip" role="tooltip" hidden>
+              2026年3月現在、X のキーワード一致検索が行えない状態のため、暫定対応として <code>&#34;&#34;&#34;語句&#34;&#34;&#34;</code> 形式で出力しています。
+            </div>
+          </div>
+          <div id="keywordInputs" class="keyword-inputs">
+            <div class="keyword-row">
+              <input type="text" class="keyword-input" data-keyword placeholder="検索語句" />
+            </div>
+          </div>
+          <button type="button" id="addKeywordBtn" class="add-btn">+ キーワード追加</button>
+        </section>
+
+        <section class="tool-section exclude-section" id="excludeSection" hidden>
+          <label class="input-label">除外する語句</label>
+          <div id="excludeInputs" class="exclude-inputs"></div>
+        </section>
+        <button type="button" id="addExcludeBtn" class="add-btn add-exclude-btn">+ 除外キーワードを追加</button>
+
+        <details class="collapsible" id="userSection">
+          <summary class="collapsible-summary">
+            <span class="collapsible-summary-text">ユーザー・ハッシュタグ</span>
+            <button type="button" class="clear-btn" data-clear="user">クリア</button>
+          </summary>
+          <div class="user-grid">
+            <div class="input-group">
+              <label for="from">from:</label>
+              <input type="text" id="from" placeholder="ユーザー名" />
+            </div>
+            <div class="input-group">
+              <label for="to">to:</label>
+              <input type="text" id="to" placeholder="宛先" />
+            </div>
+            <div class="input-group">
+              <label for="mention">@:</label>
+              <input type="text" id="mention" placeholder="メンション" />
+            </div>
+            <div class="input-group">
+              <label for="hashtag">#:</label>
+              <input type="text" id="hashtag" placeholder="ハッシュタグ" />
+            </div>
+          </div>
+        </details>
+
+        <details class="collapsible" id="mediaFilterSection">
+          <summary class="collapsible-summary">
+            <span class="collapsible-summary-text">メディア・フィルター</span>
+            <button type="button" class="clear-btn" data-clear="media">クリア</button>
+          </summary>
+          <div class="checkbox-grid">
+            <label><input type="checkbox" id="filterLinks" /> リンク</label>
+            <label><input type="checkbox" id="filterMedia" /> メディア</label>
+            <label><input type="checkbox" id="filterImages" /> 画像</label>
+            <label><input type="checkbox" id="filterVideos" /> 動画</label>
+            <label><input type="checkbox" id="filterRetweets" /> リツイート</label>
+            <label><input type="checkbox" id="filterReplies" /> リプライ</label>
+            <label><input type="checkbox" id="filterQuote" /> 引用ツイート</label>
+          </div>
+        </details>
+
+        <details class="collapsible" id="dateSection">
+          <summary class="collapsible-summary">
+            <span class="collapsible-summary-text">日付範囲</span>
+            <button type="button" class="clear-btn" data-clear="date">クリア</button>
+          </summary>
+          <div class="date-grid">
+            <div class="input-group">
+              <label for="since">開始</label>
+              <input type="date" id="since" />
+            </div>
+            <div class="input-group">
+              <label for="until">終了</label>
+              <input type="date" id="until" />
+            </div>
+          </div>
+        </details>
+
+        <details class="collapsible" id="engagementSection">
+          <summary class="collapsible-summary">
+            <span class="collapsible-summary-text">エンゲージメント・言語</span>
+            <button type="button" class="clear-btn" data-clear="engagement">クリア</button>
+          </summary>
+          <div class="engagement-grid">
+            <div class="input-group">
+              <label for="minRetweets">RT数以上</label>
+              <input type="number" id="minRetweets" min="0" placeholder="0" />
+            </div>
+            <div class="input-group">
+              <label for="minFaves">いいね数以上</label>
+              <input type="number" id="minFaves" min="0" placeholder="0" />
+            </div>
+            <div class="input-group">
+              <label for="minReplies">リプライ数以上</label>
+              <input type="number" id="minReplies" min="0" placeholder="0" />
+            </div>
+            <div class="input-group">
+              <label for="lang">言語</label>
+              <select id="lang">
+                <option value="">指定なし</option>
+                <option value="ja">日本語</option>
+                <option value="en">英語</option>
+                <option value="ko">韓国語</option>
+                <option value="zh">中国語</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <section class="tool-section preview-section">
+          <h2>生成クエリ（プレビュー）</h2>
+          <div id="preview" class="preview-box">クエリがここに表示されます</div>
+          <button type="button" id="copyBtn" class="primary-btn" disabled>📋 コピー</button>
+          <p id="copyStatus" class="status-message"></p>
+        </section>
+      </div>
+
+      <button type="button" id="searchBtn" class="floating-btn primary-btn">X で検索を開く</button>
+
+      <section class="usage-section">
+        <h2>注意事項</h2>
+        <ul>
+          <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
+          <li>直近の検索条件は cookie に保存され、リフレッシュ時に復元されます</li>
+          <li>X の検索オペレーターは Web 仕様により一部動作が異なる場合があります</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<script>
+  const COOKIE_NAME = 'x-search-builder-state';
+  const COOKIE_PATH = '/tools/x-search-builder/';
+  const COOKIE_DAYS = 30;
+
+  function getFormData() {
+    const keywords: string[] = [];
+    document.querySelectorAll<HTMLInputElement>('.keyword-input').forEach((el) => {
+      const v = el.value.trim();
+      if (v) keywords.push(v);
+    });
+    const excludes: string[] = [];
+    document.querySelectorAll<HTMLInputElement>('.exclude-input').forEach((el) => {
+      const v = el.value.trim();
+      if (v) excludes.push(v);
+    });
+    return {
+      keywords,
+      excludes,
+      from: (document.getElementById('from') as HTMLInputElement)?.value?.trim() || '',
+      to: (document.getElementById('to') as HTMLInputElement)?.value?.trim() || '',
+      mention: (document.getElementById('mention') as HTMLInputElement)?.value?.trim() || '',
+      hashtag: (document.getElementById('hashtag') as HTMLInputElement)?.value?.trim() || '',
+      filterLinks: (document.getElementById('filterLinks') as HTMLInputElement)?.checked || false,
+      filterMedia: (document.getElementById('filterMedia') as HTMLInputElement)?.checked || false,
+      filterImages: (document.getElementById('filterImages') as HTMLInputElement)?.checked || false,
+      filterVideos: (document.getElementById('filterVideos') as HTMLInputElement)?.checked || false,
+      filterRetweets: (document.getElementById('filterRetweets') as HTMLInputElement)?.checked || false,
+      filterReplies: (document.getElementById('filterReplies') as HTMLInputElement)?.checked || false,
+      filterQuote: (document.getElementById('filterQuote') as HTMLInputElement)?.checked || false,
+      since: (document.getElementById('since') as HTMLInputElement)?.value || '',
+      until: (document.getElementById('until') as HTMLInputElement)?.value || '',
+      minRetweets: (document.getElementById('minRetweets') as HTMLInputElement)?.value || '',
+      minFaves: (document.getElementById('minFaves') as HTMLInputElement)?.value || '',
+      minReplies: (document.getElementById('minReplies') as HTMLInputElement)?.value || '',
+      lang: (document.getElementById('lang') as HTMLSelectElement)?.value || '',
+    };
+  }
+
+  function buildQuery(data: ReturnType<typeof getFormData>): string {
+    const parts: string[] = [];
+    if (data.keywords.length > 0) {
+      parts.push(data.keywords.map((k) => `"""${k}"""`).join(' AND '));
+    }
+    if (data.from) parts.push(`from:${data.from.replace(/^@/, '')}`);
+    if (data.to) parts.push(`to:${data.to.replace(/^@/, '')}`);
+    if (data.mention) parts.push(`@${data.mention.replace(/^@/, '')}`);
+    if (data.hashtag) parts.push(data.hashtag.startsWith('#') ? data.hashtag : `#${data.hashtag}`);
+    if (data.filterLinks) parts.push('filter:links');
+    if (data.filterMedia) parts.push('filter:media');
+    if (data.filterImages) parts.push('filter:images');
+    if (data.filterVideos) parts.push('filter:videos');
+    if (data.filterRetweets) parts.push('filter:retweets');
+    if (data.filterReplies) parts.push('filter:replies');
+    if (data.filterQuote) parts.push('filter:quote');
+    if (data.since) parts.push(`since:${data.since}`);
+    if (data.until) parts.push(`until:${data.until}`);
+    if (data.minRetweets) parts.push(`min_retweets:${data.minRetweets}`);
+    if (data.minFaves) parts.push(`min_faves:${data.minFaves}`);
+    if (data.minReplies) parts.push(`min_replies:${data.minReplies}`);
+    (data.excludes || []).forEach((e) => {
+      parts.push(e.includes(' ') ? `-"${e}"` : `-${e}`);
+    });
+    if (data.lang) parts.push(`lang:${data.lang}`);
+    return parts.join(' ');
+  }
+
+  function updatePreview() {
+    const data = getFormData();
+    const query = buildQuery(data);
+    const preview = document.getElementById('preview');
+    const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
+    if (preview) {
+      preview.textContent = query || 'クエリがここに表示されます';
+      preview.style.color = query ? '#333' : '#999';
+      preview.style.fontStyle = query ? 'normal' : 'italic';
+    }
+    if (copyBtn) copyBtn.disabled = !query;
+  }
+
+  function setCookie(value: string) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + COOKIE_DAYS * 24 * 60 * 60 * 1000);
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(value)}; path=${COOKIE_PATH}; expires=${expires.toUTCString()}; SameSite=Lax`;
+  }
+
+  function getCookie(): string | null {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function restoreForm(data: ReturnType<typeof getFormData>) {
+    const container = document.getElementById('keywordInputs');
+    if (!container) return;
+    container.innerHTML = '';
+    const kw = data.keywords.length > 0 ? data.keywords : [''];
+    kw.forEach((v, i) => {
+      const row = document.createElement('div');
+      row.className = 'keyword-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'keyword-input';
+      input.dataset.keyword = '';
+      input.placeholder = '検索語句';
+      input.value = v;
+      row.appendChild(input);
+      if (i > 0) {
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'del-btn';
+        delBtn.textContent = '削除';
+        delBtn.addEventListener('click', () => {
+          row.remove();
+          updatePreview();
+        });
+        row.appendChild(delBtn);
+      }
+      input.addEventListener('input', updatePreview);
+      container.appendChild(row);
+    });
+    const excludeSection = document.getElementById('excludeSection');
+    const excludeInputs = document.getElementById('excludeInputs');
+    if (excludeSection && excludeInputs) {
+      const ex: string[] = data.excludes?.length ? data.excludes : ('exclude' in data && typeof (data as { exclude?: string }).exclude === 'string' ? [(data as { exclude: string }).exclude] : []);
+      if (ex.length > 0) {
+        excludeSection.hidden = false;
+        excludeInputs.innerHTML = '';
+        ex.forEach((v) => {
+          const row = document.createElement('div');
+          row.className = 'exclude-row';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'exclude-input';
+          input.placeholder = '除外したい語句';
+          input.value = v;
+          row.appendChild(input);
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'exclude-del-btn';
+          delBtn.textContent = '削除';
+          delBtn.addEventListener('click', () => {
+            row.remove();
+            if (excludeInputs.querySelectorAll('.exclude-row').length === 0) excludeSection.hidden = true;
+            updatePreview();
+          });
+          row.appendChild(delBtn);
+          input.addEventListener('input', updatePreview);
+          excludeInputs.appendChild(row);
+        });
+      }
+    }
+    (document.getElementById('from') as HTMLInputElement).value = data.from;
+    (document.getElementById('to') as HTMLInputElement).value = data.to;
+    (document.getElementById('mention') as HTMLInputElement).value = data.mention;
+    (document.getElementById('hashtag') as HTMLInputElement).value = data.hashtag;
+    (document.getElementById('filterLinks') as HTMLInputElement).checked = data.filterLinks;
+    (document.getElementById('filterMedia') as HTMLInputElement).checked = data.filterMedia;
+    (document.getElementById('filterImages') as HTMLInputElement).checked = data.filterImages;
+    (document.getElementById('filterVideos') as HTMLInputElement).checked = data.filterVideos;
+    (document.getElementById('filterRetweets') as HTMLInputElement).checked = data.filterRetweets;
+    (document.getElementById('filterReplies') as HTMLInputElement).checked = data.filterReplies;
+    (document.getElementById('filterQuote') as HTMLInputElement).checked = data.filterQuote;
+    (document.getElementById('since') as HTMLInputElement).value = data.since;
+    (document.getElementById('until') as HTMLInputElement).value = data.until;
+    (document.getElementById('minRetweets') as HTMLInputElement).value = data.minRetweets;
+    (document.getElementById('minFaves') as HTMLInputElement).value = data.minFaves;
+    (document.getElementById('minReplies') as HTMLInputElement).value = data.minReplies;
+    (document.getElementById('lang') as HTMLSelectElement).value = data.lang;
+
+    // 保存済みの選択がある折りたたみセクションは展開する
+    const userSection = document.getElementById('userSection') as HTMLDetailsElement;
+    if (userSection && (data.from || data.to || data.mention || data.hashtag)) userSection.open = true;
+    const mediaSection = document.getElementById('mediaFilterSection') as HTMLDetailsElement;
+    if (mediaSection && (data.filterLinks || data.filterMedia || data.filterImages || data.filterVideos || data.filterRetweets || data.filterReplies || data.filterQuote)) mediaSection.open = true;
+    const dateSection = document.getElementById('dateSection') as HTMLDetailsElement;
+    if (dateSection && (data.since || data.until)) dateSection.open = true;
+    const engagementSection = document.getElementById('engagementSection') as HTMLDetailsElement;
+    if (engagementSection && (data.minRetweets || data.minFaves || data.minReplies || data.lang)) engagementSection.open = true;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const saved = getCookie();
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        restoreForm(data);
+      } catch (_e) {
+        /* ignore */
+      }
+    } else {
+      document.querySelectorAll<HTMLInputElement>('.keyword-input').forEach((el) => {
+        el.addEventListener('input', updatePreview);
+      });
+    }
+
+    document.getElementById('from')?.addEventListener('input', updatePreview);
+    document.getElementById('to')?.addEventListener('input', updatePreview);
+    document.getElementById('mention')?.addEventListener('input', updatePreview);
+    document.getElementById('hashtag')?.addEventListener('input', updatePreview);
+    ['filterLinks', 'filterMedia', 'filterImages', 'filterVideos', 'filterRetweets', 'filterReplies', 'filterQuote'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('change', updatePreview);
+    });
+    document.getElementById('since')?.addEventListener('input', updatePreview);
+    document.getElementById('until')?.addEventListener('input', updatePreview);
+    document.getElementById('minRetweets')?.addEventListener('input', updatePreview);
+    document.getElementById('minFaves')?.addEventListener('input', updatePreview);
+    document.getElementById('minReplies')?.addEventListener('input', updatePreview);
+    document.getElementById('lang')?.addEventListener('change', updatePreview);
+
+    document.querySelectorAll('.clear-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const target = (btn as HTMLButtonElement).dataset.clear;
+        if (target === 'user') {
+          (document.getElementById('from') as HTMLInputElement).value = '';
+          (document.getElementById('to') as HTMLInputElement).value = '';
+          (document.getElementById('mention') as HTMLInputElement).value = '';
+          (document.getElementById('hashtag') as HTMLInputElement).value = '';
+        } else if (target === 'media') {
+          ['filterLinks', 'filterMedia', 'filterImages', 'filterVideos', 'filterRetweets', 'filterReplies', 'filterQuote'].forEach((id) => {
+            (document.getElementById(id) as HTMLInputElement).checked = false;
+          });
+        } else if (target === 'date') {
+          (document.getElementById('since') as HTMLInputElement).value = '';
+          (document.getElementById('until') as HTMLInputElement).value = '';
+        } else if (target === 'engagement') {
+          (document.getElementById('minRetweets') as HTMLInputElement).value = '';
+          (document.getElementById('minFaves') as HTMLInputElement).value = '';
+          (document.getElementById('minReplies') as HTMLInputElement).value = '';
+          (document.getElementById('lang') as HTMLSelectElement).value = '';
+        }
+        updatePreview();
+      });
+    });
+
+    const infoBtn = document.getElementById('keywordInfoBtn');
+    const infoTooltip = document.getElementById('keywordInfoTooltip');
+    if (infoBtn && infoTooltip) {
+      infoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = !infoTooltip.hidden;
+        infoTooltip.hidden = isOpen;
+        infoBtn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', () => {
+        infoTooltip.hidden = true;
+        infoBtn.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    document.getElementById('addExcludeBtn')?.addEventListener('click', () => {
+      const section = document.getElementById('excludeSection');
+      const container = document.getElementById('excludeInputs');
+      if (!section || !container) return;
+      section.hidden = false;
+      const row = document.createElement('div');
+      row.className = 'exclude-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'exclude-input';
+      input.placeholder = '除外したい語句';
+      row.appendChild(input);
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'exclude-del-btn';
+      delBtn.textContent = '削除';
+      delBtn.addEventListener('click', () => {
+        row.remove();
+        if (container.querySelectorAll('.exclude-row').length === 0) section.hidden = true;
+        updatePreview();
+      });
+      row.appendChild(delBtn);
+      input.addEventListener('input', updatePreview);
+      container.appendChild(row);
+      input.focus();
+    });
+
+    document.getElementById('addKeywordBtn')?.addEventListener('click', () => {
+      const container = document.getElementById('keywordInputs');
+      if (!container) return;
+      const row = document.createElement('div');
+      row.className = 'keyword-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'keyword-input';
+      input.dataset.keyword = '';
+      input.placeholder = '検索語句';
+      row.appendChild(input);
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'del-btn';
+      delBtn.textContent = '削除';
+      delBtn.addEventListener('click', () => {
+        row.remove();
+        updatePreview();
+      });
+      row.appendChild(delBtn);
+      input.addEventListener('input', updatePreview);
+      container.appendChild(row);
+      input.focus();
+    });
+
+    document.getElementById('copyBtn')?.addEventListener('click', async () => {
+      const query = buildQuery(getFormData());
+      if (!query) return;
+      try {
+        await navigator.clipboard.writeText(query);
+        const status = document.getElementById('copyStatus');
+        if (status) {
+          status.textContent = '✅ クリップボードにコピーしました！';
+          status.style.color = '#28a745';
+          setTimeout(() => { status.textContent = ''; }, 3000);
+        }
+      } catch (_err) {
+        alert('クリップボードへのコピーに失敗しました');
+      }
+    });
+
+    document.getElementById('searchBtn')?.addEventListener('click', () => {
+      const data = getFormData();
+      const query = buildQuery(data);
+      if (!query.trim()) {
+        alert('検索条件を入力してください');
+        return;
+      }
+      setCookie(JSON.stringify(data));
+      window.open(`https://x.com/search?q=${encodeURIComponent(query)}`, '_blank');
+    });
+
+    const searchBtn = document.getElementById('searchBtn');
+    let scrollTicking = false;
+    function checkFloatingButtonVisibility() {
+      if (!searchBtn) return;
+      const scrollTop = window.scrollY ?? document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const threshold = 80;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - threshold;
+      if (isAtBottom) {
+        searchBtn.classList.add('floating-btn-hidden');
+      } else {
+        searchBtn.classList.remove('floating-btn-hidden');
+      }
+    }
+    window.addEventListener('scroll', () => {
+      if (!scrollTicking) {
+        requestAnimationFrame(() => {
+          checkFloatingButtonVisibility();
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    }, { passive: true });
+    checkFloatingButtonVisibility();
+
+    updatePreview();
+  });
+</script>
+
+<style>
+  main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem 1rem 5rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @media (max-width: 430px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .article-body {
+    color: var(--color-text-muted);
+  }
+
+  .article-body h2 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+    border: none;
+  }
+
+  .article-body p {
+    margin-bottom: 1rem;
+  }
+
+  .tool-container {
+    background: var(--color-bg-card);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    margin: 1.5rem 0;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tool-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .tool-section:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .input-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .keyword-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* 動的追加される要素にもスタイルを適用（:global） */
+  .keyword-inputs :global(.keyword-row) {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .keyword-inputs :global(.keyword-input) {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+  }
+
+  .keyword-inputs :global(.keyword-input:focus) {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .keyword-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .keyword-header h2 {
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0;
+    border: none;
+    background: #888;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    font-style: italic;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .info-btn:hover {
+    background: #666;
+  }
+
+  .info-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    max-width: 320px;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+  }
+
+  .info-tooltip code {
+    font-size: 0.85em;
+  }
+
+  .add-btn {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: transparent;
+    border: 1px dashed var(--color-primary);
+    color: var(--color-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .add-btn:hover {
+    background: rgba(102, 126, 234, 0.08);
+  }
+
+  .add-exclude-btn {
+    border-color: #888;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .add-exclude-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .exclude-section {
+    background: #f5f5f5;
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.5rem;
+    border: 1px solid #e0e0e0;
+  }
+
+  .exclude-inputs :global(.exclude-row) {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .exclude-inputs :global(.exclude-row:last-child) {
+    margin-bottom: 0;
+  }
+
+  .exclude-inputs :global(.exclude-input) {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+  }
+
+  .exclude-inputs :global(.exclude-input:focus) {
+    outline: none;
+    border-color: #888;
+  }
+
+  .exclude-inputs :global(.exclude-del-btn) {
+    padding: 0.4rem 0.6rem;
+    background: #e0e0e0;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #555;
+    flex-shrink: 0;
+  }
+
+  .exclude-inputs :global(.exclude-del-btn:hover) {
+    background: #d0d0d0;
+  }
+
+  .keyword-inputs :global(.del-btn) {
+    padding: 0.4rem 0.6rem;
+    background: #f0f0f0;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #666;
+    flex-shrink: 0;
+  }
+
+  .keyword-inputs :global(.del-btn:hover) {
+    background: #e0e0e0;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  select {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--color-bg-card);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.25rem;
+    cursor: pointer;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .user-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .input-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .collapsible {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .collapsible summary {
+    padding: 0.6rem 0.75rem;
+    background: #f8f9fa;
+    cursor: pointer;
+    font-weight: 500;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .collapsible-summary-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .clear-btn {
+    flex-shrink: 0;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: #666;
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .clear-btn:hover {
+    color: #333;
+    background: #eee;
+    border-color: #999;
+  }
+
+  .collapsible summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .collapsible summary::before {
+    content: '▶ ';
+    font-size: 0.75rem;
+  }
+
+  .collapsible[open] summary::before {
+    content: '▼ ';
+  }
+
+  .collapsible > div {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+  }
+
+  .checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+
+  .date-grid,
+  .engagement-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .preview-section .preview-box {
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.75rem;
+    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: #999;
+    font-style: italic;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .primary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .floating-btn {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(102, 126, 234, 0.3);
+    z-index: 100;
+    transition: opacity 0.25s ease, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .floating-btn.floating-btn-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (min-width: 601px) {
+    .floating-btn {
+      left: 50%;
+      transform: translateX(-50%);
+      right: auto;
+      width: 600px;
+      max-width: calc(100% - 2rem);
+      bottom: 1rem;
+    }
+
+    .floating-btn:hover:not(:disabled) {
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .floating-btn:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+  }
+
+  .status-message {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .usage-section {
+    margin-top: 2rem;
+  }
+
+  .usage-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+  }
+
+  .usage-section ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .usage-section li {
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 480px) {
+    .user-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .date-grid,
+    .engagement-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
