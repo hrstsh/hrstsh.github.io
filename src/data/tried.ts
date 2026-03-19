@@ -9,6 +9,11 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'GA4・Search Console のデータ取得を定期実行で自動化してみた',
+    href: '/tried/google-analytics-fetcher/',
+    desc: 'サイトの GA4 と Search Console データを API で取得し、launchd で毎日自動実行して Markdown に蓄積する仕組みを構築した手記。',
+  },
+  {
     title: 'X の検索を保存する Chrome 拡張を作ってみた',
     href: '/tried/twitter-search-save/',
     desc: 'X(Twitter) の公式検索保存が新規追加できなくなったため、検索クエリを保存・管理する Chrome 拡張を作成した手記。',

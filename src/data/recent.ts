@@ -10,6 +10,7 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
+  { title: 'GA4・Search Console のデータ取得を定期実行で自動化してみた', href: '/tried/google-analytics-fetcher/', date: '2026-03-19', showNew: true },
   { title: 'JSON整形・バリデーションツール', href: '/tools/json-formatter/', date: '2026-03-17', showNew: true },
   { title: 'X の検索を保存する Chrome 拡張を作ってみた', href: '/tried/twitter-search-save/', date: '2026-03-14', showNew: true },
   { title: 'Mac でローカル TTS 基盤（VOICEVOX + Kokoro）を作ってみた', href: '/tried/voice-feed-tts/', date: '2026-03-14', showNew: true },
