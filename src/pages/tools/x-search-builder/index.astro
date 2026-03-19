@@ -493,6 +493,32 @@ const jsonLd = [
       window.open(`https://x.com/search?q=${encodeURIComponent(query)}`, '_blank');
     });
 
+    const searchBtn = document.getElementById('searchBtn');
+    let scrollTicking = false;
+    function checkFloatingButtonVisibility() {
+      if (!searchBtn) return;
+      const scrollTop = window.scrollY ?? document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const threshold = 80;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - threshold;
+      if (isAtBottom) {
+        searchBtn.classList.add('floating-btn-hidden');
+      } else {
+        searchBtn.classList.remove('floating-btn-hidden');
+      }
+    }
+    window.addEventListener('scroll', () => {
+      if (!scrollTicking) {
+        requestAnimationFrame(() => {
+          checkFloatingButtonVisibility();
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    }, { passive: true });
+    checkFloatingButtonVisibility();
+
     updatePreview();
   });
 </script>
@@ -923,6 +949,12 @@ const jsonLd = [
     border: 2px solid rgba(255, 255, 255, 0.4);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(102, 126, 234, 0.3);
     z-index: 100;
+    transition: opacity 0.25s ease, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .floating-btn.floating-btn-hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 
   @media (min-width: 601px) {
