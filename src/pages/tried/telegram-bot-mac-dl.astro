@@ -4,7 +4,7 @@ import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
 const title = '外出先から自宅の Mac を操作する Telegram Bot を作ってみた - hrの備忘録';
-const description = '外出先のスマートフォンから自宅の Mac の処理を実行するため、Telegram Bot 基盤を構築した手記。初回は yt-dlp による YouTube 動画・音声ダウンロードを実装。';
+const description = '外出先のスマートフォンから自宅の Mac を操作する Telegram Bot。yt-dlp で YouTube 動画・音声をダウンロードする bot を構築した手記。';
 const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/telegram-bot-mac-dl', toIsoDate('2026.03'), 'tried');
 
 const projectStructure = `bot/

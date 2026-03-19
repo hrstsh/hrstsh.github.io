@@ -42,5 +42,6 @@ coverage/
 .cache/
 .temp/
 
-# Dev log rule (contains user-specific paths)
+# Cursor rules (contain user-specific paths)
 .cursor/rules/dev-log-rule.mdc
+.cursor/rules/google-analytics-rule.mdc
