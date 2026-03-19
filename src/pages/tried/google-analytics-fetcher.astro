@@ -1,0 +1,181 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'GA4・Search Console のデータ取得を定期実行で自動化してみた - hrの備忘録';
+const description = 'サイトの GA4 と Search Console データを API で取得し、launchd で毎日自動実行して Markdown に蓄積する仕組みを構築した手記。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/google-analytics-fetcher', toIsoDate('2026.03'), 'tried');
+
+const dataFlow = `[launchd 日次実行]
+      ↓
+[uv run python -m src.main --days 5]
+      ↓
+[GA4 API] → data/ga4/YYYY-MM-DD.md
+[Search Console API] → data/search-console/YYYY-MM-DD.md`;
+
+const mainFetch = `def fetch_one_day(target_date: date) -> None:
+    date_str = target_date.strftime("%Y-%m-%d")
+    ga4_md = fetch_ga4(date_str)
+    save_ga4(date_str, ga4_md)
+    sc_md = fetch_search_console(date_str)
+    save_search_console(date_str, sc_md)
+
+# --days N で前日から N 日分を遡って取得
+parser.add_argument("--days", type=int, default=1, help="取得する日数")`;
+
+const plistInterval = `  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>`;
+
+const installScript = `# plist を生成して LaunchAgents に配置
+sed -e "s|PROJECT_DIR|$PROJECT_DIR|g" plist.example > "$DEST"
+mkdir -p "$PROJECT_DIR/logs"
+read -p "今すぐ有効化しますか？ [y/N] " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  launchctl load "$DEST"
+  echo "有効化しました。指定した時刻に日次実行されます。"
+fi`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>GA4・Search Console のデータ取得を定期実行で自動化してみた</h1>
+      <p class="article-meta">API でデータを取得し、launchd で毎日自動実行して Markdown に蓄積する仕組み</p>
+      <p class="article-date">2026.03</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        サイトのアクセス解析を確認するたびに GA4 や Search Console の管理画面にログインするのが面倒で、データをローカルに蓄積してサイト改善に活用したくなりました。そこで Google Analytics Data API と Search Console API でデータを取得する Python スクリプトを作り、<strong>launchd で日次自動実行</strong>する形にしました。手動で実行しなくても日次でデータが溜まるので、必要なときに参照するだけで済みます。
+      </p>
+
+      <h2>全体の流れ</h2>
+      <p>
+        取得から保存までの流れは次のとおりです。
+      </p>
+      <CodeBlock code={dataFlow} language="text" />
+
+      <p>
+        当初は GitHub Actions の cron で定期実行する案も検討しました。ただ、credentials などの秘密情報を Actions の Secrets に置く必要があり、データの永続化にも Artifact や別リポジトリへの push が必要になります。ローカルで launchd を使えば、秘密情報はマシン内に留められ、<code>data/</code> にそのまま蓄積できます。また、Markdown 形式にしたのは、Cursor などの AI が <code>@data/ga4/xxx.md</code> で参照してサイト改善の判断材料にしやすいためです。
+      </p>
+
+      <h2>取得スクリプト</h2>
+      <p>
+        GA4 は <code>BetaAnalyticsDataClient.from_service_account_file</code>、Search Console は <code>googleapiclient.discovery.build</code> でサービスアカウント認証。日別サマリー、ページ別 PV、参照元、デバイス（GA4）、クエリ別・ページ別の検索パフォーマンス（Search Console）を取得して Markdown を生成しています。
+      </p>
+      <CodeBlock code={mainFetch} language="python" />
+
+      <p>
+        Search Console は GA4 と異なり 2〜3 日遅れでデータが反映されるため、日次実行では <code>--days 5</code> で毎日 5 日分を再取得する運用にしました。同じ日付は上書きされるので、遅れて反映された分も取り込めます。
+      </p>
+
+      <h2>定期実行（launchd）</h2>
+      <p>
+        plist の <code>StartCalendarInterval</code> で実行時刻（Hour, Minute）を指定。launchd では <code>.env</code> が読まれないため、plist の <code>EnvironmentVariables</code> で必要な環境変数を渡しています。
+      </p>
+      <CodeBlock code={plistInterval} language="xml" />
+
+      <p>
+        登録用の <code>install-launchd.sh</code> で plist を生成し、<code>~/Library/LaunchAgents/</code> に配置。対話で有効化を確認して <code>launchctl load</code> します。
+      </p>
+      <CodeBlock code={installScript} language="bash" />
+
+      <p>
+        出力先は <code>data/ga4/YYYY-MM-DD.md</code> と <code>data/search-console/YYYY-MM-DD.md</code>。取得したデータを AI に参照させて、メタ情報の最適化や人気記事の把握に活用しています。
+      </p>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
