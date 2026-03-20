@@ -189,6 +189,8 @@ You can also trigger deployment manually:
 │   └── styles/
 │       └── global.css      # Global styles
 ├── public/                 # Static assets (favicon, robots.txt, etc.)
+├── .cursor/
+│   └── skills/             # Cursor Agent Skills（astro-code-blocks はリポジトリ同梱。human-ja-writing は .gitignore で除外・ローカルのみ）
 ├── .cursorrules            # AI development guidelines
 ├── astro.config.mjs        # Astro configuration
 ├── package.json
