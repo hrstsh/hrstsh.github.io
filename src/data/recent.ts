@@ -10,6 +10,7 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
+  { title: 'X のタイムラインでリポストを非表示にする Chrome 拡張', href: '/tips/twitter-hide-reposts/', date: '2026-03-28', showNew: true },
   { title: 'GitHub Pages + Astro で Search Console のリダイレクトエラーを防ぐ', href: '/tips/github-pages-trailing-slash-sitemap/', date: '2026-03-28', showNew: true },
   { title: 'X（Twitter）検索ツール', href: '/tools/x-search-builder/', date: '2026-03-08', showNew: true },
   { title: 'GA4・Search Console のデータ取得を定期実行で自動化してみた', href: '/tried/google-analytics-fetcher/', date: '2026-03-19', showNew: true },
