@@ -1,0 +1,234 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title =
+  'GitHub Pages + Astro で Search Console のリダイレクトエラーを防ぐ（trailing slash とサイトマップ） - hrの備忘録';
+const description =
+  'GitHub Pages では末尾スラッシュの付き合わせを誤ると、サイトマップの URL と実際の到達先がずれて Search Console にリダイレクトエラーが出る。Astro の trailingSlash とサイトマップ生成で揃えた手順。';
+const path = '/tips/github-pages-trailing-slash-sitemap';
+
+const faqItems = [
+  {
+    question: 'Search Console の「リダイレクトエラー」はなぜ起きる？',
+    answer:
+      '提出した URL（例: 末尾スラッシュなし）と、サーバーが返す最終 URL（末尾スラッシュ付き）が一致しないと、リダイレクトエラーとして報告される。GitHub Pages は /path を /path/ へ 301 リダイレクトするので、サイトマップや canonical がどちらか一方の形に偏っていると起きやすい。',
+  },
+  {
+    question: 'Astro ではどう直す？',
+    answer:
+      'astro.config.mjs で trailingSlash: \'always\' を指定し、配信される URL（末尾スラッシュ付き）にページと canonical を揃える。サイトマップを自前で出しているなら、loc も同じルールで末尾スラッシュを付ける。',
+  },
+];
+
+const jsonLd = [
+  tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.03'), 'tips'),
+  faqPage(faqItems, path),
+];
+
+const astroConfigSnippet = `import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  site: 'https://example.com',
+  base: '/',
+  // GitHub Pages は directory 形式（/path/index.html）のため /path が /path/ にリダイレクトされる。
+  // サイトマップ・canonical と実 URL を一致させ、Search Console のリダイレクトエラーを防ぐ。
+  trailingSlash: 'always',
+});`;
+
+const pathToUrlSnippet = `function pathToUrl(path) {
+  // trailingSlash: 'always' に合わせ、ルート以外は末尾スラッシュを付与
+  const p = path === '/' ? '' : path.endsWith('/') ? path : \`\${path}/\`;
+  return new URL(p || '/', site).href;
+}`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>GitHub Pages + Astro で Search Console のリダイレクトエラーを防ぐ（trailing slash とサイトマップ）</h1>
+      <p class="article-date">2026.03</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        個人サイトを GitHub Pages に載せたあと、Search Console でインデックスが進まなかった。理由を開くと「リダイレクトエラー」が並んでいた。
+      </p>
+      <p>
+        末尾スラッシュの付け方と、サイトマップに書いた URL が噛み合っていなかった。Astro の設定とサイトマップ生成を同じルールに揃えたら、こちらでは収まった。
+      </p>
+
+      <h2>何が起きていたか</h2>
+      <p>
+        GitHub Pages は多くの場合、<code>/foo/bar</code> を <code>foo/bar/index.html</code> として配信する。<code>/foo/bar</code>（末尾スラッシュなし）で開くと <code>/foo/bar/</code> へ 301 される構成になりやすい。
+      </p>
+      <p>
+        サイトマップや canonical が <code>https://example.com/foo/bar</code> のままだと、提出した URL とクロール後の最終 URL が一致しない。Search Console はそれをリダイレクトまわりの不整合として扱う。
+      </p>
+
+      <h2>やったこと（方針）</h2>
+      <p>
+        ページ本体・canonical・サイトマップの <code>&lt;loc&gt;</code> を、ブラウザで実際に着地する URL に揃えた。このサイトでは末尾スラッシュ付きに統一している。
+      </p>
+      <ol>
+        <li>Astro で <code>trailingSlash: 'always'</code> を指定する</li>
+        <li>ビルド後に回しているサイトマップ生成で、ルート以外の URL に末尾スラッシュを付ける</li>
+      </ol>
+
+      <h2>1. Astro の設定</h2>
+      <p>
+        <code>astro.config.mjs</code> に次を入れる（<code>site</code> は自分のドメインに置き換え）。
+      </p>
+      <CodeBlock code={astroConfigSnippet} language="javascript" />
+
+      <h2>2. サイトマップの URL 形式</h2>
+      <p>
+        このサイトでは <code>@astrojs/sitemap</code> の代わりに、ビルド後の <code>dist/</code> を走査して <code>sitemap-v3.xml</code> を出すスクリプトを使っている。<code>pathToUrl</code> だけ抜き出すと、次のイメージになる。
+      </p>
+      <CodeBlock code={pathToUrlSnippet} language="javascript" />
+      <p>
+        ルート <code>/</code> だけは二重スラッシュにならないよう分けている。別のジェネレータを使う場合も、出力 URL を本番で開いて最終表示と突き合わせておくとよい。
+      </p>
+
+      <h2>デプロイ後の確認</h2>
+      <ul>
+        <li>任意の記事ページを開き、アドレスバーが末尾スラッシュ付きになっているか</li>
+        <li>公開中のサイトマップの <code>&lt;loc&gt;</code> がそれと同じ形式か</li>
+        <li>Search Console の URL 検査で、選んだ URL が「インデックス登録済み」に落ち着くか（反映は数日かかることもある）</li>
+      </ul>
+
+      <h2>関連</h2>
+      <p>
+        サイト全体の立ち上げは <a href="/tried/github-pages-setup/">GitHub Pages を作成して公開してみた</a> に書いてある。SEO の方針はリポジトリの README にも短く載せている。
+      </p>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>Search Console の「リダイレクトエラー」はなぜ起きる？</dt>
+        <dd>
+          提出 URL（例: 末尾スラッシュなし）と、サーバーが返す最終 URL（末尾スラッシュ付き）が一致しないと、リダイレクトエラーとして出る。GitHub Pages は /path を /path/ へ 301 するので、サイトマップや canonical がどちらか一方の形に偏っていると起きやすい。
+        </dd>
+        <dt>Astro ではどう直す？</dt>
+        <dd>
+          astro.config.mjs で trailingSlash: 'always' を指定し、配信される URL（末尾スラッシュ付き）にページと canonical を揃える。サイトマップを自前で出しているなら、loc も同じルールで末尾スラッシュを付ける。
+        </dd>
+      </dl>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 1.65rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @media (min-width: 480px) {
+    h1 {
+      font-size: 2rem;
+    }
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.35rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>
