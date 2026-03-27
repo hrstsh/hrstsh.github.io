@@ -56,7 +56,7 @@ https://hrstsh.com/
 │
 ├── /tips/ ................. Tips
 │   https://hrstsh.com/tips
-│   (meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
+│   (github-pages-trailing-slash-sitemap, meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, twitter-hide-reposts, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
 │
 ├── /privacy ............... プライバシーポリシー・免責事項
 │   https://hrstsh.com/privacy
@@ -189,6 +189,8 @@ You can also trigger deployment manually:
 │   └── styles/
 │       └── global.css      # Global styles
 ├── public/                 # Static assets (favicon, robots.txt, etc.)
+├── .cursor/
+│   └── skills/             # Cursor Agent Skills（astro-code-blocks はリポジトリ同梱。human-ja-writing は .gitignore で除外・ローカルのみ）
 ├── .cursorrules            # AI development guidelines
 ├── astro.config.mjs        # Astro configuration
 ├── package.json

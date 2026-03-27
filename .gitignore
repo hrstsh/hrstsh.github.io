@@ -45,3 +45,6 @@ coverage/
 # Cursor rules (contain user-specific paths)
 .cursor/rules/dev-log-rule.mdc
 .cursor/rules/google-analytics-rule.mdc
+
+# Agent skill derived from external blog (not redistributed; keep local only)
+.cursor/skills/human-ja-writing/

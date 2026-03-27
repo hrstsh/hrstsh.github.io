@@ -1,0 +1,323 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X（Twitter）のタイムラインでリポスト（RT）を非表示にする Chrome 拡張 - hrの備忘録';
+const description =
+  'Chrome 拡張で X のタイムラインからリポスト行を隠す作り方。ポップアップで ON/OFF。content script と chrome.storage。';
+const path = '/tips/twitter-hide-reposts';
+
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.03'), 'tips')];
+
+const manifestCode = `{
+  "name": "X リポスト非表示",
+  "manifest_version": 3,
+  "version": "1.0",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://twitter.com/*", "https://x.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "256": "icon.png"
+  }
+}`;
+
+const contentCode = `(function () {
+  'use strict';
+
+  // ポップアップで保存した値。未設定なら false（リポストは隠さない）
+  let isRtFilterEnabled = false;
+
+  chrome.storage.local.get(['rtFilterEnabled'], (result) => {
+    isRtFilterEnabled = result.rtFilterEnabled === true;
+    applyVisibilityAll();
+  });
+
+  // ポップアップでスイッチを変えたあと、開いているタブにすぐ反映させる
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.rtFilterEnabled) {
+      isRtFilterEnabled = changes.rtFilterEnabled.newValue;
+      applyVisibilityAll();
+    }
+  });
+
+  // article 全体の text でリポスト用ラベルを探す。日本語 UI なら「さんがリポスト」など環境に合わせて増やす（誤爆に注意）
+  function detectRetweet(article) {
+    const t = article.textContent || '';
+    return (
+      t.includes('Reposted by') ||
+      t.includes('Retweeted by') ||
+      t.includes('reposted') ||
+      t.includes('さんがリポスト')
+    );
+  }
+
+  function processTweets() {
+    const articles = document.querySelectorAll('article[data-testid="tweet"]');
+    articles.forEach((article) => {
+      // 一度判定したノードは dataset を使い回して表示だけ直す
+      if (article.dataset.rtChecked === 'true') {
+        updateArticleVisibility(article);
+        return;
+      }
+      article.dataset.isRetweet = detectRetweet(article);
+      article.dataset.rtChecked = 'true';
+      updateArticleVisibility(article);
+    });
+  }
+
+  function updateArticleVisibility(article) {
+    const isRt = article.dataset.isRetweet === 'true';
+    if (isRtFilterEnabled && isRt) {
+      if (article.style.display !== 'none') article.style.display = 'none';
+    } else if (article.style.display === 'none') {
+      article.style.display = '';
+    }
+  }
+
+  // OFF にしたとき隠していた行をまとめて戻す
+  function applyVisibilityAll() {
+    document.querySelectorAll('article[data-testid="tweet"]').forEach((article) => {
+      updateArticleVisibility(article);
+    });
+  }
+
+  // 無限スクロールで article が増えたら再スキャン
+  const observer = new MutationObserver(() => processTweets());
+  observer.observe(document.body, { childList: true, subtree: true });
+})();`;
+
+const popupHtmlCode = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    /* ポップアップは横幅が狭いのでコンパクトに */
+    body { width: 220px; padding: 12px; font-family: sans-serif; margin: 0; }
+    .row { display: flex; align-items: center; justify-content: space-between; }
+    .label { font-size: 14px; font-weight: bold; }
+    /* チェックボックスを隠して span.slider をスイッチの見た目にする */
+    .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: #ccc; transition: 0.2s; border-radius: 24px;
+    }
+    .slider::before {
+      position: absolute; content: ''; height: 16px; width: 16px;
+      left: 4px; bottom: 4px; background: #fff; transition: 0.2s; border-radius: 50%;
+    }
+    input:checked + .slider { background: #1d9bf0; }
+    input:checked + .slider::before { transform: translateX(16px); }
+  </style>
+</head>
+<body>
+  <!-- id は popup.js から getElementById するので変えない -->
+  <div class="row">
+    <span class="label">リポスト非表示</span>
+    <label class="switch">
+      <input type="checkbox" id="toggleRtFilter" />
+      <span class="slider"></span>
+    </label>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>`;
+
+const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
+  const toggleRtFilter = document.getElementById('toggleRtFilter');
+  // 前回の状態を復元（未保存なら OFF）
+  chrome.storage.local.get(['rtFilterEnabled'], (result) => {
+    toggleRtFilter.checked = result.rtFilterEnabled === true;
+  });
+  // 変更は即 storage に書く → content 側の onChanged で拾う
+  toggleRtFilter.addEventListener('change', () => {
+    chrome.storage.local.set({ rtFilterEnabled: toggleRtFilter.checked });
+  });
+});`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>X（Twitter）のタイムラインでリポスト（RT）を非表示にする Chrome 拡張</h1>
+      <p class="article-date">2026.03</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X のタイムラインでリポストだけを非表示にしたり表示に戻したりと切り替えたくなることはないでしょうか。
+      </p>
+      <p>
+        この記事では、Google Chrome 用の拡張機能を自作する手順をまとめます。ツールバーのアイコンからポップアップを開き、スイッチを切り替えると、表示中の X のタブのタイムラインから、リポスト行を非表示にしたり、再び表示したりできます。
+      </p>
+
+      <h2>できること</h2>
+      <ul>
+        <li>タイムライン（おすすめ・リスト等）に表示されるリポストを非表示にできる</li>
+        <li>表示・非表示をいつでも切り替えられる</li>
+        <li>表示・非表示状態をブラウザ内に保存し、閉じても状態を維持する</li>
+      </ul>
+
+      <h2>用意するファイル</h2>
+      <p>同じフォルダに次を置く（<code>icon.png</code> は任意）。</p>
+      <ul>
+        <li><code>manifest.json</code></li>
+        <li><code>content.js</code></li>
+        <li><code>popup.html</code> / <code>popup.js</code></li>
+        <li><code>icon.png</code>（256×256 推奨。無ければ manifest の <code>icons</code> ごと削る）</li>
+      </ul>
+
+      <h2>manifest.json</h2>
+      <p>
+        下の JSON は <code>manifest_version</code> が <code>3</code> の Manifest V3 向け。ファイル名 <code>manifest.json</code> で保存する。
+      </p>
+      <ul>
+        <li><code>content_scripts</code> … <code>x.com</code> / <code>twitter.com</code> で <code>content.js</code> を注入</li>
+        <li><code>action.default_popup</code> … ツールバーアイコン用の HTML</li>
+        <li><code>permissions</code> の <code>storage</code> … ポップアップと content で <code>rtFilterEnabled</code> を共有</li>
+      </ul>
+      <CodeBlock code={manifestCode} language="json" />
+
+      <h2>content.js</h2>
+      <p>
+        <code>detectRetweet</code> の文字列は環境で変わる。日本語 UI 向けに「さんがリポスト」を足した例になっている。
+      </p>
+      <CodeBlock code={contentCode} language="javascript" />
+
+      <h2>popup.html</h2>
+      <CodeBlock code={popupHtmlCode} language="html" />
+
+      <h2>popup.js</h2>
+      <CodeBlock code={popupJsCode} language="javascript" />
+
+      <h2>インストール手順</h2>
+      <ol>
+        <li>Chrome で <code>chrome://extensions/</code> を開く</li>
+        <li>「デベロッパーモード」を ON</li>
+        <li>「パッケージ化されていない拡張機能を読み込む」で上記のファイルを配置したフォルダを指定</li>
+      </ol>
+      <p>X を開き直す。拡張アイコンでポップアップを開き、スイッチの ON/OFF で表示を確かめる。</p>
+
+      <h2>補足・限界</h2>
+      <ul>
+        <li>
+          本文に <code>reposted</code> が紛れるとリポスト以外も消える。<code>data-testid</code> 頼みにすると X の DOM 変更で壊れやすい。文字列マッチは荒い代わりに短く書ける。
+        </li>
+        <li><code>dataset</code> は一度付いたら残る。変なときはタブをリロード。</li>
+        <li>
+          関連: <a href="/tips/twitter-image-only-filter/">タイムラインを画像のみ表示にする</a>、<a href="/tips/twitter-long-tweet-filter/">長文ツイートを非表示にする</a>
+        </li>
+      </ul>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 1.55rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @media (min-width: 480px) {
+    h1 {
+      font-size: 1.85rem;
+    }
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.35rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
