@@ -1,0 +1,232 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'macOSのスクリーンショットの保存先・形式・影を変更する - hrの備忘録';
+const description = 'macOSのスクリーンショットをデスクトップ以外に保存したり、PNGをJPGに変えたり、ウィンドウ撮影時の影を消す方法。defaults write コマンドで設定する手順をまとめた。';
+const path = '/tips/macos-screenshot-settings';
+const faqItems = [
+  { question: 'Macのスクリーンショットの保存先を変えるには？', answer: 'ターミナルで defaults write com.apple.screencapture location 保存先のパス を実行し、killall SystemUIServer で反映する。例: defaults write com.apple.screencapture location ~/Pictures/Screenshots' },
+  { question: 'MacのスクリーンショットをJPGで保存するには？', answer: 'defaults write com.apple.screencapture type jpg を実行し、killall SystemUIServer で反映する。png に戻すと元のPNG形式になる。' },
+  { question: 'Macのウィンドウ撮影で付く影を消すには？', answer: 'defaults write com.apple.screencapture disable-shadow -bool true を実行し、killall SystemUIServer で反映する。false に戻すと影が復活する。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>macOSのスクリーンショットの保存先・形式・影を変更する</h1>
+      <p class="article-date">2026.05</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        macOS のスクリーンショットは初期設定だとデスクトップに溜まっていく。<code>defaults write</code> コマンドで、保存先・ファイル形式・影の有無を変えられる。撮るたびにデスクトップが散らかる問題はこれで解決する。
+      </p>
+
+      <h2>保存先を変える</h2>
+      <p>
+        専用フォルダに保存するようにする。先にフォルダを作っておく。
+      </p>
+      <pre><code class="language-bash">mkdir -p ~/Pictures/Screenshots
+defaults write com.apple.screencapture location ~/Pictures/Screenshots
+killall SystemUIServer</code></pre>
+      <p>
+        最後の <code>killall SystemUIServer</code> で設定が反映される。これを忘れると変更が効かない。
+      </p>
+
+      <h2>ファイル形式を変える</h2>
+      <p>
+        初期設定は PNG。ファイルサイズを抑えたいなら JPG にする。
+      </p>
+      <pre><code class="language-bash">defaults write com.apple.screencapture type jpg
+killall SystemUIServer</code></pre>
+      <p>
+        指定できる形式は <code>png</code> <code>jpg</code> <code>gif</code> <code>tiff</code> <code>pdf</code> など。PNG に戻すなら <code>type png</code> を実行する。
+      </p>
+
+      <h2>ウィンドウ撮影の影を消す</h2>
+      <p>
+        ウィンドウを撮ると周りに大きな影が付く。これを消すと余白のないスッキリした画像になる。
+      </p>
+      <pre><code class="language-bash">defaults write com.apple.screencapture disable-shadow -bool true
+killall SystemUIServer</code></pre>
+      <p>
+        影を戻すなら <code>-bool false</code> にする。なお、ウィンドウ撮影のときに <kbd>option</kbd> を押しながらクリックすると、設定を変えなくてもその一回だけ影なしで撮れる。
+      </p>
+
+      <h2>ファイル名のプレフィックスを変える</h2>
+      <p>
+        初期設定だと「スクリーンショット 2026-05-31 ...」のような名前になる。先頭の文字列を変えられる。
+      </p>
+      <pre><code class="language-bash">defaults write com.apple.screencapture name "shot"
+killall SystemUIServer</code></pre>
+      <p>
+        これで「shot 2026-05-31 ...」のような名前になる。
+      </p>
+
+      <h2>設定を元に戻す</h2>
+      <p>
+        変更した設定を初期状態に戻すには <code>delete</code> を使う。
+      </p>
+      <pre><code class="language-bash">defaults delete com.apple.screencapture location
+defaults delete com.apple.screencapture type
+defaults delete com.apple.screencapture disable-shadow
+killall SystemUIServer</code></pre>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/mac-terminal-customize/">Mac Terminal（zsh）の表示をカスタマイズする</a></li>
+        <li><a href="/tips/macos-copy-file-path/">macOSでファイルパスを一発でターミナルにコピーする</a></li>
+        <li><a href="/tips/macos-custom-command/">Macで自作コマンドを作って登録する方法</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>Macのスクリーンショットの保存先を変えるには？</dt>
+        <dd>ターミナルで defaults write com.apple.screencapture location 保存先のパス を実行し、killall SystemUIServer で反映する。例: defaults write com.apple.screencapture location ~/Pictures/Screenshots</dd>
+        <dt>MacのスクリーンショットをJPGで保存するには？</dt>
+        <dd>defaults write com.apple.screencapture type jpg を実行し、killall SystemUIServer で反映する。png に戻すと元のPNG形式になる。</dd>
+        <dt>Macのウィンドウ撮影で付く影を消すには？</dt>
+        <dd>defaults write com.apple.screencapture disable-shadow -bool true を実行し、killall SystemUIServer で反映する。false に戻すと影が復活する。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body kbd {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.85em;
+    box-shadow: 0 1px 0 #bbb;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>

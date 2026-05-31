@@ -1,0 +1,227 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'X(Twitter)の検索演算子まとめ（from: / since: / until: / filter:） - hrの備忘録';
+const description = 'X(Twitter)の検索で使える演算子のまとめ。特定アカウント・期間・メディア種別での絞り込みや、いいね数の下限指定まで。コピペで使える組み合わせ例も紹介。';
+const path = '/tips/twitter-advanced-search-operators';
+const faqItems = [
+  { question: 'X(Twitter)で特定アカウントの過去ツイートを検索するには？', answer: '検索欄に from:ユーザー名 を入力する。さらに since:2024-01-01 until:2024-12-31 のように日付を足すと、その期間内のツイートだけに絞り込める。' },
+  { question: 'X(Twitter)で画像付きツイートだけを検索するには？', answer: 'キーワードに filter:images を足す。動画なら filter:videos、リンク付きなら filter:links を使う。' },
+  { question: 'いいねが多いツイートだけを検索するには？', answer: 'min_faves:100 のように指定すると、いいねが100以上のツイートだけが表示される。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>X(Twitter)の検索演算子まとめ（from: / since: / until: / filter:）</h1>
+      <p class="article-date">2026.05</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter) でキーワードだけ入れて検索しても、目当てのツイートはなかなか出てこない。検索演算子を組み合わせると、アカウント・期間・メディア種別で一気に絞り込める。よく使うものをまとめた。
+      </p>
+
+      <h2>アカウントで絞る</h2>
+      <pre><code class="language-text">from:アカウント名    そのアカウントのツイート
+to:アカウント名      そのアカウント宛のリプライ
+@アカウント名        そのアカウントへの言及を含むツイート</code></pre>
+      <p>
+        <code>from:</code> は <code>@</code> を付けず、ユーザー名（@の後ろの部分）だけを書く。例: <code>from:elonmusk</code>。
+      </p>
+
+      <h2>期間で絞る</h2>
+      <pre><code class="language-text">since:2024-01-01     その日以降のツイート
+until:2024-12-31     その日以前のツイート</code></pre>
+      <p>
+        日付は <code>YYYY-MM-DD</code> 形式。両方を組み合わせると、特定期間のツイートだけに絞れる。「あのアカウントが去年の夏に何か言ってた」を探すときに効く。
+      </p>
+
+      <h2>メディアの種類で絞る</h2>
+      <pre><code class="language-text">filter:images       画像付きツイート
+filter:videos        動画付きツイート
+filter:links         リンク付きツイート
+filter:media         画像・動画どちらか付き
+-filter:replies      リプライを除外
+-filter:retweets     リツイートを除外</code></pre>
+      <p>
+        頭に <code>-</code> を付けると除外になる。<code>-filter:retweets</code> でリツイートを消すと、検索結果がかなり見やすくなる。
+      </p>
+
+      <h2>エンゲージメントで絞る</h2>
+      <pre><code class="language-text">min_faves:100        いいね100以上
+min_retweets:50      リツイート50以上
+min_replies:10       リプライ10以上</code></pre>
+      <p>
+        バズったツイートだけを探したいときに使う。数字を上げるほど結果が絞られる。
+      </p>
+
+      <h2>組み合わせ例</h2>
+      <p>
+        演算子はスペースで区切って並べるだけ。いくつか実用的な組み合わせを挙げる。
+      </p>
+      <pre><code class="language-text">特定アカウントの画像付きツイートだけ:
+from:アカウント名 filter:images
+
+去年バズったツイートを探す:
+キーワード min_faves:1000 since:2024-01-01 until:2024-12-31
+
+リツイートとリプライを除いた本人の発言だけ:
+from:アカウント名 -filter:retweets -filter:replies</code></pre>
+
+      <h2>毎回打つのが面倒なら</h2>
+      <p>
+        条件をフォームから選ぶだけで検索クエリを組み立てられるツールを作ってる。演算子を覚えなくても、画像・ユーザー・期間・いいね数を指定して検索できる。
+      </p>
+      <ul>
+        <li><a href="/tools/x-search-builder/">X（Twitter）検索ツール</a> - 条件を選ぶだけで検索クエリを生成</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/twitter-media-url-extractor/">X(Twitter)のメディア欄から画像URLを一括取得する方法</a></li>
+        <li><a href="/tips/twitter-image-original-quality/">X(Twitter)の画像をオリジナル画質で保存する方法</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>X(Twitter)で特定アカウントの過去ツイートを検索するには？</dt>
+        <dd>検索欄に from:ユーザー名 を入力する。さらに since:2024-01-01 until:2024-12-31 のように日付を足すと、その期間内のツイートだけに絞り込める。</dd>
+        <dt>X(Twitter)で画像付きツイートだけを検索するには？</dt>
+        <dd>キーワードに filter:images を足す。動画なら filter:videos、リンク付きなら filter:links を使う。</dd>
+        <dt>いいねが多いツイートだけを検索するには？</dt>
+        <dd>min_faves:100 のように指定すると、いいねが100以上のツイートだけが表示される。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>

@@ -1,0 +1,219 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'Chromeで開いている全タブのURLを一括コピーする方法 - hrの備忘録';
+const description = 'Chromeで開いているタブのURLをまとめてコピーする方法。拡張機能を使わず標準機能だけでコピーする手順と、タブグループを使った整理のコツを紹介。';
+const path = '/tips/chrome-copy-all-tabs';
+const faqItems = [
+  { question: 'Chromeで開いている全タブのURLをコピーするには？', answer: '最初のタブをクリックし、Shiftを押しながら最後のタブをクリックして全タブを選択する。選択したタブを右クリックして「リンクをコピー」を選ぶと、全タブのURLが改行区切りでクリップボードにコピーされる。' },
+  { question: 'タブを範囲選択するショートカットは？', answer: '最初のタブをクリック後、Shift+クリックで連続範囲を選択できる。Cmd（WindowsはCtrl）+クリックなら離れたタブを個別に追加選択できる。' },
+  { question: 'コピーしたURLを後で開き直すには？', answer: 'メモアプリなどに貼り付けて保存しておく。開き直すときは各URLをクリックするか、まとめてアドレスバーに貼り付ける。タブグループとして残したい場合はブックマークの「全てのタブをブックマークに追加」も使える。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>Chromeで開いている全タブのURLを一括コピーする方法</h1>
+      <p class="article-date">2026.05</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        調べ物をしていると、タブが大量に開いて収拾がつかなくなる。あとで見返すために URL をまとめて控えておきたい。Chrome の標準機能だけで、開いている全タブの URL を一括コピーできる。拡張機能はいらない。
+      </p>
+
+      <h2>手順</h2>
+      <ol>
+        <li>一番左のタブをクリックする</li>
+        <li><kbd>Shift</kbd> を押しながら一番右のタブをクリックする（間のタブがすべて選択される）</li>
+        <li>選択したタブのどれかを右クリックする</li>
+        <li>メニューから <strong>リンクをコピー</strong> を選ぶ</li>
+      </ol>
+      <p>
+        これで選択したタブの URL が、改行区切りでクリップボードにコピーされる。メモアプリに貼り付ければ、URL の一覧ができあがる。
+      </p>
+
+      <h2>一部のタブだけ選ぶ</h2>
+      <p>
+        全部ではなく、いくつかのタブだけコピーしたいこともある。その場合は選び方を変える。
+      </p>
+      <ul>
+        <li><kbd>Shift</kbd> + クリック … 連続した範囲を選択</li>
+        <li><kbd>Cmd</kbd>（Windows は <kbd>Ctrl</kbd>）+ クリック … 離れたタブを1枚ずつ追加選択</li>
+      </ul>
+      <p>
+        必要なタブだけ選んでから右クリック → <strong>リンクをコピー</strong>。
+      </p>
+
+      <h2>そのまま残しておきたいなら</h2>
+      <p>
+        URL のテキストではなく、あとで開き直せる形で残したいなら、ブックマークにまとめる方法がある。
+      </p>
+      <ul>
+        <li>タブを選択した状態で右クリック → <strong>タブをブックマークに追加</strong></li>
+        <li>フォルダ名を付けて保存すると、フォルダごとまとめて開き直せる</li>
+      </ul>
+
+      <h2>使い分け</h2>
+      <ul>
+        <li>メモやチャットに貼って共有したい → <strong>リンクをコピー</strong></li>
+        <li>あとで同じ状態を復元したい → <strong>タブをブックマークに追加</strong></li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/meta-info-viewer-bookmarklet/">ページのメタ情報を見やすく表示＆コピーするブックマークレット</a></li>
+        <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>Chromeで開いている全タブのURLをコピーするには？</dt>
+        <dd>最初のタブをクリックし、Shiftを押しながら最後のタブをクリックして全タブを選択する。選択したタブを右クリックして「リンクをコピー」を選ぶと、全タブのURLが改行区切りでクリップボードにコピーされる。</dd>
+        <dt>タブを範囲選択するショートカットは？</dt>
+        <dd>最初のタブをクリック後、Shift+クリックで連続範囲を選択できる。Cmd（WindowsはCtrl）+クリックなら離れたタブを個別に追加選択できる。</dd>
+        <dt>コピーしたURLを後で開き直すには？</dt>
+        <dd>メモアプリなどに貼り付けて保存しておく。開き直すときは各URLをクリックするか、まとめてアドレスバーに貼り付ける。タブグループとして残したい場合はブックマークの「全てのタブをブックマークに追加」も使える。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body kbd {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.85em;
+    box-shadow: 0 1px 0 #bbb;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>

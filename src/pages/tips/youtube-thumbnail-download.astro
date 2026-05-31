@@ -1,0 +1,229 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'YouTubeのサムネイル画像を取得・保存する方法 - hrの備忘録';
+const description = 'YouTube動画のサムネイル画像をURLだけで取得する方法。img.youtube.com の形式を使えば、最大解像度（maxresdefault）まで保存できる。動画IDの見つけ方と解像度別のURLを紹介。';
+const path = '/tips/youtube-thumbnail-download';
+const faqItems = [
+  { question: 'YouTubeのサムネイル画像を保存するには？', answer: '動画IDを使って https://img.youtube.com/vi/動画ID/maxresdefault.jpg にアクセスし、右クリックで保存する。動画IDは watch?v= の後ろ、または youtu.be/ の後ろの文字列。' },
+  { question: '最大解像度のサムネイルを取得するには？', answer: 'maxresdefault.jpg を使う。1280×720 の最大サイズで取得できる。ただし古い動画や一部の動画では maxresdefault が存在せず、その場合は hqdefault.jpg（480×360）を使う。' },
+  { question: 'サムネイルを取得するのにアプリやサイトは必要？', answer: '不要。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。' },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>YouTubeのサムネイル画像を取得・保存する方法</h1>
+      <p class="article-date">2026.05</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        YouTube のサムネイル画像は、動画ページから直接は保存できない。でも動画 ID を使えば、サムネイルの画像 URL に直接アクセスして保存できる。外部サービスは不要。
+      </p>
+
+      <h2>動画IDを見つける</h2>
+      <p>
+        まず動画 ID を確認する。URL の形式によって場所が違う。
+      </p>
+      <pre><code class="language-text">通常のURL:
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+                              ↑ この dQw4w9WgXcQ が動画ID
+
+短縮URL:
+https://youtu.be/dQw4w9WgXcQ
+                 ↑ youtu.be/ の後ろが動画ID</code></pre>
+      <p>
+        <code>watch?v=</code> の後ろ、または <code>youtu.be/</code> の後ろの 11 文字が動画 ID。後ろに <code>&amp;t=</code> などのパラメータが付いてる場合は、その手前までが ID。
+      </p>
+
+      <h2>サムネイルのURLにアクセスする</h2>
+      <p>
+        動画 ID を次の URL に当てはめてアクセスする。最大解像度のサムネイルが開く。
+      </p>
+      <pre><code class="language-text">https://img.youtube.com/vi/動画ID/maxresdefault.jpg
+
+例:
+https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg</code></pre>
+      <p>
+        開いた画像を右クリック → <strong>名前を付けて画像を保存</strong>。これだけ。
+      </p>
+
+      <h2>解像度別のURL一覧</h2>
+      <p>
+        ファイル名の部分を変えると、取得できる解像度が変わる。
+      </p>
+      <ul>
+        <li><code>maxresdefault.jpg</code> - 最大（1280×720）</li>
+        <li><code>sddefault.jpg</code> - 標準（640×480）</li>
+        <li><code>hqdefault.jpg</code> - 高（480×360）</li>
+        <li><code>mqdefault.jpg</code> - 中（320×180）</li>
+        <li><code>default.jpg</code> - 小（120×90）</li>
+      </ul>
+      <p>
+        基本は <code>maxresdefault.jpg</code> でいい。
+      </p>
+
+      <h2>maxresdefault が無い場合</h2>
+      <p>
+        <code>maxresdefault.jpg</code> は全ての動画にあるわけじゃない。古い動画や、アップロード時に高解像度のサムネイルが作られなかった動画では存在しない。その場合はグレーの仮画像が表示される。
+      </p>
+      <p>
+        表示されなかったら <code>hqdefault.jpg</code> に切り替える。<code>hqdefault.jpg</code> はどの動画にも必ずある。
+      </p>
+
+      <h2>注意</h2>
+      <ul>
+        <li>この URL 形式は YouTube の仕様変更で将来使えなくなる可能性がある。</li>
+        <li>サムネイル画像にも著作権がある。利用するときは権利に注意する。</li>
+        <li>Shorts も同じ動画 ID 形式なので、同じ方法で取得できる。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
+        <li><a href="/tips/twitter-image-original-quality/">X(Twitter)の画像をオリジナル画質で保存する方法</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>YouTubeのサムネイル画像を保存するには？</dt>
+        <dd>動画IDを使って https://img.youtube.com/vi/動画ID/maxresdefault.jpg にアクセスし、右クリックで保存する。動画IDは watch?v= の後ろ、または youtu.be/ の後ろの文字列。</dd>
+        <dt>最大解像度のサムネイルを取得するには？</dt>
+        <dd>maxresdefault.jpg を使う。1280×720 の最大サイズで取得できる。ただし古い動画や一部の動画では maxresdefault が存在せず、その場合は hqdefault.jpg（480×360）を使う。</dd>
+        <dt>サムネイルを取得するのにアプリやサイトは必要？</dt>
+        <dd>不要。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>

@@ -10,6 +10,11 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
+  { title: 'Chromeで開いている全タブのURLを一括コピーする方法', href: '/tips/chrome-copy-all-tabs/', date: '2026-05-31', showNew: true },
+  { title: 'ページ内の画像を一覧表示・一括取得するブックマークレット', href: '/tips/page-images-bookmarklet/', date: '2026-05-31', showNew: true },
+  { title: 'macOSのスクリーンショットの保存先・形式・影を変更する', href: '/tips/macos-screenshot-settings/', date: '2026-05-30', showNew: true },
+  { title: 'X(Twitter)の検索演算子まとめ（from: / since: / until: / filter:）', href: '/tips/twitter-advanced-search-operators/', date: '2026-05-30', showNew: true },
+  { title: 'YouTubeのサムネイル画像を取得・保存する方法', href: '/tips/youtube-thumbnail-download/', date: '2026-05-30', showNew: true },
   { title: 'X のタイムラインでリポストを非表示にする Chrome 拡張', href: '/tips/twitter-hide-reposts/', date: '2026-03-28', showNew: true },
   { title: 'GitHub Pages + Astro で Search Console のリダイレクトエラーを防ぐ', href: '/tips/github-pages-trailing-slash-sitemap/', date: '2026-03-28', showNew: true },
   { title: 'X（Twitter）検索ツール', href: '/tools/x-search-builder/', date: '2026-03-08', showNew: true },
