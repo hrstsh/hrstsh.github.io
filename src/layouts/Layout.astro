@@ -73,6 +73,11 @@ const schemas = jsonLd
         </script>
       </>
     )}
+
+    <!-- Google AdSense (本番環境のみ) -->
+    {isProd && (
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9203748382924719" crossorigin="anonymous"></script>
+    )}
   </head>
   <body>
     <div class="layout-main">
