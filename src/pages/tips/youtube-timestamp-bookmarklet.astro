@@ -66,6 +66,16 @@ const bookmarkletCode = `javascript:(function(){if(!location.href.includes('yout
         コメントをさらにスクロールして読み込んでから再実行すると、検出数が増える。
       </p>
 
+      <figure class="article-figure">
+        <img
+          src="/images/tips/youtube-timestamp-panel.png"
+          alt="タイムスタンプ抽出パネルの表示例。背景の塗りが広い行ほど多くのコメントで言及されている"
+          width="360"
+          loading="lazy"
+        />
+        <figcaption>抽出パネルの表示例。背景の塗りが広い行が人気のシーン</figcaption>
+      </figure>
+
       <h2>どう動いているか</h2>
       <p>
         ページ上の <code>ytd-comment-renderer</code> 要素のテキストを走査して、行頭に時刻形式（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抽出している。<code>m</code> フラグを使って <code>^</code> を各行の先頭にマッチさせているため、<code>1:23コメント</code> のようにスペースなしで続く書き方も拾える。同じ時刻の重複は除いて、時刻順に並べ直して表示する。
@@ -168,6 +178,24 @@ const bookmarkletCode = `javascript:(function(){if(!location.href.includes('yout
 
   .article-body ol {
     padding-left: 2rem;
+  }
+
+  .article-figure {
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+
+  .article-figure img {
+    max-width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .article-figure figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #888;
   }
 
   .article-body code {
