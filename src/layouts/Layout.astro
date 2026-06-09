@@ -16,6 +16,7 @@ const isProd = import.meta.env.PROD; // 本番環境判定
 const site = 'https://hrstsh.com';
 const faviconV = '2'; // ファビコン変更時にインクリメント（キャッシュ無効化用）
 const canonical = new URL(Astro.url.pathname || '/', site).href;
+const pathname = Astro.url.pathname;
 const ogImage = image ? (image.startsWith('http') ? image : new URL(image, site).href) : `${site}/favicon.svg`;
 
 const schemas = jsonLd
@@ -80,6 +81,16 @@ const schemas = jsonLd
     )}
   </head>
   <body>
+    <header class="site-header" id="site-header">
+      <div class="site-header-inner">
+        <a href="/" class="site-logo">hrの備忘録</a>
+        <nav class="site-nav">
+          <a href="/tips/" class={pathname.startsWith('/tips') ? 'is-active' : ''}>Tips</a>
+          <a href="/tried/" class={pathname.startsWith('/tried') ? 'is-active' : ''}>Tried</a>
+          <a href="/tools/" class={pathname.startsWith('/tools') ? 'is-active' : ''}>Tools</a>
+        </nav>
+      </div>
+    </header>
     <div class="layout-main">
       <slot />
     </div>
@@ -91,6 +102,25 @@ const schemas = jsonLd
       <p class="footer-copy">© 2026 hrstsh</p>
     </footer>
     <script>
+      // Hide-on-scroll-down, show-on-scroll-up header
+      (function () {
+        const header = document.getElementById('site-header');
+        if (!header) return;
+        let lastY = window.scrollY;
+        window.addEventListener('scroll', function () {
+          const y = window.scrollY;
+          if (y < 60) {
+            header.classList.remove('is-hidden');
+          } else if (y > lastY + 4) {
+            header.classList.add('is-hidden');
+          } else if (lastY > y + 4) {
+            header.classList.remove('is-hidden');
+          }
+          lastY = y;
+        }, { passive: true });
+      })();
+
+      // Image zoom overlay
       document.addEventListener('click', function (e) {
         const img = (e.target as Element).closest('figure img') as HTMLImageElement | null;
         if (!img) return;
