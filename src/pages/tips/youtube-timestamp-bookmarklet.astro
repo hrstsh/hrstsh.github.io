@@ -1,0 +1,258 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'YouTubeのコメントからタイムスタンプを抽出するブックマークレット - hrの備忘録';
+const description = 'YouTubeのコメント欄に埋もれたタイムスタンプを一覧取得するブックマークレット。読み込まれたコメントから時刻とラベルをまとめて抽出し、右パネルに表示してコピーできる。';
+const path = '/tips/youtube-timestamp-bookmarklet';
+const faqItems = [
+  {
+    question: 'YouTubeのコメントからタイムスタンプを取得するには？',
+    answer: 'ブックマークレットを使うと、動画ページでコメント欄に表示されているタイムスタンプを一覧で取得できる。コメント欄までスクロールして読み込んだ状態でクリックするだけ。',
+  },
+  {
+    question: 'タイムスタンプが見つからないと表示される場合は？',
+    answer: 'コメントが読み込まれていない場合がある。ページを下にスクロールしてコメントを表示させてから、もう一度実行する。さらにスクロールするほど検出数が増える。',
+  },
+  {
+    question: '全コメントからタイムスタンプを取得できる？',
+    answer: 'ページに読み込まれたコメントのみが対象。まだ表示されていないコメントは対象外。全件取得したい場合はYouTube Data APIを使うスクリプトが別途必要になる。',
+  },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
+
+const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var c=document.querySelectorAll('ytd-comment-renderer #content-text');if(!c.length)c=document.querySelectorAll('ytd-comment-view-model #content-text');if(!c.length){var cs=document.querySelector('#comments');if(cs)c=cs.querySelectorAll('#content-text');}if(!c.length){alert('コメントが見つかりません。動画ページを開き、コメント欄まで画面をスクロールして読み込んでから実行してください。');return;}function toSec(t){var p=t.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}var re=/^[ \\t]*(\\d{1,2}:\\d{2}(?::\\d{2})?)[ \\t]*[-:：]?[ \\t]*([^\\r\\n]{0,60})/gm,seen={},res=[];c.forEach(function(el){var t=el.innerText,m;re.lastIndex=0;while((m=re.exec(t))!==null){var secs=toSec(m[1]),matched=-1;for(var s=secs-1;s<=secs+1;s++){if(seen[s]!==undefined){matched=s;break;}}if(matched===-1){var label=m[2].trim();if(!label){var after=t.slice(m.index+m[0].length);var nl=after.match(/^[\\r\\n]+[ \\t]*([^\\r\\n]+)/);if(nl&&!/^\\d{1,2}:\\d{2}/.test(nl[1].trim())){label=nl[1].trim().slice(0,60);}}seen[secs]=res.length;res.push({time:m[1],label:label,secs:secs,count:1});}else{res[seen[matched]].count++;}}});if(!res.length){alert('タイムスタンプが見つかりませんでした。コメント欄をもっとスクロールしてから試してください。');return;}res.sort(function(a,b){return a.secs-b.secs;});var o=document.getElementById('yt-ts-panel');if(o){o.remove();return;}var lt=res.map(function(r){return r.time+(r.label?' '+r.label:'');}).join('\\n');var p=document.createElement('div');p.id='yt-ts-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:360px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='タイムスタンプ ('+res.length+'件)';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var maxCount=Math.max.apply(null,res.map(function(r){return r.count;}));var rd=document.createElement('div');res.forEach(function(r){var pct=(r.count/maxCount*100).toFixed(1);var bg='linear-gradient(to right,rgba(255,0,0,0.1) '+pct+'%,transparent '+pct+'%)';var bgHov='linear-gradient(to right,rgba(255,0,0,0.2) '+pct+'%,rgba(255,245,245,1) '+pct+'%)';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5;cursor:pointer;background:'+bg;row.onmouseover=function(){row.style.background=bgHov;};row.onmouseout=function(){row.style.background=bg;};row.onclick=function(){var vid=document.querySelector('video');if(vid)vid.currentTime=r.secs;};var ts=document.createElement('span');ts.style.cssText='color:#f00;font-weight:bold;flex-shrink:0;min-width:52px';ts.textContent=r.time;var lb=document.createElement('span');lb.style.cssText='color:#333;flex:1';lb.textContent=r.label;var badge=document.createElement('span');badge.style.cssText='color:#aaa;font-size:11px;flex-shrink:0;min-width:18px;text-align:right;padding-left:4px';badge.textContent=r.count;row.appendChild(ts);row.appendChild(lb);row.appendChild(badge);rd.appendChild(row);});p.appendChild(rd);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(lt).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>YouTubeのコメントからタイムスタンプを抽出するブックマークレット</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        長い動画では、視聴者がコメントにチャプターをまとめていることがある。目当てのシーンに飛びたいときに役立つが、コメントが多いと埋もれて見つけにくい。このブックマークレットを使えば、読み込まれたコメントからタイムスタンプだけを抽出して右パネルに一覧表示できる。
+      </p>
+
+      <h2>ブックマークレット</h2>
+      <p>
+        次のコードをブックマークのURL欄に設定する。
+      </p>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h2>登録手順</h2>
+      <ol>
+        <li>ブックマークバーを右クリックして、新しいブックマークを作る</li>
+        <li>名前を「TSを抽出」など分かりやすいものにする</li>
+        <li>URL欄に上のコードを貼り付けて保存する</li>
+      </ol>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>YouTubeの動画ページを開く</li>
+        <li>コメント欄までスクロールして、コメントを読み込む</li>
+        <li>ブックマークレットをクリックする</li>
+        <li>右側にタイムスタンプ一覧のパネルが表示される（背景の塗りが広い行ほど多くのコメントで言及された時間、右端の数字は言及数）</li>
+        <li>行をクリックすると、その時間に動画がジャンプする</li>
+        <li>コピーボタンで全件をクリップボードに取得できる</li>
+        <li>もう一度クリックするとパネルが閉じる</li>
+      </ol>
+
+      <p>
+        コメントをさらにスクロールして読み込んでから再実行すると、検出数が増える。
+      </p>
+
+      <figure class="article-figure">
+        <img
+          src="/images/tips/youtube-timestamp-panel.png"
+          alt="タイムスタンプ抽出パネルの表示例。背景の塗りが広い行ほど多くのコメントで言及されている"
+          width="360"
+          loading="lazy"
+        />
+        <figcaption>抽出パネルの表示例。背景の塗りが広い行が人気のシーン</figcaption>
+      </figure>
+
+      <h2>どう動いているか</h2>
+      <p>
+        ページ上の <code>ytd-comment-renderer</code> 要素のテキストを走査して、行頭に時刻形式（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抽出している。<code>m</code> フラグを使って <code>^</code> を各行の先頭にマッチさせているため、<code>1:23コメント</code> のようにスペースなしで続く書き方も拾える。同じ時刻の重複は除いて、時刻順に並べ直して表示する。
+      </p>
+      <p>
+        行をクリックすると <code>video.currentTime</code> をセットして動画をシークする。<code>00:01</code> と <code>0:01</code> のように表記が異なっても秒数に正規化して同一視し、1秒差の重複もまとめてカウントを集計する。各行の背景グラデーション幅は <code>count / maxCount</code> の割合で塗られ、右端に言及数を表示する。タイムスタンプだけで同じ行にラベルがない場合は次の行のテキストをラベルとして採用する（次の行がタイムスタンプなら無視）。文中に書かれた時刻（「3:45あたりが好き」のような書き方）は行頭判定で弾いている。
+      </p>
+
+      <h2>注意</h2>
+      <ul>
+        <li>ページに読み込まれたコメントだけが対象。スクロールして表示させないと拾えない。</li>
+        <li>YouTubeのDOM構造が変わると動作しなくなる可能性がある。</li>
+        <li>タイムスタンプを文の途中に書いているコメントは検出しない。</li>
+        <li>全コメントから取得したい場合は YouTube Data API を使うスクリプトが必要になる。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
+        <li><a href="/tips/youtube-thumbnail-download/">YouTubeのサムネイル画像を取得・保存する方法</a></li>
+        <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
+        <li><a href="/tips/meta-info-viewer-bookmarklet/">ページのメタ情報を見やすく表示&コピーするブックマークレット</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>YouTubeのコメントからタイムスタンプを取得するには？</dt>
+        <dd>ブックマークレットを使うと、動画ページでコメント欄に表示されているタイムスタンプを一覧で取得できる。コメント欄までスクロールして読み込んだ状態でクリックするだけ。</dd>
+        <dt>タイムスタンプが見つからないと表示される場合は？</dt>
+        <dd>コメントが読み込まれていない場合がある。ページを下にスクロールしてコメントを表示させてから、もう一度実行する。さらにスクロールするほど検出数が増える。</dd>
+        <dt>全コメントからタイムスタンプを取得できる？</dt>
+        <dd>ページに読み込まれたコメントのみが対象。まだ表示されていないコメントは対象外。全件取得したい場合はYouTube Data APIを使うスクリプトが別途必要になる。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-figure {
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+
+  .article-figure img {
+    max-width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .article-figure figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>

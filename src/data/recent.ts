@@ -10,6 +10,7 @@ export interface RecentItem {
 }
 
 export const recentUpdates: RecentItem[] = [
+  { title: 'YouTubeのコメントからタイムスタンプを抽出するブックマークレット', href: '/tips/youtube-timestamp-bookmarklet/', date: '2026-06-09', showNew: true },
   { title: 'Chromeで開いている全タブのURLを一括コピーする方法', href: '/tips/chrome-copy-all-tabs/', date: '2026-05-31', showNew: true },
   { title: 'ページ内の画像を一覧表示・一括取得するブックマークレット', href: '/tips/page-images-bookmarklet/', date: '2026-05-31', showNew: true },
   { title: 'macOSのスクリーンショットの保存先・形式・影を変更する', href: '/tips/macos-screenshot-settings/', date: '2026-05-30', showNew: true },
