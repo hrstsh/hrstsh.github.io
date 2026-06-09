@@ -90,5 +90,30 @@ const schemas = jsonLd
       </nav>
       <p class="footer-copy">© 2026 hrstsh</p>
     </footer>
+    <script>
+      document.addEventListener('click', function (e) {
+        const img = (e.target as Element).closest('figure img') as HTMLImageElement | null;
+        if (!img) return;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'img-zoom-overlay';
+
+        const enlarged = document.createElement('img');
+        enlarged.src = img.src;
+        enlarged.alt = img.alt;
+        overlay.appendChild(enlarged);
+        document.body.appendChild(overlay);
+
+        function close() {
+          overlay.remove();
+          document.removeEventListener('keydown', onKey);
+        }
+        function onKey(e: KeyboardEvent) {
+          if (e.key === 'Escape') close();
+        }
+        overlay.addEventListener('click', close);
+        document.addEventListener('keydown', onKey);
+      });
+    </script>
   </body>
 </html>
