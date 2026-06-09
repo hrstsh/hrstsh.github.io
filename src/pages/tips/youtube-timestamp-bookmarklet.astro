@@ -1,0 +1,229 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'YouTubeのコメントからタイムスタンプを抽出するブックマークレット - hrの備忘録';
+const description = 'YouTubeのコメント欄に埋もれたタイムスタンプを一覧取得するブックマークレット。読み込まれたコメントから時刻とラベルをまとめて抽出し、右パネルに表示してコピーできる。';
+const path = '/tips/youtube-timestamp-bookmarklet';
+const faqItems = [
+  {
+    question: 'YouTubeのコメントからタイムスタンプを取得するには？',
+    answer: 'ブックマークレットを使うと、動画ページでコメント欄に表示されているタイムスタンプを一覧で取得できる。コメント欄までスクロールして読み込んだ状態でクリックするだけ。',
+  },
+  {
+    question: 'タイムスタンプが見つからないと表示される場合は？',
+    answer: 'コメントが読み込まれていない場合がある。ページを下にスクロールしてコメントを表示させてから、もう一度実行する。さらにスクロールするほど検出数が増える。',
+  },
+  {
+    question: '全コメントからタイムスタンプを取得できる？',
+    answer: 'ページに読み込まれたコメントのみが対象。まだ表示されていないコメントは対象外。全件取得したい場合はYouTube Data APIを使うスクリプトが別途必要になる。',
+  },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
+
+const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var c=document.querySelectorAll('ytd-comment-renderer #content-text');if(!c.length){alert('コメントが読み込まれていません。コメント欄までスクロールしてから実行してください。');return;}var re=/(?:^|[\\r\\n])[ \\t]*(\\d{1,2}:\\d{2}(?::\\d{2})?)[ \\t]*[-:：]?[ \\t]*([^\\r\\n]{0,60})/g,seen={},res=[];c.forEach(function(el){var t=el.innerText,m;re.lastIndex=0;while((m=re.exec(t))!==null){if(!seen[m[1]]){seen[m[1]]=1;res.push({time:m[1],label:m[2].trim()});}}});if(!res.length){alert('タイムスタンプが見つかりませんでした。コメント欄をもっとスクロールしてから試してください。');return;}res.sort(function(a,b){var f=function(t){var p=t.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];};return f(a.time)-f(b.time);});var o=document.getElementById('yt-ts-panel');if(o){o.remove();return;}var p=document.createElement('div');p.id='yt-ts-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:360px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var lt=res.map(function(r){return r.time+(r.label?' '+r.label:'');}).join('\\n');var rows=res.map(function(r){return'<div style="padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5"><span style="color:#f00;font-weight:bold;display:inline-block;min-width:52px">'+r.time+'</span><span style="color:#333">'+r.label+'</span></div>';}).join('');p.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="color:#f00;font-weight:bold">タイムスタンプ ('+res.length+'件)</span><div><button id="yt-ts-copy" style="padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px">コピー</button><button id="yt-ts-close" style="background:none;border:none;font-size:16px;cursor:pointer">×</button></div></div><div>'+rows+'</div>';document.body.appendChild(p);document.getElementById('yt-ts-close').onclick=function(){p.remove();};document.getElementById('yt-ts-copy').onclick=function(){var b=document.getElementById('yt-ts-copy');navigator.clipboard.writeText(lt).then(function(){b.textContent='コピーしました';setTimeout(function(){b.textContent='コピー';},2000);}).catch(function(){b.textContent='失敗';setTimeout(function(){b.textContent='コピー';},2000);});};})();`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>YouTubeのコメントからタイムスタンプを抽出するブックマークレット</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        長い動画では、視聴者がコメントにチャプターをまとめていることがある。目当てのシーンに飛びたいときに役立つが、コメントが多いと埋もれて見つけにくい。このブックマークレットを使えば、読み込まれたコメントからタイムスタンプだけを抽出して右パネルに一覧表示できる。
+      </p>
+
+      <h2>ブックマークレット</h2>
+      <p>
+        次のコードをブックマークのURL欄に設定する。
+      </p>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h2>登録手順</h2>
+      <ol>
+        <li>ブックマークバーを右クリックして、新しいブックマークを作る</li>
+        <li>名前を「TSを抽出」など分かりやすいものにする</li>
+        <li>URL欄に上のコードを貼り付けて保存する</li>
+      </ol>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>YouTubeの動画ページを開く</li>
+        <li>コメント欄までスクロールして、コメントを読み込む</li>
+        <li>ブックマークレットをクリックする</li>
+        <li>右側にタイムスタンプ一覧のパネルが表示される</li>
+        <li>コピーボタンで全件をクリップボードに取得できる</li>
+        <li>もう一度クリックするとパネルが閉じる</li>
+      </ol>
+
+      <p>
+        コメントをさらにスクロールして読み込んでから再実行すると、検出数が増える。
+      </p>
+
+      <h2>どう動いているか</h2>
+      <p>
+        ページ上の <code>ytd-comment-renderer</code> 要素のテキストを走査して、行頭に時刻形式（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抽出している。同じ時刻の重複は除いて、時刻順に並べ直して表示する。
+      </p>
+      <p>
+        文中に書かれた時刻（「3:45あたりが好き」のような書き方）は行頭判定で弾くようにしている。チャプターリストとして書かれているコメントを拾うための設計。
+      </p>
+
+      <h2>注意</h2>
+      <ul>
+        <li>ページに読み込まれたコメントだけが対象。スクロールして表示させないと拾えない。</li>
+        <li>YouTubeのDOM構造が変わると動作しなくなる可能性がある。</li>
+        <li>タイムスタンプを文の途中に書いているコメントは検出しない。</li>
+        <li>全コメントから取得したい場合は YouTube Data API を使うスクリプトが必要になる。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
+        <li><a href="/tips/youtube-thumbnail-download/">YouTubeのサムネイル画像を取得・保存する方法</a></li>
+        <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
+        <li><a href="/tips/meta-info-viewer-bookmarklet/">ページのメタ情報を見やすく表示&コピーするブックマークレット</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>YouTubeのコメントからタイムスタンプを取得するには？</dt>
+        <dd>ブックマークレットを使うと、動画ページでコメント欄に表示されているタイムスタンプを一覧で取得できる。コメント欄までスクロールして読み込んだ状態でクリックするだけ。</dd>
+        <dt>タイムスタンプが見つからないと表示される場合は？</dt>
+        <dd>コメントが読み込まれていない場合がある。ページを下にスクロールしてコメントを表示させてから、もう一度実行する。さらにスクロールするほど検出数が増える。</dd>
+        <dt>全コメントからタイムスタンプを取得できる？</dt>
+        <dd>ページに読み込まれたコメントのみが対象。まだ表示されていないコメントは対象外。全件取得したい場合はYouTube Data APIを使うスクリプトが別途必要になる。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>
