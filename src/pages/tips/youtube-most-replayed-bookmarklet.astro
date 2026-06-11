@@ -22,7 +22,79 @@ const faqItems = [
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
 
-const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var o=document.getElementById('yt-mr-panel');if(o){o.remove();return;}var NOD='この動画には、もっとも再生された部分のデータがありません。';function findMarkers(d){var muts=d&&d.frameworkUpdates&&d.frameworkUpdates.entityBatchUpdate&&d.frameworkUpdates.entityBatchUpdate.mutations;if(!muts)return null;for(var i=0;i<muts.length;i++){var pl=muts[i].payload;if(pl&&pl.macroMarkersListEntity&&pl.macroMarkersListEntity.markersList){var ml=pl.macroMarkersListEntity.markersList;if(ml.markers&&ml.markers.length&&ml.markers[0].intensityScoreNormalized!==undefined)return ml.markers;}}return null;}var p=document.createElement('div');p.id='yt-mr-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:320px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='もっとも再生された部分';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px;display:none';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var rd=document.createElement('div');rd.textContent='読み込み中...';rd.style.color='#888';p.appendChild(rd);document.body.appendChild(p);cl.onclick=function(){p.remove();};function msg(t){rd.style.color='#888';rd.textContent=t;}function show(markers){var sum=0;markers.forEach(function(mk){sum+=Number(mk.intensityScoreNormalized);});var th=sum/markers.length*1.3;var groups=[],cur=null;markers.forEach(function(mk,idx){var score=Number(mk.intensityScoreNormalized),start=parseInt(mk.startMillis,10)/1000;if(score>=th){if(cur&&idx===cur.endIdx+1){cur.endIdx=idx;if(score>cur.maxScore){cur.maxScore=score;cur.peakStart=start;}}else{cur={endIdx:idx,peakStart:start,maxScore:score};groups.push(cur);}}});if(!groups.length){msg('該当する部分が見つかりませんでした。');return;}groups.sort(function(a,b){return b.maxScore-a.maxScore;});var top=groups.slice(0,10);var maxScore=top[0].maxScore;top.sort(function(a,b){return a.peakStart-b.peakStart;});function fmt(sec){sec=Math.floor(sec);var h=Math.floor(sec/3600),m=Math.floor(sec/60)-h*60,s=sec-h*3600-m*60;function p(n){return n<10?'0'+n:''+n;}return h>0?h+':'+p(m)+':'+p(s):m+':'+p(s);}var lt=top.map(function(g){return fmt(g.peakStart)+'（再生数の多さ '+Math.round(g.maxScore*100)+'%）';}).join('\\n');ttl.textContent='もっとも再生された部分（'+top.length+'件）';rd.textContent='';rd.style.color='';top.forEach(function(g){var pct=(g.maxScore/maxScore*100).toFixed(1);var bg='linear-gradient(to right,rgba(255,0,0,0.1) '+pct+'%,transparent '+pct+'%)';var bgHov='linear-gradient(to right,rgba(255,0,0,0.2) '+pct+'%,rgba(255,245,245,1) '+pct+'%)';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5;cursor:pointer;background:'+bg;row.onmouseover=function(){row.style.background=bgHov;};row.onmouseout=function(){row.style.background=bg;};row.onclick=function(){var vid=document.querySelector('video');if(vid)vid.currentTime=g.peakStart;};var ts=document.createElement('span');ts.style.cssText='color:#f00;font-weight:bold;flex-shrink:0;min-width:52px';ts.textContent=fmt(g.peakStart);var lb=document.createElement('span');lb.style.cssText='color:#333;flex:1';lb.textContent='再生数の多さ '+Math.round(g.maxScore*100)+'%';row.appendChild(ts);row.appendChild(lb);rd.appendChild(row);});cp.style.display='';cp.onclick=function(){navigator.clipboard.writeText(lt).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};}var vid=new URLSearchParams(location.search).get('v');var d=window.ytInitialData;var dv=d&&d.currentVideoEndpoint&&d.currentVideoEndpoint.watchEndpoint&&d.currentVideoEndpoint.watchEndpoint.videoId;var mk=dv&&dv===vid?findMarkers(d):null;if(mk){show(mk);return;}fetch(location.href).then(function(r){return r.text();}).then(function(h){var parts=h.split('var ytInitialData = ');if(parts.length<2)parts=h.split('window["ytInitialData"] = ');var m2=null;if(parts.length>1){try{m2=findMarkers(JSON.parse(parts[1].split(';</script>')[0]));}catch(e){}}if(m2){show(m2);}else{msg(NOD);}}).catch(function(){msg('データを取得できませんでした。ページを再読み込みしてから試してください。');});})();`;
+const findMarkersSnippet = `function findMarkers(data) {
+  const mutations = data?.frameworkUpdates?.entityBatchUpdate?.mutations;
+  if (!mutations) return null;
+
+  for (const { payload } of mutations) {
+    const markers = payload?.macroMarkersListEntity?.markersList?.markers;
+    // intensityScoreNormalized を持つものだけが再生数のグラフのデータ
+    if (markers?.length && markers[0].intensityScoreNormalized !== undefined) {
+      return markers;
+    }
+  }
+  return null;
+}`;
+
+const refreshSnippet = `const videoId = new URLSearchParams(location.search).get('v');
+const data = window.ytInitialData;
+const dataVideoId = data?.currentVideoEndpoint?.watchEndpoint?.videoId;
+
+// 動画IDが一致し、かつマーカーが取れた場合はその場で表示
+const markers = (dataVideoId === videoId) ? findMarkers(data) : null;
+
+if (markers) {
+  show(markers);
+} else {
+  // それ以外はページのHTMLを取得し直して ytInitialData を読み直す
+  fetch(location.href)
+    .then((res) => res.text())
+    .then((html) => {
+      const json = html.split('var ytInitialData = ')[1]?.split(';</script>')[0];
+      const reloaded = json && findMarkers(JSON.parse(json));
+      reloaded ? show(reloaded) : msg('もっとも再生された部分のデータがありません。');
+    });
+}`;
+
+const groupingSnippet = `// 全区間の平均値の1.3倍を「再生数が多い」のしきい値にする
+let sum = 0;
+markers.forEach((mk) => sum += Number(mk.intensityScoreNormalized));
+const threshold = (sum / markers.length) * 1.3;
+
+// しきい値を超える区間を、隣り合うものはひとつの山としてまとめる
+const groups = [];
+let current = null;
+markers.forEach((mk, idx) => {
+  const score = Number(mk.intensityScoreNormalized);
+  const start = parseInt(mk.startMillis, 10) / 1000;
+  if (score < threshold) return;
+
+  if (current && idx === current.endIdx + 1) {
+    // 直前の区間と連続している場合は同じ山として更新する
+    current.endIdx = idx;
+    if (score > current.maxScore) {
+      current.maxScore = score;
+      current.peakStart = start;
+    }
+  } else {
+    // しきい値を超える新しい山の開始
+    current = { endIdx: idx, peakStart: start, maxScore: score };
+    groups.push(current);
+  }
+});`;
+
+const seekSnippet = `// 再生数が多い順に並べて上位10件に絞り、時刻順に並べ直す
+groups.sort((a, b) => b.maxScore - a.maxScore);
+const top = groups.slice(0, 10);
+top.sort((a, b) => a.peakStart - b.peakStart);
+
+// 行をクリックしたら、その山の代表時刻に動画をシークする
+row.onclick = () => {
+  const video = document.querySelector('video');
+  if (video) video.currentTime = group.peakStart;
+};`;
+
+const bookmarkletCode =`javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var o=document.getElementById('yt-mr-panel');if(o){o.remove();return;}var NOD='この動画には、もっとも再生された部分のデータがありません。';function findMarkers(d){var muts=d&&d.frameworkUpdates&&d.frameworkUpdates.entityBatchUpdate&&d.frameworkUpdates.entityBatchUpdate.mutations;if(!muts)return null;for(var i=0;i<muts.length;i++){var pl=muts[i].payload;if(pl&&pl.macroMarkersListEntity&&pl.macroMarkersListEntity.markersList){var ml=pl.macroMarkersListEntity.markersList;if(ml.markers&&ml.markers.length&&ml.markers[0].intensityScoreNormalized!==undefined)return ml.markers;}}return null;}var p=document.createElement('div');p.id='yt-mr-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:320px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='もっとも再生された部分';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px;display:none';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var rd=document.createElement('div');rd.textContent='読み込み中...';rd.style.color='#888';p.appendChild(rd);document.body.appendChild(p);cl.onclick=function(){p.remove();};function msg(t){rd.style.color='#888';rd.textContent=t;}function show(markers){var sum=0;markers.forEach(function(mk){sum+=Number(mk.intensityScoreNormalized);});var th=sum/markers.length*1.3;var groups=[],cur=null;markers.forEach(function(mk,idx){var score=Number(mk.intensityScoreNormalized),start=parseInt(mk.startMillis,10)/1000;if(score>=th){if(cur&&idx===cur.endIdx+1){cur.endIdx=idx;if(score>cur.maxScore){cur.maxScore=score;cur.peakStart=start;}}else{cur={endIdx:idx,peakStart:start,maxScore:score};groups.push(cur);}}});if(!groups.length){msg('該当する部分が見つかりませんでした。');return;}groups.sort(function(a,b){return b.maxScore-a.maxScore;});var top=groups.slice(0,10);var maxScore=top[0].maxScore;top.sort(function(a,b){return a.peakStart-b.peakStart;});function fmt(sec){sec=Math.floor(sec);var h=Math.floor(sec/3600),m=Math.floor(sec/60)-h*60,s=sec-h*3600-m*60;function p(n){return n<10?'0'+n:''+n;}return h>0?h+':'+p(m)+':'+p(s):m+':'+p(s);}var lt=top.map(function(g){return fmt(g.peakStart)+'（再生数の多さ '+Math.round(g.maxScore*100)+'%）';}).join('\\n');ttl.textContent='もっとも再生された部分（'+top.length+'件）';rd.textContent='';rd.style.color='';top.forEach(function(g){var pct=(g.maxScore/maxScore*100).toFixed(1);var bg='linear-gradient(to right,rgba(255,0,0,0.1) '+pct+'%,transparent '+pct+'%)';var bgHov='linear-gradient(to right,rgba(255,0,0,0.2) '+pct+'%,rgba(255,245,245,1) '+pct+'%)';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5;cursor:pointer;background:'+bg;row.onmouseover=function(){row.style.background=bgHov;};row.onmouseout=function(){row.style.background=bg;};row.onclick=function(){var vid=document.querySelector('video');if(vid)vid.currentTime=g.peakStart;};var ts=document.createElement('span');ts.style.cssText='color:#f00;font-weight:bold;flex-shrink:0;min-width:52px';ts.textContent=fmt(g.peakStart);var lb=document.createElement('span');lb.style.cssText='color:#333;flex:1';lb.textContent='再生数の多さ '+Math.round(g.maxScore*100)+'%';row.appendChild(ts);row.appendChild(lb);rd.appendChild(row);});cp.style.display='';cp.onclick=function(){navigator.clipboard.writeText(lt).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};}var vid=new URLSearchParams(location.search).get('v');var d=window.ytInitialData;var dv=d&&d.currentVideoEndpoint&&d.currentVideoEndpoint.watchEndpoint&&d.currentVideoEndpoint.watchEndpoint.videoId;var mk=dv&&dv===vid?findMarkers(d):null;if(mk){show(mk);return;}fetch(location.href).then(function(r){return r.text();}).then(function(h){var parts=h.split('var ytInitialData = ');if(parts.length<2)parts=h.split('window["ytInitialData"] = ');var m2=null;if(parts.length>1){try{m2=findMarkers(JSON.parse(parts[1].split(';</script>')[0]));}catch(e){}}if(m2){show(m2);}else{msg(NOD);}}).catch(function(){msg('データを取得できませんでした。ページを再読み込みしてから試してください。');});})();`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -63,14 +135,24 @@ const bookmarkletCode = `javascript:(function(){if(!location.href.includes('yout
 
       <h2>どう動いているか</h2>
       <p>
-        YouTubeの動画ページには <code>ytInitialData</code> というオブジェクトが埋め込まれており、その中の <code>frameworkUpdates.entityBatchUpdate.mutations</code> に、もっとも再生された部分のグラフの元データである <code>macroMarkersListEntity</code> が含まれている。動画全体を100個前後の区間に分割し、各区間の開始時刻（<code>startMillis</code>）と再生数の多さ（<code>intensityScoreNormalized</code>、0〜1の数値）が記録されている。
+        YouTubeの動画ページには <code>ytInitialData</code> というオブジェクトが埋め込まれており、その中の <code>frameworkUpdates.entityBatchUpdate.mutations</code> に、もっとも再生された部分のグラフの元データである <code>macroMarkersListEntity</code> が含まれている。動画全体を100個前後の区間に分割し、各区間の開始時刻（<code>startMillis</code>）と再生数の多さ（<code>intensityScoreNormalized</code>、0〜1の数値）が記録されている。チャプター用のマーカーリストと混同しないよう、<code>intensityScoreNormalized</code> を持つものだけを拾う。
       </p>
+      <CodeBlock code={findMarkersSnippet} language="javascript" />
+
       <p>
-        ただしページ表示後の <code>window.ytInitialData</code> は当てにならない。YouTube内のリンクから動画を開いた場合は遷移前のページのデータのままで、直接開いた場合もアプリがデータを取り込む過程で <code>frameworkUpdates</code> が取り除かれることがある。そのためブックマークレットは <code>window.ytInitialData</code> から読み取れた場合だけそれを使い、読み取れない場合はページのHTMLを取得し直して埋め込まれた <code>ytInitialData</code> をパースする。
+        ただしページ表示後の <code>window.ytInitialData</code> は当てにならない。YouTube内のリンクから動画を開いた場合は遷移前のページのデータのままで、直接開いた場合もアプリがデータを取り込む過程で <code>frameworkUpdates</code> が取り除かれることがある。そのため、URLの動画IDと <code>window.ytInitialData</code> 内の動画IDが一致し、かつマーカーが取れた場合だけその場で表示し、それ以外はページのHTMLを取得し直して埋め込まれた <code>ytInitialData</code> をパースする。
       </p>
+      <CodeBlock code={refreshSnippet} language="javascript" />
+
       <p>
-        全区間の平均値より一定以上再生数が多い区間を抜き出し、隣り合う区間はひとつの山としてまとめる。それぞれの山の中でもっとも再生数が多い区間の開始時刻を、その山を代表する時刻として採用し、再生数が多い順に上位10件を選んで時刻順に並べ替えている。行をクリックすると <code>video.currentTime</code> をセットして動画をシークする。
+        マーカーが取得できたら、全区間の平均値の1.3倍をしきい値として、それを超える区間を抜き出す。隣り合う区間はひとつの山としてまとめ、山の中でもっとも再生数が多い区間の開始時刻を、その山の代表時刻として記録する。
       </p>
+      <CodeBlock code={groupingSnippet} language="javascript" />
+
+      <p>
+        最後に再生数が多い順に並べて上位10件に絞り、時刻順に並べ直す。行をクリックすると <code>video.currentTime</code> をセットして動画をシークする。
+      </p>
+      <CodeBlock code={seekSnippet} language="javascript" />
 
       <h2>注意</h2>
       <ul>
