@@ -22,7 +22,72 @@ const faqItems = [
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
 
-const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var c=document.querySelectorAll('ytd-comment-renderer #content-text');if(!c.length)c=document.querySelectorAll('ytd-comment-view-model #content-text');if(!c.length){var cs=document.querySelector('#comments');if(cs)c=cs.querySelectorAll('#content-text');}if(!c.length){alert('コメントが見つかりません。動画ページを開き、コメント欄まで画面をスクロールして読み込んでから実行してください。');return;}function toSec(t){var p=t.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}var re=/^[ \\t]*(\\d{1,2}:\\d{2}(?::\\d{2})?)[ \\t]*[-:：]?[ \\t]*([^\\r\\n]{0,60})/gm,seen={},res=[];c.forEach(function(el){var t=el.innerText,m;re.lastIndex=0;while((m=re.exec(t))!==null){var secs=toSec(m[1]),matched=-1;for(var s=secs-1;s<=secs+1;s++){if(seen[s]!==undefined){matched=s;break;}}if(matched===-1){var label=m[2].trim();if(!label){var after=t.slice(m.index+m[0].length);var nl=after.match(/^[\\r\\n]+[ \\t]*([^\\r\\n]+)/);if(nl&&!/^\\d{1,2}:\\d{2}/.test(nl[1].trim())){label=nl[1].trim().slice(0,60);}}seen[secs]=res.length;res.push({time:m[1],label:label,secs:secs,count:1});}else{res[seen[matched]].count++;}}});if(!res.length){alert('タイムスタンプが見つかりませんでした。コメント欄をもっとスクロールしてから試してください。');return;}res.sort(function(a,b){return a.secs-b.secs;});var o=document.getElementById('yt-ts-panel');if(o){o.remove();return;}var lt=res.map(function(r){return r.time+(r.label?' '+r.label:'');}).join('\\n');var p=document.createElement('div');p.id='yt-ts-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:360px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='タイムスタンプ ('+res.length+'件)';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var maxCount=Math.max.apply(null,res.map(function(r){return r.count;}));var rd=document.createElement('div');res.forEach(function(r){var pct=(r.count/maxCount*100).toFixed(1);var bg='linear-gradient(to right,rgba(255,0,0,0.1) '+pct+'%,transparent '+pct+'%)';var bgHov='linear-gradient(to right,rgba(255,0,0,0.2) '+pct+'%,rgba(255,245,245,1) '+pct+'%)';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5;cursor:pointer;background:'+bg;row.onmouseover=function(){row.style.background=bgHov;};row.onmouseout=function(){row.style.background=bg;};row.onclick=function(){var vid=document.querySelector('video');if(vid)vid.currentTime=r.secs;};var ts=document.createElement('span');ts.style.cssText='color:#f00;font-weight:bold;flex-shrink:0;min-width:52px';ts.textContent=r.time;var lb=document.createElement('span');lb.style.cssText='color:#333;flex:1';lb.textContent=r.label;var badge=document.createElement('span');badge.style.cssText='color:#aaa;font-size:11px;flex-shrink:0;min-width:18px;text-align:right;padding-left:4px';badge.textContent=r.count;row.appendChild(ts);row.appendChild(lb);row.appendChild(badge);rd.appendChild(row);});p.appendChild(rd);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(lt).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
+const selectorSnippet = `let comments = document.querySelectorAll('ytd-comment-renderer #content-text');
+if (!comments.length) {
+  comments = document.querySelectorAll('ytd-comment-view-model #content-text');
+}
+if (!comments.length) {
+  const section = document.querySelector('#comments');
+  if (section) comments = section.querySelectorAll('#content-text');
+}`;
+
+const regexSnippet = `// 行頭の "0:00" や "1:23:45" のような時刻表記にマッチする
+const re = /^[ \\t]*(\\d{1,2}:\\d{2}(?::\\d{2})?)[ \\t]*[-:：]?[ \\t]*([^\\r\\n]{0,60})/gm;
+
+function toSec(time) {
+  const p = time.split(':').map(Number);
+  return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
+}`;
+
+const dedupSnippet = `const seen = {};
+const results = [];
+
+comments.forEach((el) => {
+  const text = el.innerText;
+  let m;
+  re.lastIndex = 0;
+  while ((m = re.exec(text)) !== null) {
+    const secs = toSec(m[1]);
+
+    // 前後1秒以内に同じ時刻があれば、それと同一視してカウントだけ増やす
+    let matched = -1;
+    for (let s = secs - 1; s <= secs + 1; s++) {
+      if (seen[s] !== undefined) { matched = s; break; }
+    }
+
+    if (matched === -1) {
+      let label = m[2].trim();
+      if (!label) {
+        // 同じ行にラベルがなければ次の行をラベルとして使う
+        const after = text.slice(m.index + m[0].length);
+        const nextLine = after.match(/^[\\r\\n]+[ \\t]*([^\\r\\n]+)/);
+        if (nextLine && !/^\\d{1,2}:\\d{2}/.test(nextLine[1].trim())) {
+          label = nextLine[1].trim().slice(0, 60);
+        }
+      }
+      seen[secs] = results.length;
+      results.push({ time: m[1], label, secs, count: 1 });
+    } else {
+      results[seen[matched]].count++;
+    }
+  }
+});`;
+
+const renderSnippet = `const maxCount = Math.max(...results.map((r) => r.count));
+
+results.forEach((r) => {
+  // 言及数が多いほど背景の塗りを広くする
+  const pct = (r.count / maxCount * 100).toFixed(1);
+  row.style.background = \`linear-gradient(to right, rgba(255,0,0,0.1) \${pct}%, transparent \${pct}%)\`;
+
+  // クリックでその時刻にシーク
+  row.onclick = () => {
+    const video = document.querySelector('video');
+    if (video) video.currentTime = r.secs;
+  };
+});`;
+
+const bookmarkletCode =`javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var c=document.querySelectorAll('ytd-comment-renderer #content-text');if(!c.length)c=document.querySelectorAll('ytd-comment-view-model #content-text');if(!c.length){var cs=document.querySelector('#comments');if(cs)c=cs.querySelectorAll('#content-text');}if(!c.length){alert('コメントが見つかりません。動画ページを開き、コメント欄まで画面をスクロールして読み込んでから実行してください。');return;}function toSec(t){var p=t.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}var re=/^[ \\t]*(\\d{1,2}:\\d{2}(?::\\d{2})?)[ \\t]*[-:：]?[ \\t]*([^\\r\\n]{0,60})/gm,seen={},res=[];c.forEach(function(el){var t=el.innerText,m;re.lastIndex=0;while((m=re.exec(t))!==null){var secs=toSec(m[1]),matched=-1;for(var s=secs-1;s<=secs+1;s++){if(seen[s]!==undefined){matched=s;break;}}if(matched===-1){var label=m[2].trim();if(!label){var after=t.slice(m.index+m[0].length);var nl=after.match(/^[\\r\\n]+[ \\t]*([^\\r\\n]+)/);if(nl&&!/^\\d{1,2}:\\d{2}/.test(nl[1].trim())){label=nl[1].trim().slice(0,60);}}seen[secs]=res.length;res.push({time:m[1],label:label,secs:secs,count:1});}else{res[seen[matched]].count++;}}});if(!res.length){alert('タイムスタンプが見つかりませんでした。コメント欄をもっとスクロールしてから試してください。');return;}res.sort(function(a,b){return a.secs-b.secs;});var o=document.getElementById('yt-ts-panel');if(o){o.remove();return;}var lt=res.map(function(r){return r.time+(r.label?' '+r.label:'');}).join('\\n');var p=document.createElement('div');p.id='yt-ts-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:360px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='タイムスタンプ ('+res.length+'件)';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var maxCount=Math.max.apply(null,res.map(function(r){return r.count;}));var rd=document.createElement('div');res.forEach(function(r){var pct=(r.count/maxCount*100).toFixed(1);var bg='linear-gradient(to right,rgba(255,0,0,0.1) '+pct+'%,transparent '+pct+'%)';var bgHov='linear-gradient(to right,rgba(255,0,0,0.2) '+pct+'%,rgba(255,245,245,1) '+pct+'%)';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5;cursor:pointer;background:'+bg;row.onmouseover=function(){row.style.background=bgHov;};row.onmouseout=function(){row.style.background=bg;};row.onclick=function(){var vid=document.querySelector('video');if(vid)vid.currentTime=r.secs;};var ts=document.createElement('span');ts.style.cssText='color:#f00;font-weight:bold;flex-shrink:0;min-width:52px';ts.textContent=r.time;var lb=document.createElement('span');lb.style.cssText='color:#333;flex:1';lb.textContent=r.label;var badge=document.createElement('span');badge.style.cssText='color:#aaa;font-size:11px;flex-shrink:0;min-width:18px;text-align:right;padding-left:4px';badge.textContent=r.count;row.appendChild(ts);row.appendChild(lb);row.appendChild(badge);rd.appendChild(row);});p.appendChild(rd);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(lt).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -78,11 +143,24 @@ const bookmarkletCode = `javascript:(function(){if(!location.href.includes('yout
 
       <h2>どう動いているか</h2>
       <p>
-        ページ上の <code>ytd-comment-renderer</code> 要素のテキストを走査して、行頭に時刻形式（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抽出している。<code>m</code> フラグを使って <code>^</code> を各行の先頭にマッチさせているため、<code>1:23コメント</code> のようにスペースなしで続く書き方も拾える。同じ時刻の重複は除いて、時刻順に並べ直して表示する。
+        まずコメント欄の要素を取得する。YouTubeはレイアウトが変わることがあるため、いくつかのセレクタを順に試している。
       </p>
+      <CodeBlock code={selectorSnippet} language="javascript" />
+
       <p>
-        行をクリックすると <code>video.currentTime</code> をセットして動画をシークする。<code>00:01</code> と <code>0:01</code> のように表記が異なっても秒数に正規化して同一視し、1秒差の重複もまとめてカウントを集計する。各行の背景グラデーション幅は <code>count / maxCount</code> の割合で塗られ、右端に言及数を表示する。タイムスタンプだけで同じ行にラベルがない場合は次の行のテキストをラベルとして採用する（次の行がタイムスタンプなら無視）。文中に書かれた時刻（「3:45あたりが好き」のような書き方）は行頭判定で弾いている。
+        各コメントのテキストに対して、行頭に時刻形式（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抽出する。<code>m</code> フラグを使って <code>^</code> を各行の先頭にマッチさせているため、<code>1:23コメント</code> のようにスペースなしで続く書き方も拾える。文中に書かれた時刻（「3:45あたりが好き」のような書き方）は行頭判定で弾かれる。抽出した時刻は秒数に変換しておく。
       </p>
+      <CodeBlock code={regexSnippet} language="javascript" />
+
+      <p>
+        <code>00:01</code> と <code>0:01</code> のように表記が異なっても秒数に正規化して同一視し、1秒差の重複もまとめてカウントを集計する。タイムスタンプだけで同じ行にラベルがない場合は、次の行のテキストをラベルとして採用する（次の行もタイムスタンプなら無視）。
+      </p>
+      <CodeBlock code={dedupSnippet} language="javascript" />
+
+      <p>
+        最後に、各行の背景グラデーション幅を <code>count / maxCount</code> の割合で塗り、行をクリックすると <code>video.currentTime</code> をセットして動画をシークするようにする。
+      </p>
+      <CodeBlock code={renderSnippet} language="javascript" />
 
       <h2>注意</h2>
       <ul>
@@ -94,6 +172,7 @@ const bookmarkletCode = `javascript:(function(){if(!location.href.includes('yout
 
       <h2>関連記事</h2>
       <ul>
+        <li><a href="/tips/youtube-most-replayed-bookmarklet/">YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット</a></li>
         <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
         <li><a href="/tips/youtube-thumbnail-download/">YouTubeのサムネイル画像を取得・保存する方法</a></li>
         <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
