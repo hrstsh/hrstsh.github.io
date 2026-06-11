@@ -1,0 +1,172 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="運営者情報 - hrの備忘録" description="hrの備忘録(hrstsh.com)の運営者情報です。サイトの目的や更新方針についてご案内します。">
+  <main>
+    <header class="page-header">
+      <h1>運営者情報</h1>
+      <p class="subtitle">hrの備忘録(hrstsh.com)について</p>
+    </header>
+
+    <article class="article-body">
+      <section>
+        <h2>運営者</h2>
+        <dl class="operator-list">
+          <dt>ハンドル</dt>
+          <dd>hrstsh</dd>
+
+          <dt>サイト名</dt>
+          <dd>hrの備忘録(hrstsh.com)</dd>
+
+          <dt>ホスティング</dt>
+          <dd>GitHub Pages</dd>
+        </dl>
+        <p>
+          Web技術を中心に、日々の開発や調べものの過程で得た知見を記録している個人開発者です。Git・Docker・SQL といった開発ツールを日常的に使っており、ブラウザ上で動くツールや Chrome 拡張機能、ブックマークレットの制作、Python による API 連携の自動化、音声合成基盤の構築など、実際に手を動かして試したことをこのサイトのコンテンツにしています。
+        </p>
+      </section>
+
+      <section>
+        <h2>サイトの目的</h2>
+        <p>
+          このサイトは、自分が「あとで見返したい」と思った情報をまとめた備忘録です。同じことを調べている方の助けになればと、次のコンテンツを公開しています。
+        </p>
+        <ul>
+          <li><a href="/tips/">Tips</a> — ブックマークレットや macOS・ブラウザの便利機能など、すぐ使える小技</li>
+          <li><a href="/tried/">やってみた</a> — 実際に試したことの手記やレポート</li>
+          <li><a href="/tools/">ツール</a> — ブラウザ上で完結する自作ユーティリティ</li>
+          <li><a href="/cheatsheets/">チートシート</a> — Git・Docker・SQL のコマンドリファレンス</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>更新方針</h2>
+        <p>
+          掲載している手順やコードはすべて自分で動作確認したものです。ただし、X(Twitter)や YouTube などの外部サービスに依存する内容は仕様変更で動かなくなることがあるため、気づいた時点で随時更新しています。誤りや動かない手順を見つけた場合は、<a href="/contact/">お問い合わせ</a>からご連絡いただけると助かります。
+        </p>
+      </section>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/">トップに戻る</a>
+      <span class="footer-sep">|</span>
+      <a href="/contact/">お問い合わせ</a>
+      <span class="footer-sep">|</span>
+      <a href="/privacy/">プライバシーポリシー・免責事項</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+    line-height: 1.8;
+  }
+
+  .page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--color-primary), var(--color-accent)) 1;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+  }
+
+  .article-body {
+    margin-bottom: 2.5rem;
+  }
+
+  .article-body h2 {
+    font-size: 1.35rem;
+    margin: 2rem 0 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .article-body a:hover {
+    color: var(--color-accent);
+  }
+
+  .operator-list {
+    display: grid;
+    gap: 0.75rem 1rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .operator-list dt {
+    font-weight: 600;
+    color: var(--color-text-muted);
+    grid-column: 1;
+  }
+
+  .operator-list dd {
+    margin: 0;
+    grid-column: 2;
+  }
+
+  @media (min-width: 480px) {
+    .operator-list {
+      grid-template-columns: auto 1fr;
+    }
+  }
+
+  @media (max-width: 479px) {
+    .operator-list dt {
+      grid-column: 1 / -1;
+    }
+
+    .operator-list dd {
+      grid-column: 1 / -1;
+      padding-left: 0;
+    }
+  }
+
+  .page-footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: var(--color-primary);
+  }
+
+  .page-footer a:hover {
+    color: var(--color-accent);
+  }
+
+  .footer-sep {
+    margin: 0 0.5rem;
+    color: var(--color-text-muted);
+  }
+</style>

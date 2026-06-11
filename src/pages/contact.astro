@@ -35,6 +35,9 @@ const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdQZ2lHjLpBHK
         <dt>ホスティング</dt>
         <dd>GitHub Pages</dd>
       </dl>
+      <p class="operator-more">
+        詳しくは<a href="/about/">運営者情報ページ</a>をご覧ください。
+      </p>
     </section>
 
     <footer class="page-footer">
@@ -149,6 +152,19 @@ const CONTACT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdQZ2lHjLpBHK
   }
 
   .operator-list a:hover {
+    color: var(--color-accent);
+  }
+
+  .operator-more {
+    margin-top: 1.25rem;
+  }
+
+  .operator-more a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  .operator-more a:hover {
     color: var(--color-accent);
   }
 
