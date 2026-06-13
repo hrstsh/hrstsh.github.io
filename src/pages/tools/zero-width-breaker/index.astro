@@ -1,10 +1,19 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { webApplication } from '../../../utils/jsonLd';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'ツイートのリンク化回避ツール - hrの備忘録';
 const description = 'X(Twitter)のツイートのメンション・URL・ハッシュタグのリンク化を防ぐツール。見た目を変えずに Zero-Width 文字を挿入。ブラウザ上で完結、データ送信なし。';
-const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/zero-width-breaker');
+const pageUrl = 'https://hrstsh.com/tools/zero-width-breaker';
+const faqItems = [
+  { question: 'ゼロ幅文字を入れても見た目は変わらない？', answer: '表示幅がゼロの文字なので、画面上の見た目は変わらない。リンクとして認識される並びだけが途切れて、自動リンク化が起きなくなる。' },
+  { question: 'どんな場面で使う？', answer: 'メールアドレスやURLを「クリックできるリンク」ではなく「文字」として見せたいとき、@ を含む文をそのまま引用として載せたいときなどに使う。' },
+  { question: '貼り付け先で効かないことはある？', answer: 'ある。サービスによってはゼロ幅文字を取り除く処理をしており、その場合はリンク化が元に戻る。投稿前にプレビューで確認するとよい。' },
+];
+const jsonLd = [
+  webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
+  faqPage(faqItems, pageUrl),
+];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -106,6 +115,40 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
           <li>X のリンク検出アルゴリズムは変更されることがあります</li>
           <li>一部のサービスではゼロ幅文字を除去する場合があります</li>
         </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>リンク化が起きる仕組み</h2>
+        <p>
+          SNS は本文を見て、<code>@</code> に続く名前、<code>.</code> を含むドメインらしい並び、<code>#</code> に続く語を見つけると、それを自動でリンクに変える。連絡先を文章として載せたいだけなのに、勝手にメンションやリンクになってしまうのはこのためだ。
+        </p>
+        <p>
+          並びの途中に区切り文字が入ると、この判定は途切れる。半角スペースでも止められるが、見た目が間延びする。そこで、幅を持たないゼロ幅文字を1文字はさんで、見た目はそのままに判定だけを切る、というのがこのツールの考え方になる。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>使うときに気をつけたいこと</h2>
+        <p>
+          見えない文字を本文に混ぜる手法なので、節度を持って使いたい。
+        </p>
+        <ul>
+          <li>スクリーンリーダーの読み上げや、本文の検索・コピーに影響することがある。多用は避け、必要な箇所だけにとどめる</li>
+          <li>本来ハッシュタグとして機能させたい語に使うと、検索に出てこなくなる。意図と逆にならないよう確認する</li>
+          <li>相手のサービスがゼロ幅文字を削る場合は効かない。投稿前にプレビューで見た目を確かめる</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          <dt>ゼロ幅文字を入れても見た目は変わらない？</dt>
+          <dd>表示幅がゼロの文字なので、画面上の見た目は変わらない。リンクとして認識される並びだけが途切れて、自動リンク化が起きなくなる。</dd>
+          <dt>どんな場面で使う？</dt>
+          <dd>メールアドレスやURLを「クリックできるリンク」ではなく「文字」として見せたいとき、@ を含む文をそのまま引用として載せたいときなどに使う。</dd>
+          <dt>貼り付け先で効かないことはある？</dt>
+          <dd>ある。サービスによってはゼロ幅文字を取り除く処理をしており、その場合はリンク化が元に戻る。投稿前にプレビューで確認するとよい。</dd>
+        </dl>
       </section>
     </article>
   </main>
@@ -427,5 +470,19 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
     .tool-container {
       padding: 1rem;
     }
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>

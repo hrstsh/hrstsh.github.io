@@ -159,6 +159,49 @@ const jsonLd = [
           <li>X の検索オペレーターは Web 仕様により一部動作が異なる場合があります</li>
         </ul>
       </section>
+
+      <section class="usage-section">
+        <h2>このツールでできること</h2>
+        <p>
+          X の検索は、慣れると <code>from:</code> や <code>filter:</code> といった演算子を組み合わせて、かなり細かく絞り込める。ただし書式を覚えるのが面倒で、毎回手で打つと打ち間違いも出る。このツールはフォームを埋めるだけで正しい検索クエリを組み立て、そのまま X の検索結果を開くところまでをまとめている。
+        </p>
+        <p>
+          作ったクエリはプレビューに表示されるので、どんな演算子に変換されたのかを見て覚える、という使い方もできる。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>主な検索演算子の早見表</h2>
+        <p>フォームの各項目は、最終的に次のような演算子に変換される。手打ちするときの参考にもなる。</p>
+        <ul>
+          <li><code>from:ユーザー名</code> … そのユーザーの投稿だけ</li>
+          <li><code>to:ユーザー名</code> … そのユーザー宛ての返信</li>
+          <li><code>since:2026-01-01</code> / <code>until:2026-03-31</code> … 期間で絞る</li>
+          <li><code>filter:images</code> / <code>filter:videos</code> … 画像・動画付きだけ</li>
+          <li><code>min_faves:100</code> / <code>min_retweets:50</code> … いいね・RTの下限</li>
+          <li><code>lang:ja</code> … 言語で絞る</li>
+          <li><code>-語句</code> … その語句を含む投稿を除外</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>利用上の注意</h2>
+        <p>
+          検索の挙動は X 側の仕様変更で変わることがあり、ここで挙げた演算子が一部効かなくなる場合もある。閲覧は X 上で各自の利用規約の範囲で行うものとして、このツールはあくまで検索URLを組み立てる補助に徹している。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          <dt>X で画像付きツイートだけを検索する方法は？</dt>
+          <dd>「メディア・フィルター」を展開して「画像」にチェックを入れ、検索を実行すると、画像付きの投稿だけが表示される。</dd>
+          <dt>X で特定のユーザーの投稿だけを検索する方法は？</dt>
+          <dd>「ユーザー・ハッシュタグ」を展開し、from 欄にユーザー名を入れて検索すると、そのユーザーの投稿だけに絞れる。</dd>
+          <dt>このツールは無料ですか？</dt>
+          <dd>無料。ブラウザ上で動作し、入力した条件をサーバーへ送ることもない。</dd>
+        </dl>
+      </section>
     </article>
   </main>
 </Layout>
@@ -1001,6 +1044,26 @@ const jsonLd = [
 
   .usage-section li {
     margin-bottom: 0.5rem;
+  }
+
+  .usage-section p {
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    line-height: 1.7;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--color-text);
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+    line-height: 1.6;
   }
 
   @media (max-width: 480px) {

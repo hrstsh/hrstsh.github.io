@@ -1,10 +1,19 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { webApplication } from '../../../utils/jsonLd';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'SQL整形ツール - hrの備忘録';
 const description = 'SQLを整形・成形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。ブラウザ上で完結、データ送信なし。';
-const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/sql-formatter');
+const pageUrl = 'https://hrstsh.com/tools/sql-formatter';
+const faqItems = [
+  { question: '整形するとSQLの意味は変わる？', answer: '変わらない。改行やインデントといった空白の入れ方を調整するだけなので、実行結果は整形前とまったく同じになる。' },
+  { question: 'どのデータベースに対応している？', answer: '標準SQL・MySQL・PostgreSQL・SQL Server (T-SQL) に対応。方言を選ぶと、その DB のキーワードや引用符の扱いに合わせて整形される。' },
+  { question: '入力したSQLは送信される？', answer: 'いいえ。ブラウザ内のライブラリで整形しており、SQLがサーバーに送られることはない。' },
+];
+const jsonLd = [
+  webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
+  faqPage(faqItems, pageUrl),
+];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -89,6 +98,48 @@ AND B.num = A.num</code></pre>
           <li>複雑な構文や方言固有の構文は正しく解析できない場合があります</li>
           <li>重要なSQLは整形前にバックアップを取ることをおすすめします</li>
         </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>SQL整形が役立つ場面</h2>
+        <p>
+          ORM やツールが吐き出すSQLは1行に詰まっていることが多く、WHERE 句や JOIN がどこまで続いているのか読み取りづらい。整形して改行とインデントを入れると、句の切れ目や入れ子の関係が見えるようになる。
+        </p>
+        <p>
+          レビューで他人のクエリを読むとき、長いクエリのバグを追うとき、ログに出たスロークエリを解析するときなど、まず整形してから中身を見ると手間が減る。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>方言（dialect）を選ぶ意味</h2>
+        <p>
+          SQLは標準仕様がありつつ、データベースごとに細かな違いがある。識別子の引用符が MySQL ではバッククォート、PostgreSQL や標準ではダブルクォート、といった差だ。方言を合わせておくと、こうした記法やキーワードを誤って崩さずに整形できる。
+        </p>
+        <ul>
+          <li><strong>標準 SQL</strong> … 特定のDBに寄せない汎用的な整形</li>
+          <li><strong>MySQL</strong> … MySQL / MariaDB</li>
+          <li><strong>PostgreSQL</strong> … PostgreSQL</li>
+          <li><strong>SQL Server (T-SQL)</strong> … Microsoft SQL Server / Azure SQL</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>このツールの仕組み</h2>
+        <p>
+          整形には <code>sql-formatter</code> ライブラリを使い、すべてブラウザ内で実行している。入力したSQLがサーバーへ送られることはないので、社内のクエリや本番のSQLでも安心して貼り付けられる。整形が変えるのは空白だけで、テーブル名・カラム名・条件などはそのまま保たれる。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          <dt>整形するとSQLの意味は変わる？</dt>
+          <dd>変わらない。改行やインデントといった空白の入れ方を調整するだけなので、実行結果は整形前とまったく同じになる。</dd>
+          <dt>どのデータベースに対応している？</dt>
+          <dd>標準SQL・MySQL・PostgreSQL・SQL Server (T-SQL) に対応。方言を選ぶと、その DB のキーワードや引用符の扱いに合わせて整形される。</dd>
+          <dt>入力したSQLは送信される？</dt>
+          <dd>いいえ。ブラウザ内のライブラリで整形しており、SQLがサーバーに送られることはない。</dd>
+        </dl>
       </section>
     </article>
   </main>
@@ -411,5 +462,19 @@ AND B.num = A.num</code></pre>
     .tool-container {
       padding: 1rem;
     }
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>

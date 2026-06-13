@@ -1,10 +1,19 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { webApplication } from '../../../utils/jsonLd';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = '写真のメタデータ（EXIF）編集ツール - 撮影日時・カメラ情報をブラウザで編集 - hrの備忘録';
 const description = 'JPEG写真の撮影日時・カメラ情報・GPS位置情報などをブラウザで簡単に編集。既存項目の変更や新規追加が可能。無料・データ送信なし。';
-const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/exif-editor');
+const pageUrl = 'https://hrstsh.com/tools/exif-editor';
+const faqItems = [
+  { question: 'EXIFとは何ですか？', answer: '写真ファイルに埋め込まれた付加情報のこと。撮影日時、カメラやスマホの機種、レンズ、絞りやISOなどの撮影条件、GPSによる撮影場所などが記録されている。' },
+  { question: 'SNSに上げる前にGPS（位置情報）を消したい', answer: '一覧からGPS関連の項目を削除してダウンロードすればよい。撮影場所を含む写真をそのまま公開すると自宅などが特定されかねないので、共有前に確認しておくと安心。' },
+  { question: '画像はサーバーに送信される？', answer: 'いいえ。piexifjs を使ってブラウザ内で読み書きしており、選んだ画像が外部に送られることはない。' },
+];
+const jsonLd = [
+  webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
+  faqPage(faqItems, pageUrl),
+];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -72,6 +81,48 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
           <li>このツールはブラウザ上で動作し、データはサーバーに送信されません</li>
           <li>EXIFの形式を誤ると画像が破損する場合があります。重要な画像はバックアップを取ってから編集してください</li>
         </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>EXIFとは</h2>
+        <p>
+          EXIF（Exif）は、写真ファイルに一緒に保存される付加情報のこと。撮ったときに自動で書き込まれ、ふだんは目に見えないが、写真アプリの「情報」やプロパティから覗ける。主に次のようなものが入っている。
+        </p>
+        <ul>
+          <li>撮影日時（DateTimeOriginal）</li>
+          <li>カメラ・スマホの機種（Make / Model）、レンズ情報</li>
+          <li>絞り（F値）、シャッター速度、ISO感度、焦点距離などの撮影条件</li>
+          <li>GPSによる撮影場所（緯度・経度・高度）</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>EXIFを編集したくなる場面</h2>
+        <ul>
+          <li>カメラの時計がずれていて、撮影日時が実際と違う。日付順に並べたいので直したい</li>
+          <li>SNSやブログに載せる前に、GPSの位置情報を消しておきたい</li>
+          <li>自分で撮った写真に著作権表示や撮影者名を入れておきたい</li>
+          <li>スキャンした古い写真に、撮影日や説明を後から付けたい</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>位置情報（GPS）は公開前に確認を</h2>
+        <p>
+          スマホで撮った写真には、撮影した場所の緯度・経度が入っていることが多い。自宅や職場で撮った1枚をそのままアップすると、地図上の座標から場所が割り出せてしまう。多くのSNSはアップロード時にGPSを自動で落とすが、画像を直接やり取りするときや、落とされるか不安なときは、このツールで該当項目を消してから共有すると安心できる。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          <dt>EXIFとは何ですか？</dt>
+          <dd>写真ファイルに埋め込まれた付加情報のこと。撮影日時、カメラやスマホの機種、レンズ、絞りやISOなどの撮影条件、GPSによる撮影場所などが記録されている。</dd>
+          <dt>SNSに上げる前にGPS（位置情報）を消したい</dt>
+          <dd>一覧からGPS関連の項目を削除してダウンロードすればよい。撮影場所を含む写真をそのまま公開すると自宅などが特定されかねないので、共有前に確認しておくと安心。</dd>
+          <dt>画像はサーバーに送信される？</dt>
+          <dd>いいえ。piexifjs を使ってブラウザ内で読み書きしており、選んだ画像が外部に送られることはない。</dd>
+        </dl>
       </section>
     </article>
   </main>
@@ -726,5 +777,19 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
     .add-form .secondary-btn {
       width: 100%;
     }
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>
