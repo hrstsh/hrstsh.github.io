@@ -3,14 +3,15 @@ import Layout from '../../layouts/Layout.astro';
 import { itemList } from '../../utils/jsonLd';
 
 const tools = [
-  { name: 'JSON整形・バリデーション', url: '/tools/json-formatter' },
-  { name: 'スタイル付きテキスト置換', url: '/tools/styled-text-replacer' },
-  { name: 'SQL整形ツール', url: '/tools/sql-formatter' },
-  { name: 'X（Twitter）検索ツール', url: '/tools/x-search-builder' },
-  { name: 'ツイートのリンク化回避ツール', url: '/tools/zero-width-breaker' },
-  { name: '写真のメタデータ（EXIF）編集', url: '/tools/exif-editor' },
+  { name: 'JSON整形・バリデーション', url: '/tools/json-formatter/', desc: 'JSONの整形（フォーマット）・圧縮（ミニファイ）・構文チェックをブラウザで実行。外部送信なし。' },
+  { name: 'スタイル付きテキスト置換', url: '/tools/styled-text-replacer/', desc: 'クリップボード内の書式（太字・色など）を維持したまま文字列を置換できるツール。Word や Google ドキュメントで便利。' },
+  { name: 'SQL整形ツール', url: '/tools/sql-formatter/', desc: 'SQLを整形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。' },
+  { name: 'X（Twitter）検索ツール', url: '/tools/x-search-builder/', desc: '画像付きツイートや特定ユーザーの投稿を簡単に検索。無料・登録不要。検索コマンドを覚えなくても高度な検索が可能。' },
+  { name: 'ツイートのリンク化回避ツール', url: '/tools/zero-width-breaker/', desc: 'ツイートのメンション・URL・ハッシュタグのリンク化を防ぐ。見た目を変えずに Zero-Width 文字を挿入。' },
+  { name: '写真のメタデータ（EXIF）編集', url: '/tools/exif-editor/', desc: '撮影日時・カメラ情報・GPS位置情報などをブラウザで編集。既存の変更や新規追加が可能。' },
 ];
-const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。', 'https://hrstsh.com/tools', tools);
+const items = tools.map((t) => ({ name: t.name, url: t.url }));
+const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。', 'https://hrstsh.com/tools', items);
 ---
 
 <Layout title="ツール - hrの備忘録" description="ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。" jsonLd={jsonLd}>
@@ -20,47 +21,25 @@ const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツ
       <p class="subtitle">ブラウザ上で動作する便利なツール集</p>
     </header>
 
-    <section class="tools-list">
-      <h2>ツール一覧</h2>
-      <ul class="tool-cards">
-        <li>
-          <a href="/tools/json-formatter/" class="tool-card">
-            <span class="tool-title">JSON整形・バリデーション</span>
-            <span class="tool-desc">JSONの整形（フォーマット）・圧縮（ミニファイ）・構文チェックをブラウザで実行。外部送信なし。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/styled-text-replacer/" class="tool-card">
-            <span class="tool-title">スタイル付きテキスト置換</span>
-            <span class="tool-desc">クリップボード内の書式（太字・色など）を維持したまま文字列を置換できるツール。Word や Google ドキュメントで便利。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/sql-formatter/" class="tool-card">
-            <span class="tool-title">SQL整形ツール</span>
-            <span class="tool-desc">SQLを整形して読みやすくするツール。MySQL、PostgreSQL、SQL Server など複数のデータベースに対応。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/x-search-builder/" class="tool-card">
-            <span class="tool-title">X（Twitter）検索ツール</span>
-            <span class="tool-desc">画像付きツイートや特定ユーザーの投稿を簡単に検索。無料・登録不要。検索コマンドを覚えなくても高度な検索が可能。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/zero-width-breaker/" class="tool-card">
-            <span class="tool-title">ツイートのリンク化回避ツール</span>
-            <span class="tool-desc">ツイートのメンション・URL・ハッシュタグのリンク化を防ぐ。見た目を変えずに Zero-Width 文字を挿入。</span>
-          </a>
-        </li>
-        <li>
-          <a href="/tools/exif-editor/" class="tool-card">
-            <span class="tool-title">写真のメタデータ（EXIF）編集</span>
-            <span class="tool-desc">撮影日時・カメラ情報・GPS位置情報などをブラウザで編集。既存の変更や新規追加が可能。</span>
-          </a>
-        </li>
-      </ul>
+    <section class="intro-section">
+      <p>
+        ブラウザの中だけで完結する小さなツールを置いています。JSON や SQL の整形、書式を保ったままのテキスト置換、写真の EXIF 編集など、ちょっとした作業をその場で済ませたいときに使えます。
+      </p>
+      <p>
+        どれも入力したデータをサーバーへ送らず、処理は端末の中で行われます。インストールや会員登録も不要なので、開いてすぐ使えます。仕事で扱うデータや手元のファイルでも、外に出る心配なく試せるようにしているのがこだわりです。
+      </p>
     </section>
+
+    <ul class="post-list">
+      {tools.map((tool) => (
+        <li>
+          <a class="post-row" href={tool.url}>
+            <span class="post-title">{tool.name}</span>
+            <span class="post-desc">{tool.desc}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
 
     <footer class="page-footer">
       <a href="/">トップに戻る</a>
@@ -70,93 +49,80 @@ const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツ
 
 <style>
   main {
-    max-width: 860px;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 3rem 1.5rem;
-    line-height: 1.7;
+    padding: 3rem 1.5rem 4rem;
   }
 
   .page-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 2px solid transparent;
-    border-image: linear-gradient(90deg, var(--color-primary), var(--color-accent)) 1;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
   h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .subtitle {
-    font-size: 1.1rem;
-    color: var(--color-text-muted);
-  }
-
-  .tools-list h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.35rem;
     color: var(--color-text);
   }
 
-  .tool-cards {
+  .subtitle {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+  }
+
+  .intro-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .intro-section p {
+    color: var(--color-text-muted);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+
+  .intro-section p:last-child {
+    margin-bottom: 0;
+  }
+
+  .post-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
   }
 
-  .tool-card {
+  .post-row {
     display: block;
-    padding: 1.5rem 1.75rem;
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    padding: 1.4rem 0;
+    border-bottom: 1px solid var(--color-border);
     text-decoration: none;
     color: inherit;
-    box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-normal), box-shadow var(--transition-normal),
-      border-color var(--transition-normal);
   }
 
-  .tool-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-hover);
-  }
-
-  .tool-title {
-    font-weight: 600;
-    color: var(--color-primary);
+  .post-title {
     display: block;
-    margin-bottom: 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.7;
+    color: var(--color-text);
     transition: color var(--transition-fast);
   }
 
-  .tool-card:hover .tool-title {
-    color: var(--color-accent);
+  .post-row:hover .post-title {
+    color: var(--color-primary);
   }
 
-  .tool-desc {
-    font-size: 0.95rem;
-    color: var(--color-text-muted);
+  .post-desc {
     display: block;
-    line-height: 1.6;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: var(--color-text-muted);
+    margin-top: 0.55rem;
   }
 
   .page-footer {
-    margin-top: 3rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
+    margin-top: 2.5rem;
     text-align: center;
   }
 

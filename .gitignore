@@ -16,7 +16,8 @@ src/env.d.ts
 .env.local
 .env*.local
 
-# IDE
+# IDE / local tooling
+.claude/
 .vscode/
 .idea/
 *.swp

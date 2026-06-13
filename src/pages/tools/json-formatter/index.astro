@@ -1,10 +1,19 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { webApplication } from '../../../utils/jsonLd';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'JSON整形・バリデーションツール - hrの備忘録';
 const description = 'JSONの整形（フォーマット）・圧縮（ミニファイ）・構文チェックをブラウザで実行。外部送信なし。';
-const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/json-formatter');
+const pageUrl = 'https://hrstsh.com/tools/json-formatter';
+const faqItems = [
+  { question: 'JSONの整形と圧縮（ミニファイ）はどう違う？', answer: '整形は改行とインデントを入れて人が読みやすい形にする処理。圧縮は空白をすべて取り除いてデータ量を最小にする処理。値そのものは変わらず、見た目だけが変わる。' },
+  { question: '入力したJSONはどこかに送信される？', answer: 'いいえ。ブラウザの中だけで JSON.parse と JSON.stringify を使って処理しており、サーバーには一切送信しない。' },
+  { question: '「整形できない」と表示されるのはなぜ？', answer: '末尾のカンマ、シングルクォート、引用符のないキーなど、JSONの文法から外れた書き方が原因のことが多い。エラーに出る行・列のあたりを見直すと見つかりやすい。' },
+];
+const jsonLd = [
+  webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
+  faqPage(faqItems, pageUrl),
+];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -78,6 +87,51 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
           <li>非常に大きなJSONファイルの場合、ブラウザの性能に影響する可能性があります</li>
           <li>JSON5やJSONLなどの拡張形式には対応していません</li>
         </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>JSON整形・圧縮はどんなときに使うか</h2>
+        <p>
+          APIのレスポンスやアプリのログに出てくるJSONは、1行にぎっしり詰まっていて目で追いづらいことが多い。整形すると階層構造が見えるようになり、どのキーにどの値が入っているかをひと目で確認できる。
+        </p>
+        <p>
+          逆に、設定ファイルを通信に乗せたり、データ量を少しでも減らしたいときは圧縮（ミニファイ）が役立つ。整形しても圧縮しても、表している値は同じ。見た目のためにスペースを足すか、容量のためにスペースを削るかの違いだけなので、用途で使い分ければよい。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある構文エラーと原因</h2>
+        <p>「整形できない」と出るときは、たいてい次のどれかに当てはまる。</p>
+        <ul>
+          <li>配列やオブジェクトの<strong>末尾にカンマ</strong>が残っている（<code>[1, 2, 3,]</code>）。JSONでは許されない</li>
+          <li>文字列を<strong>シングルクォート</strong>で囲っている。JSONはダブルクォートのみ</li>
+          <li>キーに<strong>引用符が付いていない</strong>（<code>&#123;name: "太郎"&#125;</code>）。キーも必ずダブルクォートで囲む</li>
+          <li><strong>コメント</strong>（<code>//</code> や <code>/* */</code>）が混ざっている。JSONはコメント非対応</li>
+          <li>コピーの過程で<strong>全角スペースや全角の引用符</strong>が紛れ込んでいる</li>
+          <li>ファイル先頭に見えない<strong>BOM</strong>が付いている</li>
+        </ul>
+        <p>
+          エラーには「○行目、○列目付近」と位置が出るので、その周辺を見ると原因が絞り込める。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>このツールの仕組み</h2>
+        <p>
+          入力されたテキストをブラウザ標準の <code>JSON.parse()</code> に通して構文を検証し、問題なければ <code>JSON.stringify()</code> でインデントを付け直している。圧縮はインデントなしで文字列化するだけ。外部ライブラリもサーバー処理も使わず、すべて端末の中で完結する。だから貼り付けたデータが外に出ることはない。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          <dt>JSONの整形と圧縮（ミニファイ）はどう違う？</dt>
+          <dd>整形は改行とインデントを入れて人が読みやすい形にする処理。圧縮は空白をすべて取り除いてデータ量を最小にする処理。値そのものは変わらず、見た目だけが変わる。</dd>
+          <dt>入力したJSONはどこかに送信される？</dt>
+          <dd>いいえ。ブラウザの中だけで JSON.parse と JSON.stringify を使って処理しており、サーバーには一切送信しない。</dd>
+          <dt>「整形できない」と表示されるのはなぜ？</dt>
+          <dd>末尾のカンマ、シングルクォート、引用符のないキーなど、JSONの文法から外れた書き方が原因のことが多い。エラーに出る行・列のあたりを見直すと見つかりやすい。</dd>
+        </dl>
       </section>
     </article>
   </main>
@@ -431,5 +485,19 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
     .btn-group {
       flex-direction: column;
     }
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>

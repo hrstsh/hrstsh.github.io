@@ -1,10 +1,19 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { webApplication } from '../../../utils/jsonLd';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'スタイル付きテキスト置換 - hrの備忘録';
 const description = 'クリップボード内の書式（太字・色など）を維持したまま文字列を置換できるツール。Word や Google ドキュメントで便利。ブラウザ上で完結、データ送信なし。';
-const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), description, 'https://hrstsh.com/tools/styled-text-replacer');
+const pageUrl = 'https://hrstsh.com/tools/styled-text-replacer';
+const faqItems = [
+  { question: 'ふつうの検索・置換と何が違う？', answer: 'メモ帳やブラウザのフォームでの置換はプレーンテキスト扱いになり、太字や色などの書式が消えてしまう。このツールはクリップボードの書式付きデータ（HTML）を直接書き換えるので、見た目を保ったまま文字列だけを置き換えられる。' },
+  { question: 'どんなアプリのテキストに使える？', answer: 'Word・Google ドキュメント・Notion など、コピーすると書式付き（HTML 形式）でクリップボードに入るアプリのテキストに使える。プレーンテキストしか扱わないアプリでは書式の維持はできない。' },
+  { question: '入力したテキストは送信される？', answer: 'いいえ。クリップボードの読み書きと置換はすべてブラウザ内で完結し、サーバーには送信しない。' },
+];
+const jsonLd = [
+  webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
+  faqPage(faqItems, pageUrl),
+];
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -98,6 +107,49 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
           <li>複雑なレイアウト（表、画像など）は正しく処理できない場合があります</li>
           <li>Chrome、Edge、Safari などモダンブラウザでの使用を推奨</li>
         </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>なぜ書式を保ったまま置換できるのか</h2>
+        <p>
+          文書をコピーすると、クリップボードには見た目どおりの「書式付きデータ（HTML）」と、装飾を落とした「プレーンテキスト」の2種類が同時に入る。メモ帳やフォームでの置換はプレーンテキストの方を触るので、貼り直すと太字も色も消えてしまう。
+        </p>
+        <p>
+          このツールは書式付きデータの側を読み込み、その中のテキスト部分だけを書き換える。装飾を表すタグには手を付けないので、見た目を崩さずに単語だけを差し替えられる。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>正規表現を使った置換の例</h2>
+        <p>
+          「正規表現を使用する」にチェックを入れると、単純な文字列一致ではなくパターンで置換できる。表記ゆれをまとめて直したいときに便利。
+        </p>
+        <ul>
+          <li><code>サーバー?</code> → <code>サーバ</code> … 「サーバ」「サーバー」を片方に統一</li>
+          <li><code>\s+</code> → 半角スペース1つ … 連続した空白を1つに詰める</li>
+          <li><code>（[^）]*）</code> → 空文字 … 全角カッコで囲んだ補足をまとめて削除</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>うまくいかないときは</h2>
+        <ul>
+          <li>表・画像・段組みなど複雑なレイアウトは、構造が崩れることがある。文章主体のテキストでの利用が向いている</li>
+          <li>コピー元のアプリが書式付きデータを書き出さない場合、装飾は維持できない</li>
+          <li>クリップボードの読み込みはブラウザの許可が必要。ブロックしているとボタンが反応しない</li>
+        </ul>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          <dt>ふつうの検索・置換と何が違う？</dt>
+          <dd>メモ帳やブラウザのフォームでの置換はプレーンテキスト扱いになり、太字や色などの書式が消えてしまう。このツールはクリップボードの書式付きデータ（HTML）を直接書き換えるので、見た目を保ったまま文字列だけを置き換えられる。</dd>
+          <dt>どんなアプリのテキストに使える？</dt>
+          <dd>Word・Google ドキュメント・Notion など、コピーすると書式付き（HTML 形式）でクリップボードに入るアプリのテキストに使える。プレーンテキストしか扱わないアプリでは書式の維持はできない。</dd>
+          <dt>入力したテキストは送信される？</dt>
+          <dd>いいえ。クリップボードの読み書きと置換はすべてブラウザ内で完結し、サーバーには送信しない。</dd>
+        </dl>
       </section>
     </article>
   </main>
@@ -428,5 +480,19 @@ const jsonLd = webApplication(title.replace(/ - hrの備忘録$/, ''), descripti
     .tool-container {
       padding: 1rem;
     }
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
   }
 </style>
