@@ -66,6 +66,11 @@ fi`;
         当初は GitHub Actions の cron で定期実行する案も検討しました。ただ、credentials などの秘密情報を Actions の Secrets に置く必要があり、データの永続化にも Artifact や別リポジトリへの push が必要になります。ローカルで launchd を使えば、秘密情報はマシン内に留められ、<code>data/</code> にそのまま蓄積できます。また、Markdown 形式にしたのは、Cursor などの AI が <code>@data/ga4/xxx.md</code> で参照してサイト改善の判断材料にしやすいためです。
       </p>
 
+      <h2>API を使う準備</h2>
+      <p>
+        どちらの API も、Google Cloud でサービスアカウントを作り、その鍵ファイル（JSON）をスクリプトから読み込む形にしています。GA4 側はプロパティの管理画面で、Search Console 側は対象サイトの設定で、作成したサービスアカウントのメールアドレスに閲覧権限を与えておく必要があります。ここを忘れると、認証は通るのにデータが空で返ってくるので、最初に権限付与まで済ませておくとつまずきにくいです。
+      </p>
+
       <h2>取得スクリプト</h2>
       <p>
         GA4 は <code>BetaAnalyticsDataClient.from_service_account_file</code>、Search Console は <code>googleapiclient.discovery.build</code> でサービスアカウント認証。日別サマリー、ページ別 PV、参照元、デバイス（GA4）、クエリ別・ページ別の検索パフォーマンス（Search Console）を取得して Markdown を生成しています。
@@ -89,6 +94,14 @@ fi`;
 
       <p>
         出力先は <code>data/ga4/YYYY-MM-DD.md</code> と <code>data/search-console/YYYY-MM-DD.md</code>。取得したデータを AI に参照させて、メタ情報の最適化や人気記事の把握に活用しています。
+      </p>
+
+      <h2>つまずいたところ</h2>
+      <p>
+        launchd は通常のシェルとは環境が違い、ログインシェルで読んでいる <code>.env</code> や <code>PATH</code> がそのままでは効きません。最初は手元で動くのに自動実行だけ失敗して、原因を追うのに時間がかかりました。結局、必要な環境変数は plist の <code>EnvironmentVariables</code> に明示し、<code>uv</code> や <code>python</code> は絶対パスで呼ぶことで安定しました。
+      </p>
+      <p>
+        うまく動かないときは、まず <code>launchctl list</code> で登録されているか、終了コードが 0 以外になっていないかを確認します。plist で <code>StandardOutPath</code> と <code>StandardErrorPath</code> を指定してログを残しておくと、自動実行時のエラーを追いやすくなります。時刻指定の <code>StartCalendarInterval</code> は、その時刻にマシンがスリープしていると実行されないので、確実に回したいなら起こす設定や別の仕組みと組み合わせます。
       </p>
     </article>
 

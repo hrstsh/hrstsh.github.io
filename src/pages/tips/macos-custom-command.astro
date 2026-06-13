@@ -172,6 +172,9 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <p>
         これで <code>amv</code> コマンドがどのディレクトリからでも実行できるようになる。
       </p>
+      <p>
+        <code>PATH</code> は、コマンドを打ったときにシェルが実行ファイルを探しに行くディレクトリの一覧を指す。ここに <code>amv</code> を置いたディレクトリを足しておくと、フルパスを打たなくても名前だけで呼び出せるようになる。先頭に追加しているのは、同名のコマンドが他にあったときに自作のものを優先させるためで、後ろに足すと既存のコマンドが優先される。
+      </p>
 
       <h2>使い方</h2>
       <p>実際に使ってみる。</p>
@@ -193,6 +196,21 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
       <p>
         Python 以外にも、シェルスクリプトだけ、Ruby、Node.js など好きな言語で作成できる。
       </p>
+
+      <h2>つまずきやすいところ</h2>
+      <ul>
+        <li><code>command not found: amv</code> と出るときは、PATH の追加が反映されていないことがほとんど。<code>~/.zshrc</code> に書いたあと <code>source ~/.zshrc</code> を実行したか、ディレクトリ名のつづりが合っているかを確認する。</li>
+        <li><code>permission denied</code> と出るときは実行権限が付いていない。エントリーポイントのファイルに対して <code>chmod +x</code> を実行する。</li>
+        <li>PATH に追加するのはスクリプト本体ではなく、それが置かれているディレクトリのパスになる。ファイルそのものを指定しても動かない。</li>
+        <li>macOS の標準シェルは zsh なので <code>~/.zshrc</code> に書く。古い環境で bash を使っている場合は <code>~/.bash_profile</code> に書く点が異なる。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/mac-terminal-customize/">Mac Terminal（zsh）の表示をカスタマイズする</a></li>
+        <li><a href="/tips/macos-copy-file-path/">macOSでファイルパスを一発でターミナルにコピーする</a></li>
+        <li><a href="/tips/macos-screenshot-settings/">macOSのスクリーンショットの保存先・形式・影を変更する</a></li>
+      </ul>
 
       <h2>まとめ</h2>
       <p>

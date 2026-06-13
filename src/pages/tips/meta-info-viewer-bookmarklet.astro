@@ -84,11 +84,21 @@ const bookmarkletCode = `javascript:(function(){const id='meta-info-viewer';let 
         トグル動作になっている。
       </p>
 
+      <h2>どう動いているか</h2>
+      <p>
+        ブックマークレットは <code>javascript:</code> で始まる短いコードを URL として登録したもので、クリックすると今開いているページの上でそのコードが動く。新しいページを開くわけではないので、表示中のページの中身をその場で調べられる。
+      </p>
+      <p>
+        このコードがやっているのは、<code>document.querySelector</code> で <code>title</code> や各 <code>meta</code> タグ、<code>link[rel="canonical"]</code> などを順に拾い、値があるものだけを一覧にして画面の手前に重ねて表示することだけ。コピーボタンは <code>navigator.clipboard.writeText</code> で各項目の値をクリップボードに書き込んでいる。表示部分には固定の <code>id</code> を付けてあり、もう一度クリックすると同じ <code>id</code> の要素が見つかるので、それを取り除いて閉じるトグルになっている。
+      </p>
+
       <h2>注意事項</h2>
       <ul>
         <li>存在しない項目は表示されない</li>
         <li>一部のサイトではクリップボードへのコピーに許可が必要な場合がある</li>
+        <li>クリップボードへの書き込みは <code>https</code> のページなど安全なコンテキストでないと動かないことがある</li>
         <li>iframe 内のページでは動作しない</li>
+        <li>コンテンツを後から差し込む作りのページでは、表示前のメタ情報を拾うことがある。読み込みが終わってからクリックする</li>
       </ul>
 
       <h2>よくある質問</h2>

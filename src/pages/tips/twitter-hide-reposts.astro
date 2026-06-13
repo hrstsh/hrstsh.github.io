@@ -159,6 +159,9 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
       <p>
         この記事では、Google Chrome 用の拡張機能を自作する手順をまとめます。ツールバーのアイコンからポップアップを開き、スイッチを切り替えると、表示中の X のタブのタイムラインから、リポスト行を非表示にしたり、再び表示したりできます。
       </p>
+      <p>
+        フォローしている相手が増えるほど、タイムラインは本人の投稿よりもリポストで埋まりやすくなります。本来読みたい人の発言が下に流れてしまい、追いかけにくいと感じることがあります。リポストをまとめて消す既製のアプリもありますが、設定項目が多くて動作が重くなりがちなので、ここでは目的を非表示の切り替えだけに絞った軽い拡張機能を作ります。仕組みが単純なぶん、X 側の表示が変わったときにも自分で直しやすいという利点があります。
+      </p>
 
       <h2>できること</h2>
       <ul>
@@ -199,6 +202,17 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
       <h2>popup.js</h2>
       <CodeBlock code={popupJsCode} language="javascript" />
 
+      <h2>どう動いているか</h2>
+      <p>
+        X のタイムラインは、スクロールに合わせて新しい投稿を後から差し込んでいく作りになっています。ページを開いた瞬間にすべての投稿が並んでいるわけではないので、最初に一度走査するだけでは取りこぼします。そこで <code>MutationObserver</code> で <code>document.body</code> の変化を監視し、投稿が増えるたびに走査をやり直しています。
+      </p>
+      <p>
+        ひとつの投稿は <code>article[data-testid="tweet"]</code> という要素にまとまっています。その中の文字列に「Reposted by」や「さんがリポスト」といったリポストの目印が含まれるかどうかで、リポストかどうかを判定しています。判定し終えた投稿には <code>dataset</code> に印を付けておき、二度目以降は判定をやり直さず表示の切り替えだけを行うことで、スクロール中の負荷を抑えています。
+      </p>
+      <p>
+        非表示の状態は <code>chrome.storage.local</code> に <code>rtFilterEnabled</code> という値で保存しています。ポップアップでスイッチを変えると storage に書き込まれ、content script 側の <code>chrome.storage.onChanged</code> がそれを受け取って、開いているタブにすぐ反映されます。状態をブラウザ内に持たせているので、タブを閉じても次に開いたときは前回と同じ設定で始まります。
+      </p>
+
       <h2>インストール手順</h2>
       <ol>
         <li>Chrome で <code>chrome://extensions/</code> を開く</li>
@@ -206,6 +220,13 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
         <li>「パッケージ化されていない拡張機能を読み込む」で上記のファイルを配置したフォルダを指定</li>
       </ol>
       <p>X を開き直す。拡張アイコンでポップアップを開き、スイッチの ON/OFF で表示を確かめる。</p>
+
+      <h2>うまく動かないときは</h2>
+      <ul>
+        <li>リポストが消えないときは、判定に使う文字列が画面の表記と合っていないことがほとんどです。表示言語に合わせて <code>detectRetweet</code> の文字列を足します。英語表示なら「Reposted by」、日本語表示なら「さんがリポスト」が目印になります。</li>
+        <li>リポスト以外の投稿まで消えるときは、本文にたまたま <code>reposted</code> などの語が含まれているケースです。判定を厳しくするなら、article 全体ではなくリポストの目印が入る先頭部分だけを見るように絞ります。</li>
+        <li>切り替えてもすぐ反映されないときは、X を開いたままにしていた古いタブが対象です。一度リロードすると <code>onChanged</code> 経由で最新の状態に揃います。</li>
+      </ul>
 
       <h2>補足・限界</h2>
       <ul>

@@ -81,7 +81,10 @@ ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip
 
     <article class="article-body">
       <p>
-        外出先から自宅の Mac で動画をダウンロードしたいのに、ローカルネットワークの外だと Mac に触れない。そこで <strong>Telegram Bot</strong> を経由して Mac 上の処理を動かす形にしました。スマホから URL を貼るだけで済むので、外出先でも気軽に使えます。
+        外出先から自宅の Mac に処理をさせたいことがあっても、ローカルネットワークの外からは直接触れません。ポートを開けて外部に公開するのは管理が大変なので、Telegram Bot を中継役にして、スマホから送ったメッセージで Mac 側の処理を動かす形にしました。Mac 側は Telegram に接続しにいくだけなので、外向きにポートを開けずに使えるのが利点です。
+      </p>
+      <p>
+        最初の用途として、手元の <code>yt-dlp</code> を呼び出して自分用に動画や音声を取り込む処理を例に実装しました。主眼はあくまで遠隔実行の仕組みづくりで、取得は各サービスの規約と著作権の範囲内で行う前提です。
       </p>
 
       <h2>構成</h2>
@@ -90,9 +93,9 @@ ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip
       </p>
       <CodeBlock code={projectStructure} language="text" />
 
-      <h2>動画ダウンロード</h2>
+      <h2>実装例: yt-dlp の呼び出し</h2>
       <p>
-        <code>/dl</code> は <code>-s</code> で音声のみ、<code>-l</code> でライブ配信を指定できます。URL に応じて YouTube か Twitter に振り分ける処理は <code>dl_dispatch.py</code> で行っています。
+        遠隔実行のサンプルとして、受け取った URL を <code>yt-dlp</code> に渡す処理を作りました。<code>/dl</code> は <code>-s</code> で音声のみ、<code>-l</code> でライブ配信を指定できます。URL の種類で処理を振り分けるところは <code>dl_dispatch.py</code> にまとめています。ここで見たいのは、外部コマンドをどう非同期で安全に呼ぶかという部分です。
       </p>
       <CodeBlock code={dlDispatch} language="python" />
 
@@ -123,6 +126,11 @@ ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip
 
       <p>
         使えるコマンドは <code>/dl</code>（動画・音声・ライブ）、<code>/status</code>、<code>/help</code>、<code>/whoami</code> です。Phase 1 として動く Bot ができたので、今後は Mac 上だからこそできる処理（ローカル LLM、音声の文字起こし、画像・動画の解析など）を足していく予定です。
+      </p>
+
+      <h2>利用上の注意</h2>
+      <p>
+        <code>yt-dlp</code> での取得は、各サービスの利用規約と著作権の範囲内で行います。サービスによっては許可されていない取得方法があり、その判断は利用者の責任になります。自分がアップロードした動画や、権利者から許諾を得たもの、私的な利用の範囲にとどめ、再配布や商用利用はしません。この記事は遠隔実行の仕組みを記録したもので、特定サービスからのダウンロードを推奨する趣旨ではありません。
       </p>
     </article>
 
