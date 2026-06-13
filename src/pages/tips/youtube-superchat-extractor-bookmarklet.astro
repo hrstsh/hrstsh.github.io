@@ -1,0 +1,270 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'YouTubeアーカイブのチャットリプレイからスーパーチャットだけ抽出するブックマークレット - hrの備忘録';
+const description = 'YouTubeのライブ配信アーカイブで、チャットリプレイに流れるスーパーチャット（投げ銭）だけを抽出して一覧表示・コピーするブックマークレット。投稿者・金額・コメント・再生位置をまとめて取り出せる。切り抜きやまとめ作りに。';
+const path = '/tips/youtube-superchat-extractor-bookmarklet';
+const faqItems = [
+  {
+    question: 'YouTubeアーカイブのスーパーチャットだけを一覧で見るには？',
+    answer: 'ブックマークレットを使うと、チャットリプレイに表示されたスーパーチャットだけを抽出し、投稿者・金額・コメント・再生位置を一覧表示できる。チャットを再生して読み込んだ分が対象になる。',
+  },
+  {
+    question: 'スーパーチャットが少ししか出ないのはなぜ？',
+    answer: 'チャットリプレイは動画の再生に合わせて少しずつ読み込まれる。最初は冒頭付近の分しか表示されないので、再生を進めるかチャット欄をスクロールして読み込むと、抽出できる件数が増える。',
+  },
+  {
+    question: '配信中のライブでも使える？',
+    answer: 'アーカイブのチャットリプレイを想定している。配信中のライブチャットでも同じ仕組みで動くが、新しいスーパーチャットは流れてきた分だけが対象になる。',
+  },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
+
+const iframeSnippet = `// チャットリプレイは iframe（#chatframe）の中にある
+const frame = document.querySelector('#chatframe');
+const doc = frame && frame.contentDocument;
+if (!doc) {
+  alert('チャット欄が見つかりません。チャットリプレイを表示してから実行してください。');
+  return;
+}`;
+
+const collectSnippet = `// スーパーチャットは専用の要素で表示される
+const items = doc.querySelectorAll('yt-live-chat-paid-message-renderer');
+
+const results = [];
+items.forEach((el) => {
+  const author = el.querySelector('#author-name');
+  const amount = el.querySelector('#purchase-amount');
+  const message = el.querySelector('#message');
+  const time = el.querySelector('#timestamp'); // 動画の再生位置
+  results.push({
+    time: time ? time.textContent.trim() : '',
+    author: author ? author.textContent.trim() : '',
+    amount: amount ? amount.textContent.trim() : '',
+    message: message ? message.innerText.trim() : '',
+  });
+});`;
+
+const formatSnippet = `// 1行1件のテキストに整形する
+const lines = results.map((r) =>
+  \`[\${r.time}] \${r.author} \${r.amount}\${r.message ? ' : ' + r.message : ''}\`
+);
+const text = lines.join('\\n');`;
+
+const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var f=document.querySelector('#chatframe'),doc=f&&f.contentDocument;if(!doc){alert('チャット欄が見つかりません。「チャットのリプレイを表示」でチャットを開いてから実行してください。');return;}var items=doc.querySelectorAll('yt-live-chat-paid-message-renderer'),res=[];items.forEach(function(el){var a=el.querySelector('#author-name'),am=el.querySelector('#purchase-amount'),ms=el.querySelector('#message'),ti=el.querySelector('#timestamp');res.push({time:ti?ti.textContent.trim():'',author:a?a.textContent.trim():'',amount:am?am.textContent.trim():'',message:ms?ms.innerText.trim():''});});if(!res.length){alert('スーパーチャットが見つかりませんでした。チャットを再生して読み込んでから試してください。');return;}var lines=res.map(function(r){return '['+r.time+'] '+r.author+' '+r.amount+(r.message?' : '+r.message:'');});var text=lines.join('\\n');var o=document.getElementById('yt-sc-panel');if(o){o.remove();return;}var p=document.createElement('div');p.id='yt-sc-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:400px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #1a73e8;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#1a73e8;font-weight:bold';ttl.textContent='スーパーチャット ('+res.length+'件)';var bx=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#1a73e8;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';bx.appendChild(cp);bx.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(bx);p.appendChild(hdr);var list=document.createElement('div');res.forEach(function(r){var row=document.createElement('div');row.style.cssText='padding:6px 0;border-bottom:1px solid #f0f0f0;line-height:1.5';var top=document.createElement('div');top.style.cssText='display:flex;justify-content:space-between;gap:8px';var who=document.createElement('span');who.style.cssText='color:#333;font-weight:bold;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';who.textContent=(r.time?r.time+' ':'')+r.author;var amt=document.createElement('span');amt.style.cssText='color:#0a8a00;font-weight:bold;flex-shrink:0';amt.textContent=r.amount;top.appendChild(who);top.appendChild(amt);row.appendChild(top);if(r.message){var msg=document.createElement('div');msg.style.cssText='color:#555;margin-top:2px';msg.textContent=r.message;row.appendChild(msg);}list.appendChild(row);});p.appendChild(list);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(text).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>YouTubeアーカイブのチャットリプレイからスーパーチャットだけ抽出するブックマークレット</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        ライブ配信のアーカイブを見返すとき、スーパーチャット（投げ銭）のコメントだけを追いたいことがある。配信のハイライトになっている場面が多く、切り抜きやまとめを作るときの目印にもなる。ただし通常のチャットリプレイは普通のコメントに紛れて流れていくため、スパチャだけを拾うのは手間がかかる。このブックマークレットは、チャットリプレイに表示されたスーパーチャットだけを抽出し、投稿者・金額・コメント・動画内の再生位置をまとめて一覧表示する。コピーすればメモやまとめにそのまま貼り付けられる。
+      </p>
+
+      <h2>ブックマークレット</h2>
+      <p>
+        次のコードをブックマークのURL欄に設定する。
+      </p>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h2>登録手順</h2>
+      <ol>
+        <li>ブックマークバーを右クリックして、新しいブックマークを作る</li>
+        <li>名前を「スパチャ抽出」など分かりやすいものにする</li>
+        <li>URL欄に上のコードを貼り付けて保存する</li>
+      </ol>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>ライブ配信のアーカイブ（動画）ページを開く</li>
+        <li>右側のチャット欄で「チャットのリプレイを表示」を選び、チャットを表示する</li>
+        <li>抽出したい範囲まで動画を再生して、チャットを読み込む</li>
+        <li>ブックマークレットをクリックする</li>
+        <li>右側にスーパーチャットの一覧（再生位置・投稿者・金額・コメント）が表示される</li>
+        <li>コピーボタンで全件をクリップボードに取得できる</li>
+        <li>もう一度クリックするとパネルが閉じる</li>
+      </ol>
+
+      <p>
+        チャットリプレイは動画の再生に合わせて少しずつ読み込まれる。最初は冒頭付近しか拾えないので、再生を進めたりチャット欄をスクロールしたりして読み込んでから実行すると、抽出件数が増える。
+      </p>
+
+      <h2>どう動いているか</h2>
+      <p>
+        YouTubeのチャットリプレイは、動画ページの中に埋め込まれた <code>iframe</code>（<code>#chatframe</code>）の中で表示される。まずこの iframe の中身（<code>contentDocument</code>）を取得する。チャットと動画ページは同じ <code>youtube.com</code> なので、中の要素にアクセスできる。
+      </p>
+      <CodeBlock code={iframeSnippet} language="javascript" />
+
+      <p>
+        スーパーチャットは通常のコメントとは別の専用要素（<code>yt-live-chat-paid-message-renderer</code>）で表示される。これを全部集めて、それぞれから投稿者名・金額・コメント・タイムスタンプ（動画の再生位置）を取り出す。
+      </p>
+      <CodeBlock code={collectSnippet} language="javascript" />
+
+      <p>
+        取り出した情報を「[再生位置] 投稿者 金額 : コメント」の形に整え、パネルに一覧表示する。金額は緑、投稿者は太字で見分けやすくし、コピーボタンを押すと全件をまとめてクリップボードに入れる。
+      </p>
+      <CodeBlock code={formatSnippet} language="javascript" />
+
+      <h2>注意</h2>
+      <ul>
+        <li>チャットリプレイに読み込まれた分だけが対象。全件取得するには再生して読み込む必要がある。</li>
+        <li>チャットがオフの配信や、リプレイが残っていない動画では取得できない。</li>
+        <li>メンバーシップの加入メッセージなど、スパチャ以外の有料表示は対象外（必要なら要素のセレクタを足す）。</li>
+        <li>YouTubeのDOM構造が変わると動作しなくなる可能性がある。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/youtube-timestamp-bookmarklet/">YouTubeのコメントからタイムスタンプを抽出するブックマークレット</a></li>
+        <li><a href="/tips/youtube-most-replayed-bookmarklet/">YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット</a></li>
+        <li><a href="/tips/youtube-playlist-total-time-bookmarklet/">YouTube再生リストの合計再生時間を計算するブックマークレット</a></li>
+        <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
+        <li><a href="/tips/youtube-thumbnail-download/">YouTubeのサムネイル画像を取得・保存する方法</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>YouTubeアーカイブのスーパーチャットだけを一覧で見るには？</dt>
+        <dd>ブックマークレットを使うと、チャットリプレイに表示されたスーパーチャットだけを抽出し、投稿者・金額・コメント・再生位置を一覧表示できる。チャットを再生して読み込んだ分が対象になる。</dd>
+        <dt>スーパーチャットが少ししか出ないのはなぜ？</dt>
+        <dd>チャットリプレイは動画の再生に合わせて少しずつ読み込まれる。最初は冒頭付近の分しか表示されないので、再生を進めるかチャット欄をスクロールして読み込むと、抽出できる件数が増える。</dd>
+        <dt>配信中のライブでも使える？</dt>
+        <dd>アーカイブのチャットリプレイを想定している。配信中のライブチャットでも同じ仕組みで動くが、新しいスーパーチャットは流れてきた分だけが対象になる。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>

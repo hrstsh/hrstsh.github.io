@@ -1,0 +1,274 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'YouTube再生リストの合計再生時間を計算するブックマークレット - hrの備忘録';
+const description = 'YouTubeの再生リストに表示されない「合計再生時間」を、各動画のサムネイルに出ている時間表記から合算するブックマークレット。本数・平均・1.5倍速などの所要時間も表示。URLの貼り付け不要、開いているページでワンクリック。';
+const path = '/tips/youtube-playlist-total-time-bookmarklet';
+const faqItems = [
+  {
+    question: 'YouTubeの再生リストの合計時間を調べるには？',
+    answer: 'ブックマークレットを使うと、再生リストのページで各動画の長さを合算して合計再生時間を表示できる。すべての動画を読み込んでからクリックするだけで、本数や平均の長さも分かる。',
+  },
+  {
+    question: '合計時間が実際より短く出るのはなぜ？',
+    answer: 'YouTubeは画面に表示された分の動画だけを読み込む。リストが長いと下のほうが未読み込みのことがあるので、最後までスクロールしてから実行すると全件が合算される。',
+  },
+  {
+    question: '倍速で見たときの所要時間も分かる？',
+    answer: '合計時間に加えて1.25倍・1.5倍・2倍で再生した場合の所要時間も表示する。講座やまとめ再生リストを倍速で消化するときの目安に使える。',
+  },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
+
+const parseSnippet = `// "12:34" や "1:02:03" を秒数に変換する
+function toSec(t) {
+  const p = t.trim().split(':').map(Number);
+  if (p.some(isNaN)) return 0;
+  return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
+}`;
+
+const collectSnippet = `// サムネイル右下の再生時間バッジを集める
+const badges = document.querySelectorAll('ytd-thumbnail-overlay-time-status-renderer');
+
+let total = 0, count = 0;
+badges.forEach((b) => {
+  const text = b.textContent.trim();
+  if (!/^\\d+(:\\d+)+$/.test(text)) return; // "ライブ" などを除外
+  total += toSec(text);
+  count++;
+});`;
+
+const formatSnippet = `// 秒数を「3時間12分5秒」の形に整える
+function fmt(sec) {
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return (h ? h + '時間' : '') + (m ? m + '分' : '') + s + '秒';
+}
+
+const lines = [
+  '本数: ' + count + '本',
+  '合計: ' + fmt(total),
+  '平均: ' + fmt(total / count),
+  '1.25倍速: ' + fmt(total / 1.25),
+  '1.5倍速: ' + fmt(total / 1.5),
+  '2倍速: ' + fmt(total / 2),
+];`;
+
+const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com')){alert('YouTubeの再生リストのページで実行してください');return;}function toSec(t){var p=t.trim().split(':').map(Number);if(p.some(isNaN))return 0;return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}function fmt(sec){sec=Math.round(sec);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h?h+'時間':'')+(m?m+'分':'')+s+'秒';}var badges=document.querySelectorAll('ytd-thumbnail-overlay-time-status-renderer'),total=0,count=0;badges.forEach(function(b){var t=b.textContent.trim();if(!/^\\d+(:\\d+)+$/.test(t))return;total+=toSec(t);count++;});if(!count){alert('動画の長さが見つかりません。再生リストのページを開き、リストを下までスクロールして読み込んでから実行してください。');return;}var lines=['本数: '+count+'本','合計: '+fmt(total),'平均: '+fmt(total/count),'1.25倍速: '+fmt(total/1.25),'1.5倍速: '+fmt(total/1.5),'2倍速: '+fmt(total/2)];var text=lines.join('\\n');var o=document.getElementById('yt-pl-panel');if(o){o.remove();return;}var p=document.createElement('div');p.id='yt-pl-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:300px;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:14px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='再生リストの合計時間';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var body=document.createElement('div');body.style.cssText='line-height:1.9;color:#333';lines.forEach(function(l){var row=document.createElement('div');var i=l.indexOf(':');var k=document.createElement('span');k.style.cssText='color:#888;display:inline-block;min-width:84px';k.textContent=l.slice(0,i);var v=document.createElement('span');v.style.cssText='font-weight:bold';v.textContent=l.slice(i+1).trim();row.appendChild(k);row.appendChild(v);body.appendChild(row);});p.appendChild(body);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(text).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>YouTube再生リストの合計再生時間を計算するブックマークレット</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        YouTubeの再生リストには、動画の本数は表示されても「全部で何時間あるか」は表示されない。講座や解説シリーズを再生リストにまとめたとき、「これ全部見るのに何時間かかる？」を知りたくなることはよくある。外部サイトに再生リストのURLを貼り付けて計算するサービスもあるが、いま開いているページでワンクリックで済むほうが手軽だ。このブックマークレットは、各動画のサムネイル右下に出ている時間表記を読み取って合算し、合計・平均・倍速時の所要時間をまとめて表示する。
+      </p>
+
+      <h2>ブックマークレット</h2>
+      <p>
+        次のコードをブックマークのURL欄に設定する。
+      </p>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h2>登録手順</h2>
+      <ol>
+        <li>ブックマークバーを右クリックして、新しいブックマークを作る</li>
+        <li>名前を「合計時間」など分かりやすいものにする</li>
+        <li>URL欄に上のコードを貼り付けて保存する</li>
+      </ol>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>再生リストのページ（<code>youtube.com/playlist?list=...</code>）を開く</li>
+        <li>リストの最後までスクロールして、すべての動画を読み込む</li>
+        <li>ブックマークレットをクリックする</li>
+        <li>右側に本数・合計時間・平均・倍速時の所要時間が表示される</li>
+        <li>コピーボタンで結果をクリップボードに取得できる</li>
+        <li>もう一度クリックするとパネルが閉じる</li>
+      </ol>
+
+      <p>
+        動画ページ右側に出る再生リストのパネル上でも動くが、読み込まれている動画だけが対象になる。正確に出したいときは再生リスト専用ページで最後までスクロールしてから実行するとよい。
+      </p>
+
+      <h2>どう動いているか</h2>
+      <p>
+        まず、各動画のサムネイル右下に出ている再生時間バッジ（<code>ytd-thumbnail-overlay-time-status-renderer</code>）をすべて集める。バッジの文字列は <code>12:34</code> や <code>1:02:03</code> の形なので、コロンで分割して秒数に変換する。
+      </p>
+      <CodeBlock code={parseSnippet} language="javascript" />
+
+      <p>
+        ライブ配信中のものには「ライブ」と表示されるなど時間以外のバッジもあるため、<code>数字:数字</code> の形にマッチするものだけを合算対象にしている。あわせて本数も数えておく。
+      </p>
+      <CodeBlock code={collectSnippet} language="javascript" />
+
+      <p>
+        最後に、合計秒数を「◯時間◯分◯秒」の形に整え、平均と倍速時の所要時間を並べて表示する。倍速で見る人向けに、1.25倍・1.5倍・2倍で再生した場合の所要時間も計算している。
+      </p>
+      <CodeBlock code={formatSnippet} language="javascript" />
+
+      <h2>注意</h2>
+      <ul>
+        <li>画面に読み込まれた動画だけが対象。リストが長い場合は最後までスクロールしてから実行する。</li>
+        <li>非公開・削除された動画は時間バッジが出ないため合算されない。</li>
+        <li>ライブ配信中の動画は時間が確定しないため除外される。</li>
+        <li>YouTubeのDOM構造が変わると動作しなくなる可能性がある。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/youtube-timestamp-bookmarklet/">YouTubeのコメントからタイムスタンプを抽出するブックマークレット</a></li>
+        <li><a href="/tips/youtube-most-replayed-bookmarklet/">YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット</a></li>
+        <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
+        <li><a href="/tips/youtube-thumbnail-download/">YouTubeのサムネイル画像を取得・保存する方法</a></li>
+        <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>YouTubeの再生リストの合計時間を調べるには？</dt>
+        <dd>ブックマークレットを使うと、再生リストのページで各動画の長さを合算して合計再生時間を表示できる。すべての動画を読み込んでからクリックするだけで、本数や平均の長さも分かる。</dd>
+        <dt>合計時間が実際より短く出るのはなぜ？</dt>
+        <dd>YouTubeは画面に表示された分の動画だけを読み込む。リストが長いと下のほうが未読み込みのことがあるので、最後までスクロールしてから実行すると全件が合算される。</dd>
+        <dt>倍速で見たときの所要時間も分かる？</dt>
+        <dd>合計時間に加えて1.25倍・1.5倍・2倍で再生した場合の所要時間も表示する。講座やまとめ再生リストを倍速で消化するときの目安に使える。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>
