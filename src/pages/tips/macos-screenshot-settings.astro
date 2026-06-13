@@ -25,6 +25,9 @@ const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description,
       <p>
         macOS のスクリーンショットは初期設定だとデスクトップに溜まっていく。<code>defaults write</code> コマンドで、保存先・ファイル形式・影の有無を変えられる。撮るたびにデスクトップが散らかる問題はこれで解決する。
       </p>
+      <p>
+        ここで使う <code>defaults</code> は、各アプリの設定を保存している macOS のデータベースを読み書きするコマンド。<code>com.apple.screencapture</code> はスクリーンショット機能の設定をまとめた識別子で、ここに値を書き込むと挙動が変わる。システム設定の画面には項目が用意されていない調整も、このコマンドからなら変えられる。
+      </p>
 
       <h2>保存先を変える</h2>
       <p>
@@ -67,6 +70,26 @@ killall SystemUIServer</code></pre>
         これで「shot 2026-05-31 ...」のような名前になる。
       </p>
 
+      <h2>撮影後のサムネイルを出さない</h2>
+      <p>
+        撮影すると画面の右下に小さなサムネイルがしばらく残り、それが消えるまで保存が確定しない。これを切ると、撮った瞬間にファイルとして保存されるようになる。
+      </p>
+      <pre><code class="language-bash">defaults write com.apple.screencapture show-thumbnail -bool false
+killall SystemUIServer</code></pre>
+      <p>
+        サムネイルを戻すなら <code>-bool true</code> にする。続けて何枚も撮るときは、切っておくとテンポよく保存できる。
+      </p>
+
+      <h2>ファイル名から日時を消す</h2>
+      <p>
+        初期設定ではファイル名に撮影日時が入る。これを省くと、日時のない短い名前で保存できる。
+      </p>
+      <pre><code class="language-bash">defaults write com.apple.screencapture include-date -bool false
+killall SystemUIServer</code></pre>
+      <p>
+        これで「スクリーンショット.png」のような名前になり、同名のファイルがあれば末尾に連番が付く。日時を戻すなら <code>-bool true</code> にする。
+      </p>
+
       <h2>設定を元に戻す</h2>
       <p>
         変更した設定を初期状態に戻すには <code>delete</code> を使う。
@@ -75,6 +98,13 @@ killall SystemUIServer</code></pre>
 defaults delete com.apple.screencapture type
 defaults delete com.apple.screencapture disable-shadow
 killall SystemUIServer</code></pre>
+
+      <h2>うまく反映されないときは</h2>
+      <ul>
+        <li>変更しても効かないときは <code>killall SystemUIServer</code> を実行し忘れていることがほとんど。設定は書き込んだだけでは反映されず、このコマンドで再読み込みして初めて効く。</li>
+        <li>保存先には実在するフォルダを指定する。存在しないフォルダを指定すると、撮影してもファイルが見当たらなくなる。先に <code>mkdir -p</code> で作っておく。</li>
+        <li>挙動がおかしくなったら、<code>defaults delete</code> で該当のキーを消すと初期状態に戻せる。</li>
+      </ul>
 
       <h2>関連記事</h2>
       <ul>

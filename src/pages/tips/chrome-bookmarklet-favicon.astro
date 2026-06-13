@@ -72,11 +72,18 @@ const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description,
         <li>ファビコンは「そのアイコンが出ているページを1つブックマークする」だけで足りる。画像を自分で用意しなくていい。</li>
         <li>エクスポートした HTML では、アイコンが <code>data:image/png;base64,...</code> や <code>https://...</code> で <code>ICON</code> に入っている。</li>
         <li>ブックマークレットは <code>javascript:</code> のままなので、クリック時の動きは変わらない。</li>
+        <li>好きな画像をアイコンにしたいときは、その画像を <code>data:image/png;base64,...</code> 形式に変換し、同じように <code>ICON="..."</code> の値として貼り付ければいい。</li>
       </ul>
 
       <h2>注意</h2>
       <ul>
         <li>インポートで既存と重なったりフォルダ構成が変わることがある。心配ならエクスポート前にバックアップか、テスト用フォルダで試すといい。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/meta-info-viewer-bookmarklet/">ページのメタ情報を見やすく表示＆コピーするブックマークレット</a></li>
+        <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
       </ul>
 
       <h2>よくある質問</h2>

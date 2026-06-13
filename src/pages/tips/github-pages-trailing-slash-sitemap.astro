@@ -92,10 +92,16 @@ const pathToUrlSnippet = `function pathToUrl(path) {
         ルート <code>/</code> だけは二重スラッシュにならないよう分けている。別のジェネレータを使う場合も、出力 URL を本番で開いて最終表示と突き合わせておくとよい。
       </p>
 
+      <h2>どちらに統一するか</h2>
+      <p>
+        末尾スラッシュは、付ける方針（<code>always</code>）でも付けない方針（<code>never</code>）でも、サイト全体で揃ってさえいれば問題ない。大事なのは方向ではなく、ページ・canonical・サイトマップの三つが同じ形を指していることになる。ただし GitHub Pages は <code>/path/index.html</code> を配信する都合で末尾スラッシュ付きに着地しやすいため、無理に <code>never</code> へ寄せるより <code>always</code> に合わせるほうが衝突が少ない。書き換えを細かく制御できるホスティングなら、どちらに寄せても構わない。
+      </p>
+
       <h2>デプロイ後の確認</h2>
       <ul>
         <li>任意の記事ページを開き、アドレスバーが末尾スラッシュ付きになっているか</li>
         <li>公開中のサイトマップの <code>&lt;loc&gt;</code> がそれと同じ形式か</li>
+        <li>コマンドで確かめるなら <code>curl -I https://example.com/foo/bar</code> を実行し、<code>301</code> と <code>location</code> ヘッダで最終的にどの URL へ着地するかを見る</li>
         <li>Search Console の URL 検査で、選んだ URL が「インデックス登録済み」に落ち着くか（反映は数日かかることもある）</li>
       </ul>
 
