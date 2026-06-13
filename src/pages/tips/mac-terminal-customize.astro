@@ -52,6 +52,12 @@ nano ~/.zshrc
 
 # 3) 反映
 source ~/.zshrc`;
+
+const colorList = `# 256色の番号と実際の色を並べて確認する
+for i in {0..255}; do
+  print -Pn "%F{$i}$i %f"
+done
+print`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -64,40 +70,79 @@ source ~/.zshrc`;
 
     <article class="article-body">
       <p>
-        自分の Mac で使っている <code>~/.zshrc</code> の設定をベースに、
-        Terminal の表示を整える方法。テーマや外部ツールなしで、
-        「ディレクトリ・Gitブランチ・日時・プロンプト文字」を出す。
+        macOS の Terminal は標準のままだと、プロンプトにユーザー名とホスト名が出るだけで、
+        今どのディレクトリにいるのか、Git のどのブランチで作業しているのかが画面から分からない。
+        ディレクトリを深く潜ったときや、ブランチを切り替えながら直していると、
+        うっかり別の場所でコマンドを打ってしまう事故が起きやすい。
+      </p>
+      <p>
+        そこで <code>~/.zshrc</code> を書き換えて、カレントディレクトリと Git ブランチ、日時を
+        プロンプトに常時出すようにした。テーマフレームワークや外部ツールは入れず、
+        zsh が元から持っている機能だけで完結させている。Oh My Zsh のような仕組みを足さず、
+        できるだけ素の状態を保ちたい人向けの設定。
       </p>
 
       <h2>この設定で変わるところ</h2>
       <ul>
-        <li>コマンド入力の前に1行空けて見やすくする</li>
-        <li>左側にカレントディレクトリを表示</li>
-        <li>右側に Git ブランチ名を表示（Git管理下のみ）</li>
-        <li>入力プロンプトを好きな文字列に変更</li>
-        <li>右側に日時を表示</li>
+        <li>コマンド入力の前に1行空けて、直前の出力と入力行の境目を見やすくする</li>
+        <li>左側にカレントディレクトリを表示する</li>
+        <li>右側に Git ブランチ名を表示する。Git 管理下のディレクトリだけで出る</li>
+        <li>入力プロンプトを好きな文字列に変える</li>
+        <li>右端に日時を表示して、1秒ごとに更新する</li>
       </ul>
 
       <h2>手順</h2>
-      <p>まずはバックアップしてから <code>~/.zshrc</code> を編集する。</p>
+      <p>
+        設定を間違えるとシェルの起動時にエラーが出ることがあるので、先に <code>~/.zshrc</code> を
+        バックアップしてから編集する。おかしくなってもバックアップを戻せば元の状態に戻せる。
+      </p>
       <CodeBlock code={backupAndReload} language="shell" />
 
       <h2>設定例（そのまま貼り付け可）</h2>
+      <p>
+        次の内容を <code>~/.zshrc</code> の末尾に貼り付けて <code>source ~/.zshrc</code> すれば反映される。
+      </p>
       <CodeBlock code={zshSnippet} language="shell" />
+
+      <h2>何をしているか</h2>
+      <p>
+        要になるのは <code>precmd</code> という関数で、これはプロンプトを表示する直前に zsh が毎回呼ぶ。
+        この中で左側の文字列と右側の文字列を組み立てて、間をスペースで埋めて1行に並べている。
+        ターミナルの横幅 <code>$COLUMNS</code> から左右の表示幅を引いた分だけスペースを入れているので、
+        ウインドウ幅を変えても左寄せと右寄せの見た目を保てる。
+      </p>
+      <ul>
+        <li><code>vcs_info</code> は zsh 標準のバージョン管理情報を取る仕組みで、Git のブランチ名はこれで取得している。先に <code>autoload -Uz vcs_info</code> で読み込んでおく必要がある。</li>
+        <li><code>PROMPT</code> は入力行の先頭に出る文字列、<code>RPROMPT</code> は同じ行の右端に出る文字列で、ここに日時を入れている。</li>
+        <li><code>TMOUT=1</code> と <code>TRAPALRM</code> を組み合わせて、1秒ごとにプロンプトを描き直し、右端の時計を更新している。</li>
+      </ul>
 
       <h2>どこをいじると見た目が変わるか</h2>
       <ul>
-        <li><code>left</code> の中身: 左側の表示（今はディレクトリ）</li>
-        <li><code>right</code> の中身: 右側の表示（今はブランチ）</li>
-        <li><code>PROMPT</code>: 入力行の先頭文字列</li>
-        <li><code>RPROMPT</code>: 右側の表示（今は日時）</li>
+        <li><code>left</code> の中身 … 左側の表示。今はカレントディレクトリ</li>
+        <li><code>right</code> の中身 … 右側の表示。今は Git ブランチ</li>
+        <li><code>PROMPT</code> … 入力行の先頭文字列。先頭の顔文字を別のものに変えてもいい</li>
+        <li><code>RPROMPT</code> … 右端の表示。今は日時</li>
       </ul>
+      <p>
+        文字色は ANSI エスケープシーケンスの 256 色番号で決まる。設定例の中の <code>38;5;</code> に続く
+        数字を変えれば色が変わる。0 から 255 のどの番号がどの色になるかは、次のコマンドを打つと
+        番号と実際の色を並べて確認できる。
+      </p>
+      <CodeBlock code={colorList} language="shell" />
 
       <h2>補足</h2>
       <ul>
         <li>Git ブランチ表示は <code>autoload -Uz vcs_info</code> と <code>vcs_info</code> がポイント。</li>
         <li>色は ANSI エスケープ（<code>\\e[38;5;...m</code>）で指定している。</li>
         <li>もし表示が崩れたら、<code>~/.zshrc.bak</code> を戻せば復旧できる。</li>
+      </ul>
+
+      <h2>つまずきやすいところ</h2>
+      <ul>
+        <li>右端の時計は <code>TMOUT</code> での再描画で更新している。入力せず放置するとシェルを自動で閉じる設定を別に入れていると衝突することがあるので、併用するなら設定の順序に注意する。</li>
+        <li>この設定は zsh 前提で、bash では <code>precmd</code> や <code>vcs_info</code> はそのまま使えない。macOS は Catalina 以降の標準シェルが zsh なので、自分で切り替えていなければそのまま動く。</li>
+        <li>色や桁の表示が崩れたときは、エスケープシーケンスの開始と終了の対応がずれていることが多い。設定例から該当行をコピーし直すと直りやすい。</li>
       </ul>
     </article>
 

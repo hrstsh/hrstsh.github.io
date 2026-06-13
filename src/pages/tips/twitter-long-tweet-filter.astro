@@ -132,7 +132,14 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
 
     <article class="article-body">
       <p>
-        X(Twitter) のタイムラインで長文ツイートだけを隠す Chrome 拡張の作り方。下のファイルをコピペすれば同じように動く。
+        X のタイムラインを流し見していると、考察や連投をまとめた長文ツイートで急に密度が上がって、
+        ざっと眺めたいときには逆に読みにくくなる。短い投稿だけを拾い読みしたいときに、
+        長文ツイートをまとめて隠せると都合がいい。
+      </p>
+      <p>
+        ここではタイムライン上の長文ツイートを自動で非表示にする Chrome 拡張を自作する。
+        ツールバーのアイコンから ON/OFF を切り替えられて、設定はブラウザに保存されるので、
+        次に開いたときも前回の状態が続く。下の4ファイルをそのまま保存すれば同じように動く。
       </p>
 
       <h2>できること</h2>
@@ -151,6 +158,19 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
         <li><code>popup.js</code> … ポップアップのON/OFF処理</li>
         <li><code>icon.png</code> … アイコン（256×256推奨。任意）</li>
       </ul>
+
+      <h2>仕組みの全体像</h2>
+      <p>
+        中心になるのは <code>content.js</code> で、これが X のページに読み込まれてタイムラインを監視する。
+        ツイート1件は <code>article</code> 要素になっていて、その本文の文字数が基準を超えるか、
+        「もっと見る」が付いているものを長文と見なし、<code>display:none</code> で行ごと隠している。
+      </p>
+      <p>
+        タイムラインはスクロールのたびに新しいツイートが後から差し込まれるので、一度きりの処理では追いつかない。
+        そこで <code>MutationObserver</code> でページの変化を監視して、ツイートが増えるたびに判定を走らせている。
+        ON/OFF の状態は <code>chrome.storage</code> に保存し、ポップアップで切り替えると <code>content.js</code> が
+        その変化を受け取って、開いているタブの表示へすぐ反映する。
+      </p>
 
       <h2>manifest.json（全文）</h2>
       <CodeBlock code={manifestCode} language="json" />
@@ -174,10 +194,17 @@ const popupJsCode = `document.addEventListener('DOMContentLoaded', () => {
       </ol>
       <p>X のタブで長文が非表示になり、拡張アイコンから ON/OFF を切り替えられる。</p>
 
-      <h2>補足</h2>
+      <h2>カスタマイズ</h2>
       <ul>
-        <li>長文の基準（140文字）は <code>content.js</code> の <code>MAX_LENGTH</code> を変えればよい。</li>
-        <li>X の DOM（<code>data-testid</code> など）が変わると動かなくなることがある。そのときはセレクタを直す。</li>
+        <li>長文と見なす文字数は <code>content.js</code> の <code>MAX_LENGTH</code> で決めている。140 を増やせば、より長いものだけが対象になる。</li>
+        <li>「もっと見る」が付くツイートも対象に含めているのは、X が一定の長さで本文を折りたたむため。折りたたみの有無だけで判定したいなら、文字数の条件を外して <code>showMoreBtn</code> の有無だけにすればいい。</li>
+      </ul>
+
+      <h2>つまずきやすいところ・注意</h2>
+      <ul>
+        <li>X 側の DOM は予告なく変わる。急に効かなくなったら、<code>article[data-testid="tweet"]</code> や <code>tweetText</code> のセレクタが今も合っているかを確認して直す。</li>
+        <li>判定済みのツイートは <code>dataset</code> に結果を残して使い回している。挙動が変なときはタブをリロードすると、最初から判定し直せる。</li>
+        <li>これは自分のブラウザ上での見え方を変えるだけで、相手の投稿や通知には何も影響しない。手元のタイムラインが読みやすくなるだけのもの。</li>
       </ul>
     </article>
 
