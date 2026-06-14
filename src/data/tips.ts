@@ -10,6 +10,7 @@ export interface TipPost {
 }
 
 export const tipPosts: TipPost[] = [
+  { title: 'macOS の launchctl 完全ガイド', href: '/tips/macos-launchctl/', desc: 'plistの基本構造からbootstrap/bootout、Desktop配下で実行できない問題、SSH経由での操作方法まで。', date: '2026.06' },
   { title: 'YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット', href: '/tips/youtube-most-replayed-bookmarklet/', desc: 'シークバーのグラフのもとになっているデータから、もっとも再生された部分の時刻を数値で抽出する。', date: '2026.06' },
   { title: 'YouTubeのコメントからタイムスタンプを抽出するブックマークレット', href: '/tips/youtube-timestamp-bookmarklet/', desc: 'コメント欄に埋もれたタイムスタンプを一覧取得。時刻とラベルをまとめてコピーできる。', date: '2026.06' },
   { title: 'Chromeで開いている全タブのURLを一括コピーする方法', href: '/tips/chrome-copy-all-tabs/', desc: 'タブを範囲選択して右クリック「リンクをコピー」で全URLをまとめて取得。拡張機能不要。', date: '2026.05' },

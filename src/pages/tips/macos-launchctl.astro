@@ -1,0 +1,477 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'macOS の launchctl 完全ガイド - hrの備忘録';
+const description = 'launchctl で定期実行・常駐処理を設定する基本に加え、Desktop配下のスクリプトが実行できない問題やSSH経由での操作方法など、実際に詰まったポイントをまとめる。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/macos-launchctl', toIsoDate('2026.06'), 'tips');
+
+const plistBasic = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.myjob</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/my-script.sh</string>
+    </array>
+
+    <!-- 実行スケジュール（例：毎日9時） -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- ログ出力先 -->
+    <key>StandardOutPath</key>
+    <string>/tmp/myjob.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/myjob.err</string>
+</dict>
+</plist>`;
+
+const basicCommands = `# ロード（登録）
+launchctl load ~/Library/LaunchAgents/com.example.myjob.plist
+
+# アンロード（解除）
+launchctl unload ~/Library/LaunchAgents/com.example.myjob.plist
+
+# 一覧確認
+launchctl list
+launchctl list | grep com.example
+
+# 手動で即時実行
+launchctl start com.example.myjob
+
+# 停止
+launchctl stop com.example.myjob`;
+
+const bootstrapCommands = `# bootstrap（新しいロード方法）
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.myjob.plist
+
+# bootout（新しいアンロード方法）
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.example.myjob.plist
+
+# 状態確認
+launchctl print gui/$(id -u)/com.example.myjob`;
+
+const desktopProblemBad = `<!-- ~/Desktop/myscript.sh を呼び出す例 -->
+<!-- plistに書いても実行されない、エラーも出ない -->
+<key>ProgramArguments</key>
+<array>
+    <string>/Users/username/Desktop/myscript.sh</string>
+</array>`;
+
+const desktopProblemFix = `# 避けるべき場所
+~/Desktop/myscript.sh
+~/Documents/myscript.sh
+~/Downloads/myscript.sh
+
+# スクリプトを移動する（例）
+mkdir -p ~/bin
+mv ~/Desktop/myscript.sh ~/bin/myscript.sh
+chmod +x ~/bin/myscript.sh
+
+# plist側のパスも合わせて書き換える
+<key>ProgramArguments</key>
+<array>
+    <string>/Users/username/bin/myscript.sh</string>
+</array>`;
+
+const sshCommands = `# 自分のUIDを確認する
+id -u   # → 例: 501
+
+# bootstrap/boutoutはドメインを明示的に指定する
+launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.example.myjob.plist
+launchctl bootout gui/501 ~/Library/LaunchAgents/com.example.myjob.plist
+
+# 状態確認
+launchctl print gui/501/com.example.myjob
+
+# 即時実行（kickstart）
+launchctl kickstart -k gui/501/com.example.myjob
+
+# それでも動かない場合：GUIセッションの有無を確認する
+launchctl print-cache
+who`;
+
+const scheduleExamples = `<!-- 毎日 AM 9:30 -->
+<key>StartCalendarInterval</key>
+<dict>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>30</integer>
+</dict>
+
+<!-- 毎週月曜 AM 10:00（0=日, 1=月, ..., 6=土） -->
+<key>StartCalendarInterval</key>
+<dict>
+    <key>Weekday</key><integer>1</integer>
+    <key>Hour</key><integer>10</integer>
+    <key>Minute</key><integer>0</integer>
+</dict>
+
+<!-- 複数スケジュール（配列で指定） -->
+<key>StartCalendarInterval</key>
+<array>
+    <dict>
+        <key>Hour</key><integer>9</integer>
+        <key>Minute</key><integer>0</integer>
+    </dict>
+    <dict>
+        <key>Hour</key><integer>18</integer>
+        <key>Minute</key><integer>0</integer>
+    </dict>
+</array>
+
+<!-- 一定間隔（秒）で繰り返し。1時間ごと -->
+<key>StartInterval</key>
+<integer>3600</integer>
+
+<!-- ロード時に即実行 -->
+<key>RunAtLoad</key>
+<true/>`;
+
+const debugCommands = `# launchd関連のログをリアルタイムで見る
+log stream --predicate 'subsystem == "com.apple.launchd"' --level debug
+
+# 特定ジョブのログ
+log show --predicate 'processImagePath contains "myscript"' --last 1h
+
+# plistのシンタックスチェック
+plutil -lint ~/Library/LaunchAgents/com.example.myjob.plist
+# → OK: /Users/.../com.example.myjob.plist: OK
+
+# 終了コード確認（listコマンドの2列目）
+launchctl list | grep com.example
+# → -    78    com.example.myjob   ← 78 = エラーあり
+# → -    0     com.example.myjob   ← 0  = 正常終了
+# → 501  -     com.example.myjob   ← 数字 = 実行中のPID`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>macOS の launchctl 完全ガイド</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        macOS で定期実行やバックグラウンド処理を自動化したいとき、<code>launchctl</code> を使う機会があった。
+        cron の代替として macOS 標準の仕組みで完結できるので便利なのだが、いくつか一見わかりにくい挙動に詰まった。
+      </p>
+      <p>
+        ひとつは、スクリプトを <code>~/Desktop</code> に置いたまま plist から呼び出したら何も起きなかった
+        （エラーも出ない）という問題。もうひとつは、SSH でリモート接続した状態から <code>launchctl</code> を
+        操作しようとすると、通常のターミナルと同じコマンドでは動かず、やり方を変える必要があるという問題。
+      </p>
+      <p>
+        どちらも原因がわかってしまえばシンプルなのだが、ドキュメントを読んでも要領を得ず、地味に時間を使った。
+        同じところで詰まる人の助けになるよう、基本的な使い方からハマりやすい箇所までまとめておく。
+      </p>
+
+      <h2>launchctl とは</h2>
+      <p>
+        <code>launchctl</code> は、macOS の起動・常駐プロセス管理システムである <code>launchd</code> を
+        操作するためのコマンド。「決まった時刻にスクリプトを動かしたい」「ログイン時にアプリを起動したい」
+        「常駐プログラムを動かし続けたい」といったことを、<code>plist</code>（XML形式の設定ファイル）と
+        セットで実現する。cron に近い使い方もできるが、cron より細かいスケジュール指定やログ管理ができる
+        macOS 標準の仕組み、という位置づけで考えるとわかりやすい。
+      </p>
+
+      <h2>plist ファイルの基本構造</h2>
+      <p>
+        設定は <code>.plist</code> という XML ファイルに書く。最低限必要なのは「ジョブを識別する
+        <code>Label</code>」と「実行するコマンド・スクリプトを指定する <code>ProgramArguments</code>」で、
+        スケジュールやログ出力先もここに書き込む。
+      </p>
+      <CodeBlock code={plistBasic} language="xml" />
+
+      <h2>plist の配置場所</h2>
+      <p>
+        plist を置く場所によって、誰の権限で・いつから動くジョブになるかが変わる。基本的には
+        <code>~/Library/LaunchAgents/</code> を使うことが多い。
+      </p>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>ディレクトリ</th>
+            <th>対象</th>
+            <th>実行ユーザー</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>~/Library/LaunchAgents/</code></td>
+            <td>ログイン中のユーザー</td>
+            <td>ログインユーザー</td>
+          </tr>
+          <tr>
+            <td><code>/Library/LaunchAgents/</code></td>
+            <td>全ユーザー（要管理者権限）</td>
+            <td>ログインユーザー</td>
+          </tr>
+          <tr>
+            <td><code>/Library/LaunchDaemons/</code></td>
+            <td>システム全体（起動時から）</td>
+            <td>root</td>
+          </tr>
+          <tr>
+            <td><code>/System/Library/LaunchAgents/</code></td>
+            <td>macOS組み込み（触らない）</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>基本コマンド</h2>
+      <p>
+        plist を配置したら、<code>launchctl</code> でロード（登録）・アンロード（解除）する。状態確認や
+        手動実行もこのコマンドから行う。
+      </p>
+      <CodeBlock code={basicCommands} language="shell" />
+      <p>
+        macOS 10.10 Yosemite 以降では、<code>load</code>/<code>unload</code> の代わりに
+        <code>bootstrap</code>/<code>bootout</code> を使う新しい API も用意されている。
+        どのセッション（ドメイン）に対する操作かを明示できるのが特徴で、後述する SSH 経由の操作では
+        こちらを使う必要がある。
+      </p>
+      <CodeBlock code={bootstrapCommands} language="shell" />
+
+      <h2>⚠️ Desktop 配下のスクリプトが実行できない問題</h2>
+      <p>
+        plist の <code>ProgramArguments</code> に <code>~/Desktop</code> 配下のスクリプトを指定しても、
+        ロードはエラーなく成功するのに、スケジュール時刻になっても何も実行されないことがある。
+      </p>
+      <CodeBlock code={desktopProblemBad} language="xml" />
+      <p>
+        原因は macOS Catalina（10.15）以降の TCC（Transparency, Consent, and Control）によるサンドボックス保護。
+        <code>~/Desktop</code>、<code>~/Documents</code>、<code>~/Downloads</code> はアクセスに許可が必要な
+        保護対象フォルダになっており、GUI セッション外で動く <code>launchd</code> はそのままではここに
+        フルアクセスできない。エラーが <code>Operation not permitted</code> として出ることもあれば、
+        何も表示されずに静かに失敗することもある。
+      </p>
+      <p>
+        「システム設定 → プライバシーとセキュリティ → フルディスクアクセス」に <code>launchctl</code> や
+        <code>launchd</code> を追加しても解決しない。確実な対処は、plist が参照するスクリプト自体を
+        保護対象外のディレクトリに移すことになる。
+      </p>
+      <CodeBlock code={desktopProblemFix} language="shell" />
+
+      <h2>⚠️ SSH からの操作で挙動が変わる問題</h2>
+      <p>
+        SSH でリモートログインした状態で <code>launchctl load</code> を実行すると、通常のターミナルとは
+        異なる挙動になることがある。
+      </p>
+      <pre class="error-box"><code>$ launchctl load ~/Library/LaunchAgents/com.example.myjob.plist
+# → "Could not find domain for this service"
+# → "Bootstrap failed: 5: Input/output error"
+# → 何も起きない（無言で失敗）</code></pre>
+      <p>
+        <code>launchctl</code> はセッションの「ドメイン」に紐づいて動作する。GUI ログインセッションは
+        <code>gui/&lt;uid&gt;</code>、SSH のセッションは <code>user/&lt;uid&gt;</code> という別ドメインになっており、
+        <code>LaunchAgents</code> はログイン済みの GUI セッションに対して登録するものなので、SSH からは
+        そのまま操作できない。
+      </p>
+      <p>
+        SSH から操作する場合は、<code>bootstrap</code>/<code>bootout</code>/<code>print</code> で
+        <code>gui/&lt;uid&gt;</code> ドメインを明示的に指定する。どうしても動かない場合は GUI セッション自体が
+        存在するか（誰もログインしていないなど）を確認するか、<code>/Library/LaunchDaemons/</code> に置いて
+        root 権限の LaunchDaemon として動かす方法に切り替える。
+      </p>
+      <CodeBlock code={sshCommands} language="shell" />
+
+      <h2>StartCalendarInterval の書き方パターン</h2>
+      <p>
+        スケジュール指定でよく使うのは <code>StartCalendarInterval</code>。<code>Hour</code> と
+        <code>Minute</code> だけ指定すれば毎日その時刻に実行され、<code>Weekday</code> を加えれば曜日指定もできる。
+        配列で複数指定すれば、1日に複数回のスケジュールも組める。一定間隔で動かしたいだけなら
+        <code>StartInterval</code>（秒数）、ロード時に即実行したいなら <code>RunAtLoad</code> を使う。
+      </p>
+      <CodeBlock code={scheduleExamples} language="xml" />
+
+      <h2>デバッグ・ログ確認</h2>
+      <p>
+        想定どおりに動かないときは、まず plist の文法エラーがないか <code>plutil -lint</code> で確認し、
+        次に <code>launchctl list</code> で終了コードを見る。さらに詳しく追うなら <code>log</code> コマンドで
+        <code>launchd</code> 周りのログをリアルタイムに見るのが確実。
+      </p>
+      <CodeBlock code={debugCommands} language="shell" />
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>終了コード</th>
+            <th>意味</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>0</code></td>
+            <td>正常終了</td>
+          </tr>
+          <tr>
+            <td><code>1</code></td>
+            <td>一般的なエラー</td>
+          </tr>
+          <tr>
+            <td><code>78</code></td>
+            <td>設定エラー（plistの問題が多い）</td>
+          </tr>
+          <tr>
+            <td><code>127</code></td>
+            <td>コマンド・スクリプトが見つからない</td>
+          </tr>
+          <tr>
+            <td><code>Operation not permitted</code></td>
+            <td>権限エラー（TCC・Desktop問題など）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>つまずきやすいところ</h2>
+      <ul>
+        <li>plist が「ロード成功」と表示されても、実体のスクリプトが保護されたフォルダにあると静かに失敗する。エラーが出ないからこそ気づきにくい。</li>
+        <li><code>load</code>/<code>unload</code> と <code>bootstrap</code>/<code>bootout</code> は完全な互換ではない。新しいmacOSでは <code>bootstrap</code>/<code>bootout</code> が推奨される。</li>
+        <li>SSH 経由では <code>gui/&lt;uid&gt;</code> を明示しないと操作対象が見つからない。ローカルのターミナルで動いたコマンドをそのまま SSH 越しに打つとハマりやすい。</li>
+        <li>plist を編集したあとは、一度 <code>bootout</code> してから <code>bootstrap</code> し直さないと変更が反映されない。</li>
+      </ul>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .info-table th,
+  .info-table td {
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  .info-table th {
+    background: rgba(102, 126, 234, 0.08);
+    font-weight: 600;
+  }
+
+  .info-table code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .error-box {
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  .error-box code {
+    background: none;
+    padding: 0;
+    color: #444;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+</style>
