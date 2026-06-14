@@ -13,7 +13,6 @@ export const tipPosts: TipPost[] = [
   { title: 'X(Twitter)のスレッド（連投）を1つのテキストにまとめてコピーするブックマークレット', href: '/tips/twitter-thread-copy-bookmarklet/', desc: 'スレッド主のツイート本文だけを上から順に連結して1つのテキストにコピー。1ツイートずつコピーする手間をなくす。', date: '2026.06' },
   { title: 'YouTube再生リストの合計再生時間を計算するブックマークレット', href: '/tips/youtube-playlist-total-time-bookmarklet/', desc: '各動画の時間表記を合算して合計・平均・倍速時の所要時間を表示。URL貼り付け不要でワンクリック。', date: '2026.06' },
   { title: 'HTMLの表をTSV/CSVとしてコピーするブックマークレット', href: '/tips/html-table-tsv-csv-copy-bookmarklet/', desc: 'ページ上の表をクリックで選んでTSV/CSVでコピー。Excel・スプレッドシートに崩れず貼り付けられる。', date: '2026.06' },
-  { title: 'YouTubeアーカイブのチャットリプレイからスーパーチャットだけ抽出するブックマークレット', href: '/tips/youtube-superchat-extractor-bookmarklet/', desc: 'チャットリプレイのスーパーチャットだけを抽出。投稿者・金額・コメント・再生位置をまとめて取得できる。', date: '2026.06' },
   { title: 'YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット', href: '/tips/youtube-most-replayed-bookmarklet/', desc: 'シークバーのグラフのもとになっているデータから、もっとも再生された部分の時刻を数値で抽出する。', date: '2026.06' },
   { title: 'YouTubeのコメントからタイムスタンプを抽出するブックマークレット', href: '/tips/youtube-timestamp-bookmarklet/', desc: 'コメント欄に埋もれたタイムスタンプを一覧取得。時刻とラベルをまとめてコピーできる。', date: '2026.06' },
   { title: 'Chromeで開いている全タブのURLを一括コピーする方法', href: '/tips/chrome-copy-all-tabs/', desc: 'タブを範囲選択して右クリック「リンクをコピー」で全URLをまとめて取得。拡張機能不要。', date: '2026.05' },
