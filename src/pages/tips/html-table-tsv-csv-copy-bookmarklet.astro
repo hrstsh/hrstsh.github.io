@@ -1,0 +1,268 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'HTMLの表をTSV/CSVとしてコピーするブックマークレット（Excel・スプレッドシートに崩れず貼り付け） - hrの備忘録';
+const description = 'Webページ上のHTMLテーブルをクリックで選んで、TSV（タブ区切り）またはCSVとしてクリップボードにコピーするブックマークレット。Excelやスプレッドシートにセル単位できれいに貼り付けられる。外部サービス不要・特定サイトに依存しない。';
+const path = '/tips/html-table-tsv-csv-copy-bookmarklet';
+const faqItems = [
+  {
+    question: 'Webページの表をExcelにきれいに貼り付けるには？',
+    answer: 'ブックマークレットで表をTSV（タブ区切り）としてコピーすると、Excelやスプレッドシートにそのまま貼り付けたときにセル単位で正しく分かれる。ページからドラッグでコピーすると崩れやすいのを防げる。',
+  },
+  {
+    question: 'TSVとCSVはどちらを使えばいい？',
+    answer: 'Excelやスプレッドシートにそのまま貼り付けるならタブ区切りのTSVが確実。ファイルとして保存したり他のツールに渡すならCSVが向く。セル内にカンマを含む表ではTSVのほうが崩れにくい。',
+  },
+  {
+    question: '特定のサイトでしか使えない？',
+    answer: '標準のHTMLテーブル（table要素）を対象にしているため、サイトを問わず使える。ページ上に複数の表があるときは、コピーしたい表をクリックして選ぶ。',
+  },
+];
+const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'), faqPage(faqItems, path)];
+
+const cellSnippet = `// 1つの表を二次元配列に変換する
+function tableToRows(table) {
+  return [...table.rows].map((tr) =>
+    [...tr.cells].map((cell) => {
+      // セル内の改行・タブは半角スペースに置換しておく
+      return cell.innerText.replace(/[\\t\\r\\n]+/g, ' ').trim();
+    })
+  );
+}`;
+
+const formatSnippet = `// TSV（タブ区切り）はそのまま連結するだけ
+function toTSV(rows) {
+  return rows.map((r) => r.join('\\t')).join('\\n');
+}
+
+// CSVはカンマ・引用符・改行を含むセルを "..." で囲む
+function toCSV(rows) {
+  return rows.map((r) =>
+    r.map((c) => /[",\\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c).join(',')
+  ).join('\\n');
+}`;
+
+const pickSnippet = `// 表が複数あるときはクリックで選べるようにする
+const tables = [...document.querySelectorAll('table')];
+
+tables.forEach((t) => {
+  t.style.outline = '2px solid #667eea';
+  t.style.cursor = 'pointer';
+  t.addEventListener('click', onPick, { once: true });
+});`;
+
+const bookmarkletCode = `javascript:(function(){var mode=confirm('OK=TSV（Excel/スプレッドシート向け）, キャンセル=CSV')?'tsv':'csv';function cell(c){return c.innerText.replace(/[\\t\\r\\n]+/g,' ').trim();}function rows(t){return [].map.call(t.rows,function(tr){return [].map.call(tr.cells,cell);});}function tsv(r){return r.map(function(x){return x.join('\\t');}).join('\\n');}function csv(r){return r.map(function(x){return x.map(function(c){return /[\",\\n]/.test(c)?'\"'+c.replace(/\"/g,'\"\"')+'\"':c;}).join(',');}).join('\\n');}function out(t){var r=rows(t);if(!r.length){alert('この表には行がありません');return;}var text=mode==='tsv'?tsv(r):csv(r);navigator.clipboard.writeText(text).then(function(){toast(r.length+'行を'+mode.toUpperCase()+'でコピーしました');}).catch(function(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(r.length+'行を'+mode.toUpperCase()+'でコピーしました');}catch(e){toast('コピーに失敗しました');}ta.remove();});}function toast(m){var d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#667eea;color:#fff;padding:8px 16px;border-radius:4px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(function(){d.remove();},2000);}var tables=[].slice.call(document.querySelectorAll('table'));if(!tables.length){alert('このページには表（table要素）が見つかりませんでした');return;}if(tables.length===1){out(tables[0]);return;}function clear(){tables.forEach(function(t){t.style.outline='';t.style.cursor='';t.removeEventListener('click',pick,true);});}function pick(e){e.preventDefault();e.stopPropagation();var t=e.currentTarget;clear();out(t);}tables.forEach(function(t){t.style.outline='2px solid #667eea';t.style.cursor='pointer';t.addEventListener('click',pick,true);});toast('コピーしたい表をクリックしてください（'+tables.length+'個）');})();`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>HTMLの表をTSV/CSVとしてコピーするブックマークレット</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        Webページに載っている表（料金表、比較表、ランキングなど）をExcelやスプレッドシートに取り込みたいとき、範囲選択してそのままコピー＆ペーストすると、セルがずれたり1つのセルに全部入ってしまったりして崩れることがある。サイトのスタイルや余計な装飾が混ざるのが原因だ。このブックマークレットは、ページ上のHTMLテーブルをクリックで選んで、TSV（タブ区切り）またはCSVとしてクリップボードに入れる。タブ区切りで貼り付けるとセル単位できれいに分かれるので、表計算ソフトへの取り込みが一気に楽になる。特定のサービスに依存しないので、どんなサイトの表でも使える。
+      </p>
+
+      <h2>ブックマークレット</h2>
+      <p>
+        次のコードをブックマークのURL欄に設定する。
+      </p>
+      <CodeBlock code={bookmarkletCode} language="javascript" />
+
+      <h2>登録手順</h2>
+      <ol>
+        <li>ブックマークバーを右クリックして、新しいブックマークを作る</li>
+        <li>名前を「表をコピー」など分かりやすいものにする</li>
+        <li>URL欄に上のコードを貼り付けて保存する</li>
+      </ol>
+
+      <h2>使い方</h2>
+      <ol>
+        <li>表のあるページでブックマークレットをクリックする</li>
+        <li>形式を聞かれるので、Excel・スプレッドシート向けなら「OK」（TSV）、ファイル保存などには「キャンセル」（CSV）を選ぶ</li>
+        <li>ページに表が1つだけならそのままコピーされる</li>
+        <li>表が複数あるときは枠が青くハイライトされるので、コピーしたい表をクリックする</li>
+        <li>「◯行をコピーしました」と表示されたら、Excelやスプレッドシートに貼り付ける</li>
+      </ol>
+
+      <p>
+        TSVを貼り付けると、表計算ソフト側がタブを列の区切りとして解釈するため、セルがきれいに分かれる。CSVはファイルとして保存したり、他のツールにデータを渡したりするときに向く。
+      </p>
+
+      <h2>どう動いているか</h2>
+      <p>
+        まず、表（<code>table</code> 要素）を二次元配列に変換する。各行（<code>tr</code>）の各セル（<code>td</code> / <code>th</code>）からテキストを取り出すだけだが、セル内に改行やタブが入っていると区切りが崩れるので、半角スペースに置き換えておく。
+      </p>
+      <CodeBlock code={cellSnippet} language="javascript" />
+
+      <p>
+        TSVは各セルをタブ、各行を改行でつなぐだけで完成する。CSVの場合は、セルにカンマ・引用符・改行が含まれていると区切りが壊れるため、その場合だけ全体をダブルクォートで囲み、セル内の <code>"</code> は <code>""</code> にエスケープする（RFC 4180 の方式）。
+      </p>
+      <CodeBlock code={formatSnippet} language="javascript" />
+
+      <p>
+        ページに表が複数あるときは、すべての表に青い枠を付けてクリックできるようにし、選ばれた表だけを変換する。クリック時にはリンク遷移などを止めたいので、イベントをキャプチャ段階で受け取って <code>preventDefault()</code> している。
+      </p>
+      <CodeBlock code={pickSnippet} language="javascript" />
+
+      <h2>注意</h2>
+      <ul>
+        <li>標準の <code>table</code> 要素が対象。<code>div</code> を並べて見た目だけ表にしているレイアウトは取得できない。</li>
+        <li>結合セル（<code>colspan</code> / <code>rowspan</code>）はそのままの並びで出力されるため、複雑な表では列がずれることがある。</li>
+        <li>セル内の改行は半角スペースに置き換わる。元の改行を保ちたい用途には向かない。</li>
+        <li>クリップボードへの書き込みがブロックされた環境では、一時的なテキストエリア経由でコピーを試みる。</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/page-images-bookmarklet/">ページ内の画像を一覧表示・一括取得するブックマークレット</a></li>
+        <li><a href="/tips/meta-info-viewer-bookmarklet/">ページのメタ情報を見やすく表示&コピーするブックマークレット</a></li>
+        <li><a href="/tips/chrome-copy-all-tabs/">Chromeで開いている全タブのURLを一括コピーする方法</a></li>
+        <li><a href="/tips/chrome-bookmarklet-favicon/">Chromeのブックマークレットにアイコン（ファビコン）を追加する</a></li>
+        <li><a href="/tools/styled-text-replacer/">スタイル付きテキスト置換ツール</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>Webページの表をExcelにきれいに貼り付けるには？</dt>
+        <dd>ブックマークレットで表をTSV（タブ区切り）としてコピーすると、Excelやスプレッドシートにそのまま貼り付けたときにセル単位で正しく分かれる。ページからドラッグでコピーすると崩れやすいのを防げる。</dd>
+        <dt>TSVとCSVはどちらを使えばいい？</dt>
+        <dd>Excelやスプレッドシートにそのまま貼り付けるならタブ区切りのTSVが確実。ファイルとして保存したり他のツールに渡すならCSVが向く。セル内にカンマを含む表ではTSVのほうが崩れにくい。</dd>
+        <dt>特定のサイトでしか使えない？</dt>
+        <dd>標準のHTMLテーブル（table要素）を対象にしているため、サイトを問わず使える。ページ上に複数の表があるときは、コピーしたい表をクリックして選ぶ。</dd>
+      </dl>
+
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>
