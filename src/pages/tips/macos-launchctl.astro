@@ -3,24 +3,28 @@ import Layout from '../../layouts/Layout.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
-const title = 'macOS の launchctl 完全ガイド - hrの備忘録';
-const description = 'launchctl で定期実行・常駐処理を設定する基本に加え、Desktop配下のスクリプトが実行できない問題やSSH経由での操作方法など、実際に詰まったポイントをまとめる。';
+const title = 'launchctl の使い方 - hrの備忘録';
+const description = 'macOS で定期実行・常駐処理を設定する launchctl の使い方を、初めて触る人向けに解説。plist の全キーと取りうる値、配置場所、基本コマンド、bootstrap/bootout、デバッグ方法までまとめる。';
 const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/macos-launchctl', toIsoDate('2026.06'), 'tips');
 
-const plistBasic = `<?xml version="1.0" encoding="UTF-8"?>
+const plistFull = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!-- ジョブを識別する一意な名前（必須） -->
     <key>Label</key>
     <string>com.example.myjob</string>
 
+    <!-- 実行するコマンドと引数。1要素目が実行ファイル -->
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/my-script.sh</string>
+        <string>--option</string>
+        <string>value</string>
     </array>
 
-    <!-- 実行スケジュール（例：毎日9時） -->
+    <!-- 実行スケジュール（毎日9時0分） -->
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
@@ -29,7 +33,18 @@ const plistBasic = `<?xml version="1.0" encoding="UTF-8"?>
         <integer>0</integer>
     </dict>
 
-    <!-- ログ出力先 -->
+    <!-- 実行時のカレントディレクトリ -->
+    <key>WorkingDirectory</key>
+    <string>/usr/local/var/myjob</string>
+
+    <!-- 環境変数を渡す -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- 標準出力・標準エラーの書き出し先 -->
     <key>StandardOutPath</key>
     <string>/tmp/myjob.log</string>
     <key>StandardErrorPath</key>
@@ -37,70 +52,75 @@ const plistBasic = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>`;
 
-const basicCommands = `# ロード（登録）
+const plistMinimal = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.example.hello</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/echo</string>
+        <string>hello launchd</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/hello.log</string>
+</dict>
+</plist>`;
+
+const basicCommands = `# ロード（plistをlaunchdに登録する）
 launchctl load ~/Library/LaunchAgents/com.example.myjob.plist
 
-# アンロード（解除）
+# アンロード（登録を解除する）
 launchctl unload ~/Library/LaunchAgents/com.example.myjob.plist
 
-# 一覧確認
+# 登録済みジョブの一覧を見る
 launchctl list
+
+# Label でしぼり込む
 launchctl list | grep com.example
 
-# 手動で即時実行
+# スケジュールを待たずに今すぐ実行する
 launchctl start com.example.myjob
 
-# 停止
+# 実行中のジョブを止める
 launchctl stop com.example.myjob`;
 
-const bootstrapCommands = `# bootstrap（新しいロード方法）
+const firstJobSteps = `# 1) フォルダが無ければ作る
+mkdir -p ~/Library/LaunchAgents
+
+# 2) 上の最小plistを com.example.hello.plist として保存
+#    （Label と同じ名前にするのが慣習）
+
+# 3) 文法チェック（OK が出れば書式は正しい）
+plutil -lint ~/Library/LaunchAgents/com.example.hello.plist
+
+# 4) ロード（RunAtLoad が true なのでロード時に1回実行される）
+launchctl load ~/Library/LaunchAgents/com.example.hello.plist
+
+# 5) 結果を確認
+cat /tmp/hello.log
+
+# 6) 後片付け（登録を解除する）
+launchctl unload ~/Library/LaunchAgents/com.example.hello.plist`;
+
+const bootstrapCommands = `# bootstrap（load に相当・ドメインを明示する）
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.myjob.plist
 
-# bootout（新しいアンロード方法）
+# bootout（unload に相当）
 launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.example.myjob.plist
 
-# 状態確認
-launchctl print gui/$(id -u)/com.example.myjob`;
+# ジョブの詳細な状態を見る（終了コード・実行状況など）
+launchctl print gui/$(id -u)/com.example.myjob
 
-const desktopProblemBad = `<!-- ~/Desktop/myscript.sh を呼び出す例 -->
-<!-- plistに書いても実行されない、エラーも出ない -->
-<key>ProgramArguments</key>
-<array>
-    <string>/Users/username/Desktop/myscript.sh</string>
-</array>`;
-
-const desktopProblemFix = `# 避けるべき場所
-~/Desktop/myscript.sh
-~/Documents/myscript.sh
-~/Downloads/myscript.sh
-
-# スクリプトを移動する（例）
-mkdir -p ~/bin
-mv ~/Desktop/myscript.sh ~/bin/myscript.sh
-chmod +x ~/bin/myscript.sh
-
-# plist側のパスも合わせて書き換える
-<key>ProgramArguments</key>
-<array>
-    <string>/Users/username/bin/myscript.sh</string>
-</array>`;
-
-const sshCommands = `# 自分のUIDを確認する
-id -u   # → 例: 501
-
-# bootstrap/boutoutはドメインを明示的に指定する
-launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.example.myjob.plist
-launchctl bootout gui/501 ~/Library/LaunchAgents/com.example.myjob.plist
-
-# 状態確認
-launchctl print gui/501/com.example.myjob
-
-# 即時実行（kickstart）
-launchctl kickstart -k gui/501/com.example.myjob
-
-# それでも動かない場合：GUIセッションの有無を確認する
-launchctl print-cache
-who`;
+# 今すぐ実行する（再起動つき）
+launchctl kickstart -k gui/$(id -u)/com.example.myjob`;
 
 const scheduleExamples = `<!-- 毎日 AM 9:30 -->
 <key>StartCalendarInterval</key>
@@ -109,7 +129,7 @@ const scheduleExamples = `<!-- 毎日 AM 9:30 -->
     <key>Minute</key><integer>30</integer>
 </dict>
 
-<!-- 毎週月曜 AM 10:00（0=日, 1=月, ..., 6=土） -->
+<!-- 毎週月曜 AM 10:00（Weekday は 0/7=日曜, 1=月曜 … 6=土曜） -->
 <key>StartCalendarInterval</key>
 <dict>
     <key>Weekday</key><integer>1</integer>
@@ -117,7 +137,15 @@ const scheduleExamples = `<!-- 毎日 AM 9:30 -->
     <key>Minute</key><integer>0</integer>
 </dict>
 
-<!-- 複数スケジュール（配列で指定） -->
+<!-- 毎月1日 AM 0:00 -->
+<key>StartCalendarInterval</key>
+<dict>
+    <key>Day</key><integer>1</integer>
+    <key>Hour</key><integer>0</integer>
+    <key>Minute</key><integer>0</integer>
+</dict>
+
+<!-- 1日に複数回（配列で並べる。9時と18時） -->
 <key>StartCalendarInterval</key>
 <array>
     <dict>
@@ -130,80 +158,427 @@ const scheduleExamples = `<!-- 毎日 AM 9:30 -->
     </dict>
 </array>
 
-<!-- 一定間隔（秒）で繰り返し。1時間ごと -->
+<!-- 一定間隔で繰り返す（StartInterval は秒数。3600=1時間ごと） -->
 <key>StartInterval</key>
-<integer>3600</integer>
+<integer>3600</integer>`;
 
-<!-- ロード時に即実行 -->
-<key>RunAtLoad</key>
-<true/>`;
+const keepAliveExample = `<!-- プロセスが落ちたら自動で再起動する（常駐用） -->
+<key>KeepAlive</key>
+<true/>
 
-const debugCommands = `# launchd関連のログをリアルタイムで見る
-log stream --predicate 'subsystem == "com.apple.launchd"' --level debug
+<!-- 条件つきの再起動（異常終了したときだけ再起動する） -->
+<key>KeepAlive</key>
+<dict>
+    <key>SuccessfulExit</key>
+    <false/>
+</dict>`;
 
-# 特定ジョブのログ
-log show --predicate 'processImagePath contains "myscript"' --last 1h
+const desktopProblemBad = `<!-- ~/Desktop のスクリプトを呼び出す例 -->
+<!-- ロードは成功するのに、実行されない／エラーも出ない -->
+<key>ProgramArguments</key>
+<array>
+    <string>/Users/username/Desktop/myscript.sh</string>
+</array>`;
 
-# plistのシンタックスチェック
+const desktopProblemFix = `# 避けるべき場所（TCC の保護対象）
+~/Desktop/myscript.sh
+~/Documents/myscript.sh
+~/Downloads/myscript.sh
+
+# スクリプトを保護対象外へ移す
+mkdir -p ~/bin
+mv ~/Desktop/myscript.sh ~/bin/myscript.sh
+chmod +x ~/bin/myscript.sh
+
+# plist 側のパスも書き換える
+<key>ProgramArguments</key>
+<array>
+    <string>/Users/username/bin/myscript.sh</string>
+</array>`;
+
+const sshCommands = `# 自分の UID を確認する
+id -u   # → 例: 501
+
+# bootstrap / bootout は gui/<uid> ドメインを明示する
+launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.example.myjob.plist
+launchctl bootout gui/501 ~/Library/LaunchAgents/com.example.myjob.plist
+
+# 状態確認
+launchctl print gui/501/com.example.myjob
+
+# 今すぐ実行
+launchctl kickstart -k gui/501/com.example.myjob
+
+# それでも動かないとき：GUI セッションが存在するか確認する
+who   # ログイン中のセッション一覧（console 行があれば GUI ログイン中）`;
+
+const debugCommands = `# plist の文法チェック（まずこれ）
 plutil -lint ~/Library/LaunchAgents/com.example.myjob.plist
 # → OK: /Users/.../com.example.myjob.plist: OK
 
-# 終了コード確認（listコマンドの2列目）
+# 登録状態と終了コードを見る
 launchctl list | grep com.example
 # → -    78    com.example.myjob   ← 78 = エラーあり
 # → -    0     com.example.myjob   ← 0  = 正常終了
-# → 501  -     com.example.myjob   ← 数字 = 実行中のPID`;
+# → 501  -     com.example.myjob   ← 数字 = 実行中の PID
+
+# ジョブの詳細（最後の終了コード・パスなど）
+launchctl print gui/$(id -u)/com.example.myjob
+
+# launchd 関連のログをリアルタイムで見る
+log stream --predicate 'subsystem == "com.apple.launchd"' --level debug
+
+# 過去ログをさかのぼる（スクリプト名で絞り込み）
+log show --predicate 'processImagePath contains "myscript"' --last 1h`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
   <main>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
-      <h1>macOS の launchctl 完全ガイド</h1>
+      <h1>launchctl の使い方</h1>
       <p class="article-date">2026.06</p>
     </header>
 
     <article class="article-body">
       <p>
-        macOS で定期実行やバックグラウンド処理を自動化したいとき、<code>launchctl</code> を使う機会があった。
-        cron の代替として macOS 標準の仕組みで完結できるので便利なのだが、いくつか一見わかりにくい挙動に詰まった。
+        macOS には「決まった時刻にスクリプトを動かす」「ログイン時にプログラムを起動する」
+        「常駐させて動かし続ける」といった処理を担う <code>launchd</code> という仕組みが標準で入っている。
+        この <code>launchd</code> に「いつ・何を・どう動かすか」を伝えて操作するためのコマンドが
+        <code>launchctl</code> で、設定は <code>plist</code> という XML ファイルに書く。
       </p>
       <p>
-        ひとつは、スクリプトを <code>~/Desktop</code> に置いたまま plist から呼び出したら何も起きなかった
-        （エラーも出ない）という問題。もうひとつは、SSH でリモート接続した状態から <code>launchctl</code> を
-        操作しようとすると、通常のターミナルと同じコマンドでは動かず、やり方を変える必要があるという問題。
-      </p>
-      <p>
-        どちらも原因がわかってしまえばシンプルなのだが、ドキュメントを読んでも要領を得ず、地味に時間を使った。
-        同じところで詰まる人の助けになるよう、基本的な使い方からハマりやすい箇所までまとめておく。
+        Linux の cron や systemd に近い役割だが、macOS では launchd がこれらをまとめて引き受けている。
+        この記事は launchctl を初めて触る人を対象に、plist の書き方（使えるキーと取りうる値）から、
+        登録・実行・確認のコマンド、そして実際に動かしたときに引っかかりやすい点までを順番にまとめる。
       </p>
 
-      <h2>launchctl とは</h2>
+      <nav class="toc" aria-label="目次">
+        <p class="toc-title">目次</p>
+        <ol>
+          <li><a href="#about">launchctl と launchd とは</a></li>
+          <li><a href="#agent-daemon">LaunchAgent と LaunchDaemon の違い</a></li>
+          <li><a href="#plist-basic">plist の基本構造</a></li>
+          <li><a href="#plist-keys">plist で使えるキー一覧（取りうる値）</a></li>
+          <li><a href="#schedule">StartCalendarInterval のスケジュール指定</a></li>
+          <li><a href="#keepalive">KeepAlive で常駐させる</a></li>
+          <li><a href="#location">plist の配置場所</a></li>
+          <li><a href="#first-job">はじめてのジョブを動かす手順</a></li>
+          <li><a href="#commands">基本コマンド（load / unload / list）</a></li>
+          <li><a href="#domain">bootstrap / bootout とドメインの考え方</a></li>
+          <li><a href="#desktop">Desktop 配下のスクリプトが実行できない</a></li>
+          <li><a href="#ssh">SSH からの操作で挙動が変わる</a></li>
+          <li><a href="#debug">デバッグ・ログ確認</a></li>
+          <li><a href="#pitfalls">つまずきやすいところ</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="about">launchctl と launchd とは</h2>
       <p>
-        <code>launchctl</code> は、macOS の起動・常駐プロセス管理システムである <code>launchd</code> を
-        操作するためのコマンド。「決まった時刻にスクリプトを動かしたい」「ログイン時にアプリを起動したい」
-        「常駐プログラムを動かし続けたい」といったことを、<code>plist</code>（XML形式の設定ファイル）と
-        セットで実現する。cron に近い使い方もできるが、cron より細かいスケジュール指定やログ管理ができる
-        macOS 標準の仕組み、という位置づけで考えるとわかりやすい。
+        <code>launchd</code> は macOS が起動するときに最初に立ち上がる、すべてのプロセスの親にあたる
+        管理プロセス。システムの起動処理、常駐サービス（デーモン）の管理、ユーザーがログインしたときの
+        アプリ起動、定期実行のスケジューリングなどを一手に引き受けている。普段は意識しないが、Mac の中で
+        動いているバックグラウンド処理の多くはこの launchd が面倒を見ている。
+      </p>
+      <p>
+        <code>launchctl</code> は、その launchd に対して「このジョブを登録して」「今すぐ動かして」
+        「状態を見せて」と指示を出すためのコマンドラインツール。自分でジョブを追加したいときは、
+        やりたいことを <code>plist</code> ファイルに書き、それを launchctl で launchd に登録する、
+        という流れになる。
+      </p>
+      <p>
+        cron との違いも押さえておくとよい。cron は「定期実行」に特化しているが、launchd は定期実行に加えて
+        「ログイン時に1回だけ実行」「落ちたら再起動して常駐」「特定フォルダが変化したら実行」など、
+        起動のきっかけを幅広く指定できる。ログ出力先や環境変数も plist にまとめて書けるので、
+        cron より少し記述は多いが、その分こまかく制御できる。
       </p>
 
-      <h2>plist ファイルの基本構造</h2>
+      <h2 id="agent-daemon">LaunchAgent と LaunchDaemon の違い</h2>
       <p>
-        設定は <code>.plist</code> という XML ファイルに書く。最低限必要なのは「ジョブを識別する
-        <code>Label</code>」と「実行するコマンド・スクリプトを指定する <code>ProgramArguments</code>」で、
-        スケジュールやログ出力先もここに書き込む。
+        launchd で動かすジョブには <strong>LaunchAgent</strong> と <strong>LaunchDaemon</strong> の
+        2 種類があり、どちらにするかで「いつ・誰の権限で動くか」が変わる。最初はこの違いでつまずきやすいので、
+        先に整理しておく。
       </p>
-      <CodeBlock code={plistBasic} language="xml" />
-
-      <h2>plist の配置場所</h2>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>種類</th>
+            <th>動くタイミング</th>
+            <th>実行権限</th>
+            <th>向いている用途</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LaunchAgent</td>
+            <td>ユーザーがログインしている間</td>
+            <td>ログインユーザー</td>
+            <td>個人の定期処理、GUI を伴う処理、通知</td>
+          </tr>
+          <tr>
+            <td>LaunchDaemon</td>
+            <td>OS 起動時から（ログイン不要）</td>
+            <td>root（システム）</td>
+            <td>常駐サービス、全ユーザー共通の処理</td>
+          </tr>
+        </tbody>
+      </table>
       <p>
-        plist を置く場所によって、誰の権限で・いつから動くジョブになるかが変わる。基本的には
-        <code>~/Library/LaunchAgents/</code> を使うことが多い。
+        個人で「毎日この時刻にスクリプトを回したい」という程度なら、まず <strong>LaunchAgent</strong> を
+        選んでおけばよい。画面に誰もログインしていない状態でも動かしたい、root 権限が必要、といった場合に
+        LaunchDaemon を検討する。置き場所もこの種類によって変わる（後述の
+        <a href="#location">配置場所</a>を参照）。
+      </p>
+
+      <h2 id="plist-basic">plist の基本構造</h2>
+      <p>
+        plist（Property List）は macOS の設定ファイル形式で、launchd の設定も XML 形式の plist で書く。
+        中身は <code>&lt;key&gt;</code>（項目名）と、その値（<code>&lt;string&gt;</code> や
+        <code>&lt;integer&gt;</code> など）のペアを <code>&lt;dict&gt;</code>（辞書）の中に並べていく構造になっている。
+        次は実用的な項目をひととおり入れた例で、各行にコメントで意味を添えている。
+      </p>
+      <CodeBlock code={plistFull} language="xml" />
+      <p>
+        値の型は決まったタグで表す。文字列は <code>&lt;string&gt;</code>、整数は <code>&lt;integer&gt;</code>、
+        真偽値は <code>&lt;true/&gt;</code> / <code>&lt;false/&gt;</code>、複数の値を並べる配列は
+        <code>&lt;array&gt;</code>、入れ子の辞書は <code>&lt;dict&gt;</code> を使う。型を間違える
+        （たとえば数値を <code>&lt;string&gt;</code> で書く）と読み込みに失敗するので、後述の
+        <code>plutil -lint</code> で必ず確認する。
+      </p>
+
+      <h2 id="plist-keys">plist で使えるキー一覧（取りうる値）</h2>
+      <p>
+        launchd の plist で指定できる主なキーをまとめる。実際には <code>Label</code> と
+        <code>ProgramArguments</code>（または <code>Program</code>）さえあれば動くので、残りは
+        必要に応じて足していけばよい。
+      </p>
+
+      <h3>必ず／よく使うキー</h3>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>キー</th>
+            <th>型</th>
+            <th>説明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Label</code></td>
+            <td>文字列</td>
+            <td>ジョブの一意な識別子（必須）。他と重複しなければ任意の文字列でよいが、慣習として逆ドメイン形式（<code>com.example.myjob</code>）にし、plist のファイル名とも揃える。</td>
+          </tr>
+          <tr>
+            <td><code>ProgramArguments</code></td>
+            <td>文字列の配列</td>
+            <td>実行するコマンドと引数。1 要素目が実行ファイルのパス、2 要素目以降が引数。コマンドは絶対パスで書く。</td>
+          </tr>
+          <tr>
+            <td><code>Program</code></td>
+            <td>文字列</td>
+            <td>実行ファイルのパスだけを指定する簡易版。引数が要らないとき用。<code>ProgramArguments</code> があればそちらが優先される。</td>
+          </tr>
+          <tr>
+            <td><code>RunAtLoad</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> でロードした瞬間に 1 回実行する。動作確認や、起動直後に走らせたい処理に使う。</td>
+          </tr>
+          <tr>
+            <td><code>StartInterval</code></td>
+            <td>整数（秒）</td>
+            <td>指定した秒数ごとに繰り返し実行する。例：<code>3600</code> で 1 時間ごと。</td>
+          </tr>
+          <tr>
+            <td><code>StartCalendarInterval</code></td>
+            <td>辞書 / 配列</td>
+            <td>cron のように時刻・曜日を指定して実行する。詳細は<a href="#schedule">次節</a>。</td>
+          </tr>
+          <tr>
+            <td><code>StandardOutPath</code></td>
+            <td>文字列</td>
+            <td>標準出力（コマンドの通常の出力）を書き出すファイルパス。</td>
+          </tr>
+          <tr>
+            <td><code>StandardErrorPath</code></td>
+            <td>文字列</td>
+            <td>標準エラー（エラーメッセージ）を書き出すファイルパス。失敗の原因調査に使うので入れておくとよい。</td>
+          </tr>
+          <tr>
+            <td><code>WorkingDirectory</code></td>
+            <td>文字列</td>
+            <td>スクリプトを実行する際のカレントディレクトリ。相対パスを扱うスクリプトで重要。</td>
+          </tr>
+          <tr>
+            <td><code>EnvironmentVariables</code></td>
+            <td>辞書</td>
+            <td>ジョブに渡す環境変数。launchd 経由では <code>PATH</code> が最小限になりがちなので、必要なら明示する。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>起動制御・常駐に使うキー</h3>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>キー</th>
+            <th>型</th>
+            <th>説明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>KeepAlive</code></td>
+            <td>真偽値 / 辞書</td>
+            <td><code>true</code> でプロセスが終了するたびに再起動（常駐用）。辞書で条件を絞れる（<a href="#keepalive">後述</a>）。</td>
+          </tr>
+          <tr>
+            <td><code>Disabled</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> でジョブを無効化。<code>load</code> しても起動しない。</td>
+          </tr>
+          <tr>
+            <td><code>LaunchOnlyOnce</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> でロード中に一度だけ実行する。</td>
+          </tr>
+          <tr>
+            <td><code>ThrottleInterval</code></td>
+            <td>整数（秒）</td>
+            <td>連続再起動の最小間隔。デフォルトは 10 秒。短時間で何度も落ちるジョブの暴走を防ぐ。</td>
+          </tr>
+          <tr>
+            <td><code>ExitTimeOut</code></td>
+            <td>整数（秒）</td>
+            <td>停止シグナルを送ってから強制終了するまでの猶予。デフォルトは 20 秒。</td>
+          </tr>
+          <tr>
+            <td><code>ProcessType</code></td>
+            <td>文字列</td>
+            <td>スケジューラ上の優先度。<code>Background</code> / <code>Standard</code> / <code>Adaptive</code> / <code>Interactive</code> のいずれか。重い処理は <code>Background</code> にする。</td>
+          </tr>
+          <tr>
+            <td><code>Nice</code></td>
+            <td>整数（-20〜20）</td>
+            <td>プロセスの nice 値（CPU 優先度）。数値が小さいほど優先される。</td>
+          </tr>
+          <tr>
+            <td><code>WatchPaths</code></td>
+            <td>文字列の配列</td>
+            <td>指定したパス（ファイル / フォルダ）に変更があると実行する。</td>
+          </tr>
+          <tr>
+            <td><code>QueueDirectories</code></td>
+            <td>文字列の配列</td>
+            <td>指定ディレクトリにファイルが存在する間、実行を繰り返す。フォルダ監視処理に使う。</td>
+          </tr>
+          <tr>
+            <td><code>StartOnMount</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> で、ボリュームがマウントされるたびに実行する。</td>
+          </tr>
+          <tr>
+            <td><code>UserName</code> / <code>GroupName</code></td>
+            <td>文字列</td>
+            <td>実行するユーザー / グループ。主に LaunchDaemon で「root 以外で動かしたい」ときに使う。</td>
+          </tr>
+          <tr>
+            <td><code>RootDirectory</code></td>
+            <td>文字列</td>
+            <td>chroot して実行するルートディレクトリ。</td>
+          </tr>
+          <tr>
+            <td><code>AbandonProcessGroup</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> で、親プロセス終了時に子プロセスを道連れにせず残す。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="schedule">StartCalendarInterval のスケジュール指定</h2>
+      <p>
+        定期実行で中心になるのが <code>StartCalendarInterval</code>。中に時刻や曜日のフィールドを書き、
+        <strong>指定したフィールドが一致したときに実行</strong>される。書かなかったフィールドはワイルドカード
+        （毎回マッチ）扱いになる。たとえば <code>Minute</code> だけ書けば「毎時その分」、
+        <code>Hour</code> と <code>Minute</code> を書けば「毎日その時刻」になる。
+      </p>
+      <p>各フィールドの取りうる値は次のとおり。</p>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>フィールド</th>
+            <th>取りうる値</th>
+            <th>意味</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Minute</code></td><td>0〜59</td><td>分</td></tr>
+          <tr><td><code>Hour</code></td><td>0〜23</td><td>時（24時間制）</td></tr>
+          <tr><td><code>Day</code></td><td>1〜31</td><td>日（月の中の日付）</td></tr>
+          <tr><td><code>Weekday</code></td><td>0〜7</td><td>曜日。0 と 7 が日曜、1=月曜 … 6=土曜</td></tr>
+          <tr><td><code>Month</code></td><td>1〜12</td><td>月</td></tr>
+        </tbody>
+      </table>
+      <p>
+        複数の時刻に実行したいときは、<code>StartCalendarInterval</code> を辞書ではなく辞書の配列にして並べる。
+        単純に「一定間隔ごと」でよければ <code>StartInterval</code>（秒数）の方が手軽。
+      </p>
+      <CodeBlock code={scheduleExamples} language="xml" />
+      <p class="note">
+        注意：Mac がスリープしている時刻に予定があった場合、その回は飛ばされる（cron と同じ）。ただし
+        launchd は復帰後に「逃した実行」を 1 回だけまとめて走らせる挙動があるので、起きていなかった分が
+        丸ごと消えるとは限らない。
+      </p>
+
+      <h2 id="keepalive">KeepAlive で常駐させる</h2>
+      <p>
+        「スクリプトを動かし続けたい」「落ちても自動で立ち上げ直したい」という常駐用途では
+        <code>KeepAlive</code> を使う。<code>true</code> にすると、プロセスが終了するたびに launchd が
+        再起動する。条件を絞りたいときは辞書で書く。
+      </p>
+      <CodeBlock code={keepAliveExample} language="xml" />
+      <p>辞書で指定できる主な条件キーは次のとおり。</p>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>サブキー</th>
+            <th>型</th>
+            <th>意味</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>SuccessfulExit</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> なら正常終了後も再起動、<code>false</code> なら異常終了したときだけ再起動。</td>
+          </tr>
+          <tr>
+            <td><code>Crashed</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> でクラッシュ時に再起動する。</td>
+          </tr>
+          <tr>
+            <td><code>NetworkState</code></td>
+            <td>真偽値</td>
+            <td><code>true</code> でネットワークが有効なときだけ起動する。</td>
+          </tr>
+          <tr>
+            <td><code>PathState</code></td>
+            <td>辞書</td>
+            <td>指定したパスが存在する/しない状態に応じて起動を制御する。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="location">plist の配置場所</h2>
+      <p>
+        plist をどのディレクトリに置くかで、それが LaunchAgent になるか LaunchDaemon になるか、
+        誰の権限で・いつから動くかが決まる。個人利用なら <code>~/Library/LaunchAgents/</code> を使うのが基本。
       </p>
       <table class="info-table">
         <thead>
           <tr>
             <th>ディレクトリ</th>
+            <th>種類</th>
             <th>対象</th>
             <th>実行ユーザー</th>
           </tr>
@@ -211,100 +586,146 @@ launchctl list | grep com.example
         <tbody>
           <tr>
             <td><code>~/Library/LaunchAgents/</code></td>
-            <td>ログイン中のユーザー</td>
+            <td>Agent</td>
+            <td>そのユーザーがログイン中</td>
             <td>ログインユーザー</td>
           </tr>
           <tr>
             <td><code>/Library/LaunchAgents/</code></td>
+            <td>Agent</td>
             <td>全ユーザー（要管理者権限）</td>
             <td>ログインユーザー</td>
           </tr>
           <tr>
             <td><code>/Library/LaunchDaemons/</code></td>
+            <td>Daemon</td>
             <td>システム全体（起動時から）</td>
             <td>root</td>
           </tr>
           <tr>
-            <td><code>/System/Library/LaunchAgents/</code></td>
-            <td>macOS組み込み（触らない）</td>
-            <td>-</td>
+            <td><code>/System/Library/...</code></td>
+            <td>—</td>
+            <td>macOS 組み込み（触らない）</td>
+            <td>—</td>
           </tr>
         </tbody>
       </table>
-
-      <h2>基本コマンド</h2>
       <p>
-        plist を配置したら、<code>launchctl</code> でロード（登録）・アンロード（解除）する。状態確認や
-        手動実行もこのコマンドから行う。
+        <code>/System/Library/</code> 以下は OS 標準のジョブが入っている領域なので、自分のジョブを置いたり
+        中身を書き換えたりしない。自作のものは <code>~/Library/LaunchAgents/</code> か、root で動かしたいときだけ
+        <code>/Library/LaunchDaemons/</code> に置く。
+      </p>
+
+      <h2 id="first-job">はじめてのジョブを動かす手順</h2>
+      <p>
+        まずは確実に動く最小構成で一度通してみるのが理解の近道。次の plist を
+        <code>~/Library/LaunchAgents/com.example.hello.plist</code> として保存する。
+        ロードした瞬間に <code>/bin/echo</code> を 1 回実行し、結果を <code>/tmp/hello.log</code> に書き出すだけのジョブ。
+      </p>
+      <p>
+        plist ファイルは、フォルダが無ければ <code>mkdir -p ~/Library/LaunchAgents</code> で作ってから、
+        <code>nano ~/Library/LaunchAgents/com.example.hello.plist</code>（または VS Code などの好きなエディタ）で
+        新規作成し、次の内容を貼り付けて保存する。特別なツールは要らず、ただのテキストファイルとして書けばよい。
+      </p>
+      <CodeBlock code={plistMinimal} language="xml" />
+      <p>保存したら、次の流れで動作を確認する。</p>
+      <CodeBlock code={firstJobSteps} language="shell" />
+      <p>
+        <code>launchctl load</code> は成功しても何も表示しない（無言で完了する）。エラーが出ていなければ
+        登録できているので、<code>/tmp/hello.log</code> に行が追記されているか確認する。書き込まれていれば成功。
+        ここまで通せれば、あとは
+        <code>ProgramArguments</code> を自分のスクリプトに、<code>RunAtLoad</code> を
+        <code>StartCalendarInterval</code> に置き換えていくだけで定期実行に発展させられる。
+      </p>
+
+      <h2 id="commands">基本コマンド（load / unload / list）</h2>
+      <p>
+        plist を配置したら、<code>launchctl</code> で launchd に登録（ロード）する。登録を外すのがアンロード。
+        状態確認や手動実行もこのコマンドから行う。
       </p>
       <CodeBlock code={basicCommands} language="shell" />
       <p>
-        macOS 10.10 Yosemite 以降では、<code>load</code>/<code>unload</code> の代わりに
-        <code>bootstrap</code>/<code>bootout</code> を使う新しい API も用意されている。
-        どのセッション（ドメイン）に対する操作かを明示できるのが特徴で、後述する SSH 経由の操作では
-        こちらを使う必要がある。
+        plist を編集したときは、一度 <code>unload</code> してから <code>load</code> し直さないと変更が反映されない
+        点に注意。<code>load</code> し直さずに中身だけ書き換えても、launchd は古い設定で動き続ける。
       </p>
-      <CodeBlock code={bootstrapCommands} language="shell" />
 
-      <h2>⚠️ Desktop 配下のスクリプトが実行できない問題</h2>
+      <h2 id="domain">bootstrap / bootout とドメインの考え方</h2>
       <p>
-        plist の <code>ProgramArguments</code> に <code>~/Desktop</code> 配下のスクリプトを指定しても、
-        ロードはエラーなく成功するのに、スケジュール時刻になっても何も実行されないことがある。
+        macOS 10.10 Yosemite 以降では、<code>load</code> / <code>unload</code> に代わる新しいコマンドとして
+        <code>bootstrap</code> / <code>bootout</code> が用意されている。新しい macOS ではこちらが推奨で、
+        後述の SSH 経由の操作でも必要になる。
+      </p>
+      <p>
+        新コマンドの肝は「<strong>ドメイン</strong>」という考え方。launchd はジョブを、それが属する場所
+        （セッション）ごとに区切って管理しており、操作するときにどのドメインかを明示する。よく使うのは次の 2 つ。
+      </p>
+      <ul>
+        <li><code>gui/&lt;uid&gt;</code> … GUI でログイン中のユーザーセッション。LaunchAgent はここ。<code>&lt;uid&gt;</code> は <code>id -u</code> で得られる数値。</li>
+        <li><code>system</code> … システム全体。LaunchDaemon はここ。</li>
+      </ul>
+      <CodeBlock code={bootstrapCommands} language="shell" />
+      <p>
+        <code>kickstart -k</code> はジョブを今すぐ起動するコマンドで、<code>-k</code> を付けると実行中の場合は
+        一度止めてから起動し直す。動作確認に便利。
+      </p>
+
+      <h2 id="desktop">Desktop 配下のスクリプトが実行できない</h2>
+      <p>
+        ここからは実際に動かしたときにハマりやすい点。まず、plist の <code>ProgramArguments</code> に
+        <code>~/Desktop</code> 配下のスクリプトを指定すると、ロードはエラーなく成功するのに、いざ実行される
+        時刻になっても何も起きないことがある。エラーも出ないので原因が分かりにくい。
       </p>
       <CodeBlock code={desktopProblemBad} language="xml" />
       <p>
         原因は macOS Catalina（10.15）以降の TCC（Transparency, Consent, and Control）によるサンドボックス保護。
-        <code>~/Desktop</code>、<code>~/Documents</code>、<code>~/Downloads</code> はアクセスに許可が必要な
-        保護対象フォルダになっており、GUI セッション外で動く <code>launchd</code> はそのままではここに
-        フルアクセスできない。エラーが <code>Operation not permitted</code> として出ることもあれば、
-        何も表示されずに静かに失敗することもある。
+        <code>~/Desktop</code>・<code>~/Documents</code>・<code>~/Downloads</code> はアクセスに明示的な許可が
+        必要な保護対象フォルダになっており、GUI セッションの外で動く launchd はそのままではここを読めない。
+        結果として <code>Operation not permitted</code> になるか、何も表示されず静かに失敗する。
       </p>
       <p>
         「システム設定 → プライバシーとセキュリティ → フルディスクアクセス」に <code>launchctl</code> や
-        <code>launchd</code> を追加しても解決しない。確実な対処は、plist が参照するスクリプト自体を
-        保護対象外のディレクトリに移すことになる。
+        <code>launchd</code> を足しても解決しない。確実なのは、plist が参照するスクリプト本体を保護対象外の
+        ディレクトリ（<code>~/bin</code> など）へ移すこと。
       </p>
       <CodeBlock code={desktopProblemFix} language="shell" />
 
-      <h2>⚠️ SSH からの操作で挙動が変わる問題</h2>
+      <h2 id="ssh">SSH からの操作で挙動が変わる</h2>
       <p>
-        SSH でリモートログインした状態で <code>launchctl load</code> を実行すると、通常のターミナルとは
-        異なる挙動になることがある。
+        もう一つの落とし穴が SSH 経由の操作。SSH でリモートログインした状態で
+        <code>launchctl load</code> を実行すると、手元のターミナルとは違う結果になることがある。
       </p>
       <pre class="error-box"><code>$ launchctl load ~/Library/LaunchAgents/com.example.myjob.plist
 # → "Could not find domain for this service"
 # → "Bootstrap failed: 5: Input/output error"
 # → 何も起きない（無言で失敗）</code></pre>
       <p>
-        <code>launchctl</code> はセッションの「ドメイン」に紐づいて動作する。GUI ログインセッションは
-        <code>gui/&lt;uid&gt;</code>、SSH のセッションは <code>user/&lt;uid&gt;</code> という別ドメインになっており、
-        <code>LaunchAgents</code> はログイン済みの GUI セッションに対して登録するものなので、SSH からは
-        そのまま操作できない。
+        これは前述の<a href="#domain">ドメイン</a>が関係している。GUI ログインのセッションは
+        <code>gui/&lt;uid&gt;</code>、SSH のセッションは <code>user/&lt;uid&gt;</code> という別ドメインで、
+        LaunchAgent は GUI セッション側に属する。SSH のドメインからは、GUI 側のジョブをそのまま
+        操作できないため、対象が見つからずエラーになる。
       </p>
       <p>
-        SSH から操作する場合は、<code>bootstrap</code>/<code>bootout</code>/<code>print</code> で
-        <code>gui/&lt;uid&gt;</code> ドメインを明示的に指定する。どうしても動かない場合は GUI セッション自体が
-        存在するか（誰もログインしていないなど）を確認するか、<code>/Library/LaunchDaemons/</code> に置いて
-        root 権限の LaunchDaemon として動かす方法に切り替える。
+        SSH から操作する場合は、<code>bootstrap</code> / <code>bootout</code> / <code>print</code> に
+        <code>gui/&lt;uid&gt;</code> を明示的に渡す。手元のターミナルで使っていた <code>load</code> を
+        そのまま SSH 越しに打つとハマるので、SSH のときは新コマンド＋ドメイン指定に切り替えると覚えておく。
       </p>
       <CodeBlock code={sshCommands} language="shell" />
-
-      <h2>StartCalendarInterval の書き方パターン</h2>
       <p>
-        スケジュール指定でよく使うのは <code>StartCalendarInterval</code>。<code>Hour</code> と
-        <code>Minute</code> だけ指定すれば毎日その時刻に実行され、<code>Weekday</code> を加えれば曜日指定もできる。
-        配列で複数指定すれば、1日に複数回のスケジュールも組める。一定間隔で動かしたいだけなら
-        <code>StartInterval</code>（秒数）、ロード時に即実行したいなら <code>RunAtLoad</code> を使う。
+        それでも動かない場合は、そもそも GUI セッションが存在しない（誰も画面にログインしていない）
+        ケースが考えられる。その場合は素直に LaunchDaemon（<code>/Library/LaunchDaemons/</code> に置いて
+        <code>sudo launchctl bootstrap system ...</code>）として root 権限で動かす方が確実。
       </p>
-      <CodeBlock code={scheduleExamples} language="xml" />
 
-      <h2>デバッグ・ログ確認</h2>
+      <h2 id="debug">デバッグ・ログ確認</h2>
       <p>
-        想定どおりに動かないときは、まず plist の文法エラーがないか <code>plutil -lint</code> で確認し、
-        次に <code>launchctl list</code> で終了コードを見る。さらに詳しく追うなら <code>log</code> コマンドで
-        <code>launchd</code> 周りのログをリアルタイムに見るのが確実。
+        想定どおり動かないときの調べ方。まず <code>plutil -lint</code> で plist の文法を確認し、次に
+        <code>launchctl list</code> の終了コードを見る。さらに追うなら <code>launchctl print</code> で
+        詳細を、<code>log</code> コマンドで launchd 周りのログを見る。
       </p>
       <CodeBlock code={debugCommands} language="shell" />
+      <p>
+        <code>launchctl list</code> の出力は左から「PID・最後の終了コード・Label」の順。終了コードの主なものは次のとおり。
+      </p>
       <table class="info-table">
         <thead>
           <tr>
@@ -313,35 +734,22 @@ launchctl list | grep com.example
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td><code>0</code></td>
-            <td>正常終了</td>
-          </tr>
-          <tr>
-            <td><code>1</code></td>
-            <td>一般的なエラー</td>
-          </tr>
-          <tr>
-            <td><code>78</code></td>
-            <td>設定エラー（plistの問題が多い）</td>
-          </tr>
-          <tr>
-            <td><code>127</code></td>
-            <td>コマンド・スクリプトが見つからない</td>
-          </tr>
-          <tr>
-            <td><code>Operation not permitted</code></td>
-            <td>権限エラー（TCC・Desktop問題など）</td>
-          </tr>
+          <tr><td><code>0</code></td><td>正常終了</td></tr>
+          <tr><td><code>1</code></td><td>一般的なエラー</td></tr>
+          <tr><td><code>78</code></td><td>設定エラー（plist の記述ミスが多い）</td></tr>
+          <tr><td><code>127</code></td><td>コマンド・スクリプトが見つからない（パスの誤り）</td></tr>
+          <tr><td><code>Operation not permitted</code></td><td>権限エラー（TCC・Desktop 問題など）</td></tr>
         </tbody>
       </table>
 
-      <h2>つまずきやすいところ</h2>
+      <h2 id="pitfalls">つまずきやすいところ</h2>
       <ul>
-        <li>plist が「ロード成功」と表示されても、実体のスクリプトが保護されたフォルダにあると静かに失敗する。エラーが出ないからこそ気づきにくい。</li>
-        <li><code>load</code>/<code>unload</code> と <code>bootstrap</code>/<code>bootout</code> は完全な互換ではない。新しいmacOSでは <code>bootstrap</code>/<code>bootout</code> が推奨される。</li>
-        <li>SSH 経由では <code>gui/&lt;uid&gt;</code> を明示しないと操作対象が見つからない。ローカルのターミナルで動いたコマンドをそのまま SSH 越しに打つとハマりやすい。</li>
-        <li>plist を編集したあとは、一度 <code>bootout</code> してから <code>bootstrap</code> し直さないと変更が反映されない。</li>
+        <li>plist を書き換えただけでは反映されない。<code>unload</code> → <code>load</code>（または <code>bootout</code> → <code>bootstrap</code>）でロードし直す。</li>
+        <li>「ロード成功」と出ても、スクリプト本体が保護フォルダ（Desktop など）にあると静かに失敗する。エラーが出ないぶん気づきにくい。</li>
+        <li>plist 内のパスでは <code>~</code> が展開されない。<code>~/bin/x.sh</code> ではなく <code>/Users/ユーザー名/bin/x.sh</code> のように絶対パスで書く。</li>
+        <li>コマンドやスクリプトは絶対パスで書く。launchd 経由では <code>PATH</code> が最小限なので、<code>python</code> のような名前だけの指定は見つからないことがある。</li>
+        <li>SSH からは <code>gui/&lt;uid&gt;</code> を明示しないと操作できない。ローカルで動いたコマンドをそのまま持ち込むとハマる。</li>
+        <li><code>StartCalendarInterval</code> はフィールドを書かないと「毎回」扱いになる。<code>Minute</code> を書き忘れると毎分実行になってしまう点に注意。</li>
       </ul>
     </article>
 
@@ -384,13 +792,54 @@ launchctl list | grep com.example
     background-clip: text;
   }
 
+  .toc {
+    background: rgba(102, 126, 234, 0.05);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding-left: 1.4rem;
+    color: #444;
+  }
+
+  .toc li {
+    margin-bottom: 0.3rem;
+  }
+
+  .toc a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    text-decoration: underline;
+  }
+
   .article-body h2 {
     font-size: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
     margin-bottom: 0.75rem;
     color: #333;
     border-bottom: 1px solid #e0e0e0;
     padding-bottom: 0.25rem;
+    scroll-margin-top: 64px;
+  }
+
+  .article-body h3 {
+    font-size: 1.15rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: #333;
   }
 
   .article-body p,
@@ -403,12 +852,24 @@ launchctl list | grep com.example
     margin-bottom: 0.25rem;
   }
 
+  .article-body a {
+    color: #667eea;
+  }
+
   .article-body code {
     background: rgba(30, 64, 175, 0.06);
     color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
+  }
+
+  .note {
+    background: rgba(102, 126, 234, 0.06);
+    border-left: 3px solid #667eea;
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.92rem;
   }
 
   .info-table {
@@ -423,6 +884,7 @@ launchctl list | grep com.example
     border: 1px solid #e0e0e0;
     padding: 0.5rem 0.75rem;
     text-align: left;
+    vertical-align: top;
   }
 
   .info-table th {
