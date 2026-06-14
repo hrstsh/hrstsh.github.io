@@ -18,6 +18,7 @@ src/env.d.ts
 
 # IDE / local tooling
 .claude/
+CLAUDE.md
 .vscode/
 .idea/
 *.swp
