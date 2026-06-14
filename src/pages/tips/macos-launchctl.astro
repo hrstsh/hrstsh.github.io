@@ -248,6 +248,10 @@ log stream --predicate 'subsystem == "com.apple.launchd"' --level debug
 
 # 過去ログをさかのぼる（スクリプト名で絞り込み）
 log show --predicate 'processImagePath contains "myscript"' --last 1h`;
+
+const referenceCommands = `man launchctl       # launchctl コマンドのリファレンス
+man launchd.plist   # plist で指定できるキーの正式な仕様（型・取りうる値）
+man launchd         # launchd 本体の説明`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -269,6 +273,10 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
         Linux の cron や systemd に近い役割だが、macOS では launchd がこれらをまとめて引き受けている。
         自分で実際に使っていたところ、いくつかわかりにくい挙動で詰まった部分があった。そこで、launchd の基本から実際に詰まったところまでまとめて記録しておく。
       </p>
+      <p class="note">
+        本記事の内容は macOS Sequoia 15.7.7 で動作を確認している。launchctl の挙動は OS のバージョンで
+        変わることがあるため、参考にする際は手元の環境とあわせて確認してほしい。
+      </p>
       <nav class="toc" aria-label="目次">
         <p class="toc-title">目次</p>
         <ol>
@@ -282,10 +290,11 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
           <li><a href="#first-job">はじめてのジョブを動かす手順</a></li>
           <li><a href="#commands">基本コマンド（load / unload / list）</a></li>
           <li><a href="#domain">bootstrap / bootout とドメインの考え方</a></li>
-          <li><a href="#desktop">Desktop 配下のスクリプトが実行できない</a>/li>
+          <li><a href="#desktop">Desktop 配下のスクリプトが実行できない</a></li>
           <li><a href="#ssh">SSH からの操作で挙動が変わる</a></li>
           <li><a href="#debug">デバッグ・ログ確認</a></li>
           <li><a href="#pitfalls">つまずきやすいところ</a></li>
+          <li><a href="#reference">参考（一次情報）</a></li>
         </ol>
       </nav>
 
@@ -807,6 +816,19 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
         <li>SSH からは <code>gui/&lt;uid&gt;</code> を明示しないと操作できない。ローカルで動いたコマンドをそのまま持ち込むとハマる。</li>
         <li><code>StartCalendarInterval</code> はフィールドを書かないと「毎回」扱いになる。<code>Minute</code> を書き忘れると毎分実行になってしまう点に注意。</li>
       </ul>
+
+      <h2 id="reference">参考（一次情報）</h2>
+      <p>
+        各キーの正式な仕様や、ここで触れていないオプションを確認したいときは、macOS に標準で入っている
+        man ページが一次情報として確実。ターミナルで次を実行すれば、その環境の launchd に対応した
+        正確な内容を参照できる。
+      </p>
+      <CodeBlock code={referenceCommands} language="shell" />
+      <p>
+        特に <code>man launchd.plist</code> は、本記事の「<a href="#plist-keys">plist で使えるキー一覧</a>」で
+        挙げた各キーの型・取りうる値・デフォルト挙動が正式に定義されている。記事と挙動が食い違う場合は、
+        手元の環境の man ページを優先してほしい。
+      </p>
     </article>
 
     <footer class="page-footer">
