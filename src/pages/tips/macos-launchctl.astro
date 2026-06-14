@@ -212,6 +212,11 @@ launchctl kickstart -k gui/501/com.example.myjob
 # それでも動かないとき：GUI セッションが存在するか確認する
 who   # ログイン中のセッション一覧（console 行があれば GUI ログイン中）`;
 
+const sshError = `$ launchctl load ~/Library/LaunchAgents/com.example.myjob.plist
+# → "Could not find domain for this service"
+# → "Bootstrap failed: 5: Input/output error"
+# → 何も起きない（無言で失敗）`;
+
 const debugCommands = `# plist の文法チェック（まずこれ）
 plutil -lint ~/Library/LaunchAgents/com.example.myjob.plist
 # → OK: /Users/.../com.example.myjob.plist: OK
@@ -249,8 +254,10 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
       </p>
       <p>
         Linux の cron や systemd に近い役割だが、macOS では launchd がこれらをまとめて引き受けている。
-        この記事は launchctl を初めて触る人を対象に、plist の書き方（使えるキーと取りうる値）から、
-        登録・実行・確認のコマンド、そして実際に動かしたときに引っかかりやすい点までを順番にまとめる。
+        自分でも実際に使ってみたところ、一見わかりにくい挙動にいくつか詰まった。そこで、同じところで
+        止まる人の助けになるよう、launchctl を初めて触る人向けに、plist の書き方（使えるキーと取りうる値）から
+        登録・実行・確認のコマンド、つまずきやすい点までを基本から順番にまとめておく。具体的にどこで詰まったかは、
+        後半の該当セクションで触れる。
       </p>
 
       <nav class="toc" aria-label="目次">
@@ -266,8 +273,8 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
           <li><a href="#first-job">はじめてのジョブを動かす手順</a></li>
           <li><a href="#commands">基本コマンド（load / unload / list）</a></li>
           <li><a href="#domain">bootstrap / bootout とドメインの考え方</a></li>
-          <li><a href="#desktop">Desktop 配下のスクリプトが実行できない</a></li>
-          <li><a href="#ssh">SSH からの操作で挙動が変わる</a></li>
+          <li><a href="#desktop">Desktop 配下のスクリプトが実行できない</a> <span class="toc-note">実際に詰まった点</span></li>
+          <li><a href="#ssh">SSH からの操作で挙動が変わる</a> <span class="toc-note">実際に詰まった点</span></li>
           <li><a href="#debug">デバッグ・ログ確認</a></li>
           <li><a href="#pitfalls">つまずきやすいところ</a></li>
         </ol>
@@ -669,7 +676,7 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
         一度止めてから起動し直す。動作確認に便利。
       </p>
 
-      <h2 id="desktop">Desktop 配下のスクリプトが実行できない</h2>
+      <h2 id="desktop">⚠️ Desktop 配下のスクリプトが実行できない</h2>
       <p>
         ここからは実際に動かしたときにハマりやすい点。まず、plist の <code>ProgramArguments</code> に
         <code>~/Desktop</code> 配下のスクリプトを指定すると、ロードはエラーなく成功するのに、いざ実行される
@@ -689,15 +696,12 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
       </p>
       <CodeBlock code={desktopProblemFix} language="shell" />
 
-      <h2 id="ssh">SSH からの操作で挙動が変わる</h2>
+      <h2 id="ssh">⚠️ SSH からの操作で挙動が変わる</h2>
       <p>
         もう一つの落とし穴が SSH 経由の操作。SSH でリモートログインした状態で
         <code>launchctl load</code> を実行すると、手元のターミナルとは違う結果になることがある。
       </p>
-      <pre class="error-box"><code>$ launchctl load ~/Library/LaunchAgents/com.example.myjob.plist
-# → "Could not find domain for this service"
-# → "Bootstrap failed: 5: Input/output error"
-# → 何も起きない（無言で失敗）</code></pre>
+      <CodeBlock code={sshError} language="shell" />
       <p>
         これは前述の<a href="#domain">ドメイン</a>が関係している。GUI ログインのセッションは
         <code>gui/&lt;uid&gt;</code>、SSH のセッションは <code>user/&lt;uid&gt;</code> という別ドメインで、
@@ -825,6 +829,18 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
     text-decoration: underline;
   }
 
+  .toc-note {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: #b91c1c;
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 0.3rem;
+    white-space: nowrap;
+  }
+
   .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2.5rem;
@@ -898,23 +914,6 @@ log show --predicate 'processImagePath contains "myscript"' --last 1h`;
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
-  }
-
-  .error-box {
-    background: rgba(220, 38, 38, 0.06);
-    border: 1px solid rgba(220, 38, 38, 0.2);
-    border-radius: 6px;
-    padding: 0.85rem 1rem;
-    margin-bottom: 1.5rem;
-    font-size: 0.85rem;
-    line-height: 1.6;
-    overflow-x: auto;
-  }
-
-  .error-box code {
-    background: none;
-    padding: 0;
-    color: #444;
   }
 
   .page-footer {
