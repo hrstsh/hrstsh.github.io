@@ -29,14 +29,41 @@ function toSec(t) {
   return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
 }`;
 
-const collectSnippet = `// サムネイル右下の再生時間バッジを集める
-const badges = document.querySelectorAll('ytd-thumbnail-overlay-time-status-renderer');
+const collectSnippet = `// 各動画の行を取得する（再生リストページ／視聴ページ右側の両方に対応）
+let rows = document.querySelectorAll(
+  'ytd-playlist-video-renderer, ytd-playlist-panel-video-renderer'
+);
+// 新レイアウト（lockup）などで見つからなければ汎用の動画カードを使う
+if (!rows.length) {
+  rows = document.querySelectorAll('yt-lockup-view-model, ytd-video-renderer');
+}
+
+const reTime = /\\d{1,2}:\\d{2}(?::\\d{2})?/;          // 文字列の中の「12:34」を拾う
+const reTimeFull = /^\\d{1,2}:\\d{2}(?::\\d{2})?$/;    // 「12:34」だけのテキスト
+
+// 1行から再生時間を1つだけ取り出す（二重カウントを防ぐ）
+function rowTime(row) {
+  // よく使われるバッジ要素を優先（旧/新レイアウト両対応）
+  const badge = row.querySelector(
+    'ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz__text'
+  );
+  if (badge) {
+    const m = badge.textContent.match(reTime);
+    if (m) return m[0];
+  }
+  // 見つからなければ行内から「12:34」だけのテキストを探す
+  for (const el of row.querySelectorAll('span, div')) {
+    const t = el.textContent.trim();
+    if (reTimeFull.test(t)) return t;
+  }
+  return null; // ライブ配信中・公開予定などは時間がないので除外される
+}
 
 let total = 0, count = 0;
-badges.forEach((b) => {
-  const text = b.textContent.trim();
-  if (!/^\\d+(:\\d+)+$/.test(text)) return; // "ライブ" などを除外
-  total += toSec(text);
+rows.forEach((row) => {
+  const t = rowTime(row);
+  if (!t) return;
+  total += toSec(t);
   count++;
 });`;
 
@@ -61,7 +88,7 @@ const lines = [
   '2倍速: ' + fmt(total / 2),
 ];`;
 
-const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com')){alert('YouTubeの再生リストのページで実行してください');return;}function toSec(t){var p=t.trim().split(':').map(Number);if(p.some(isNaN))return 0;return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}function fmt(sec){sec=Math.round(sec);var h=Math.floor(sec/3600),m=Math.floor((sec-h*3600)/60),s=sec-h*3600-m*60;return (h?h+'時間':'')+(m?m+'分':'')+s+'秒';}var badges=document.querySelectorAll('ytd-thumbnail-overlay-time-status-renderer'),total=0,count=0;badges.forEach(function(b){var t=b.textContent.trim();if(!/^\\d+(:\\d+)+$/.test(t))return;total+=toSec(t);count++;});if(!count){alert('動画の長さが見つかりません。再生リストのページを開き、リストを下までスクロールして読み込んでから実行してください。');return;}var lines=['本数: '+count+'本','合計: '+fmt(total),'平均: '+fmt(total/count),'1.25倍速: '+fmt(total/1.25),'1.5倍速: '+fmt(total/1.5),'2倍速: '+fmt(total/2)];var text=lines.join('\\n');var o=document.getElementById('yt-pl-panel');if(o){o.remove();return;}var p=document.createElement('div');p.id='yt-pl-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:300px;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:14px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='再生リストの合計時間';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var body=document.createElement('div');body.style.cssText='line-height:1.9;color:#333';lines.forEach(function(l){var row=document.createElement('div');var i=l.indexOf(':');var k=document.createElement('span');k.style.cssText='color:#888;display:inline-block;min-width:84px';k.textContent=l.slice(0,i);var v=document.createElement('span');v.style.cssText='font-weight:bold';v.textContent=l.slice(i+1).trim();row.appendChild(k);row.appendChild(v);body.appendChild(row);});p.appendChild(body);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(text).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
+const bookmarkletCode = `javascript:(function(){if(!location.href.includes('youtube.com')){alert('YouTubeの再生リストのページで実行してください');return;}function toSec(t){var p=t.trim().split(':').map(Number);if(p.some(isNaN))return 0;return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}function fmt(sec){sec=Math.round(sec);var h=Math.floor(sec/3600),m=Math.floor((sec-h*3600)/60),s=sec-h*3600-m*60;return (h?h+'時間':'')+(m?m+'分':'')+s+'秒';}var rows=document.querySelectorAll('ytd-playlist-video-renderer,ytd-playlist-panel-video-renderer');if(!rows.length)rows=document.querySelectorAll('yt-lockup-view-model,ytd-video-renderer,ytd-grid-video-renderer');var rt=/\\d{1,2}:\\d{2}(?::\\d{2})?/,rtFull=/^\\d{1,2}:\\d{2}(?::\\d{2})?$/;function rowTime(row){var b=row.querySelector('ytd-thumbnail-overlay-time-status-renderer,.badge-shape-wiz__text');if(b){var m=b.textContent.match(rt);if(m)return m[0];}var ns=row.querySelectorAll('span,div');for(var i=0;i<ns.length;i++){var x=ns[i].textContent.trim();if(rtFull.test(x))return x;}return null;}var total=0,count=0;rows.forEach(function(row){var t=rowTime(row);if(!t)return;total+=toSec(t);count++;});if(!count){var leaves=document.querySelectorAll('.badge-shape-wiz__text,ytd-thumbnail-overlay-time-status-renderer #text');leaves.forEach(function(el){if(el.children.length)return;var t=el.textContent.trim();if(rtFull.test(t)){total+=toSec(t);count++;}});}if(!count){alert('動画の長さが見つかりません。再生リストのページ（/playlist?list=...）を開き、リストを下までスクロールして読み込んでから実行してください。');return;}var lines=['本数: '+count+'本','合計: '+fmt(total),'平均: '+fmt(total/count),'1.25倍速: '+fmt(total/1.25),'1.5倍速: '+fmt(total/1.5),'2倍速: '+fmt(total/2)];var text=lines.join('\\n');var o=document.getElementById('yt-pl-panel');if(o){o.remove();return;}var p=document.createElement('div');p.id='yt-pl-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:300px;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:14px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='再生リストの合計時間';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var body=document.createElement('div');body.style.cssText='line-height:1.9;color:#333';lines.forEach(function(l){var row=document.createElement('div');var i=l.indexOf(':');var k=document.createElement('span');k.style.cssText='color:#888;display:inline-block;min-width:84px';k.textContent=l.slice(0,i);var v=document.createElement('span');v.style.cssText='font-weight:bold';v.textContent=l.slice(i+1).trim();row.appendChild(k);row.appendChild(v);body.appendChild(row);});p.appendChild(body);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(text).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
 ---
 
 <Layout title={title} description={description} jsonLd={jsonLd}>
@@ -106,14 +133,18 @@ const bookmarkletCode = `javascript:(function(){if(!location.href.includes('yout
 
       <h2>どう動いているか</h2>
       <p>
-        まず、各動画のサムネイル右下に出ている再生時間バッジ（<code>ytd-thumbnail-overlay-time-status-renderer</code>）をすべて集める。バッジの文字列は <code>12:34</code> や <code>1:02:03</code> の形なので、コロンで分割して秒数に変換する。
+        まず、再生時間の文字列（<code>12:34</code> や <code>1:02:03</code>）を秒数に変換する関数を用意する。コロンで分割して、時・分・秒に重み付けして足すだけだ。
       </p>
       <CodeBlock code={parseSnippet} language="javascript" />
 
       <p>
-        ライブ配信中のものには「ライブ」と表示されるなど時間以外のバッジもあるため、<code>数字:数字</code> の形にマッチするものだけを合算対象にしている。あわせて本数も数えておく。
+        次に、各動画の行（<code>ytd-playlist-video-renderer</code> など）を取得し、その行の中から再生時間を探す。YouTubeはレイアウトを段階的に新しいWebコンポーネントへ移行していて、再生時間バッジの要素名やクラスがページによって違う。そこで、よく使われるバッジ要素（旧来の <code>ytd-thumbnail-overlay-time-status-renderer</code> と、新レイアウトの <code>.badge-shape-wiz__text</code>）をまず試し、見つからなければ行内から「<code>12:34</code>」のような時刻だけのテキストを拾う二段構えにしている。1行につき時間は1つだけ取るので二重カウントを防げて、ライブ配信中（「ライブ」表示）や公開予定の動画は時間が取れずに自然と除外される。
       </p>
       <CodeBlock code={collectSnippet} language="javascript" />
+
+      <p>
+        万一どの行も拾えなかったときの保険として、ページ全体から「時刻だけ」の要素を直接集めるフォールバックも入れてある。これで再生リストページでも視聴ページ右側のリストでも、レイアウトが新旧どちらでも合算できる。
+      </p>
 
       <p>
         最後に、合計秒数を「◯時間◯分◯秒」の形に整え、平均と倍速時の所要時間を並べて表示する。倍速で見る人向けに、1.25倍・1.5倍・2倍で再生した場合の所要時間も計算している。
