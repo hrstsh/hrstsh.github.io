@@ -10,6 +10,7 @@ export interface TipPost {
 }
 
 export const tipPosts: TipPost[] = [
+  { title: 'launchctl の使い方', href: '/tips/macos-launchctl/', desc: 'macOSで定期実行・常駐処理を設定するlaunchctlを初心者向けに解説。plistの全キーと取りうる値、配置場所、bootstrap/bootout、デバッグまで。', date: '2026.06' },
   { title: 'X(Twitter)のスレッド（連投）を1つのテキストにまとめてコピーするブックマークレット', href: '/tips/twitter-thread-copy-bookmarklet/', desc: 'スレッド主のツイート本文だけを上から順に連結して1つのテキストにコピー。1ツイートずつコピーする手間をなくす。', date: '2026.06' },
   { title: 'YouTube再生リストの合計再生時間を計算するブックマークレット', href: '/tips/youtube-playlist-total-time-bookmarklet/', desc: '各動画の時間表記を合算して合計・平均・倍速時の所要時間を表示。URL貼り付け不要でワンクリック。', date: '2026.06' },
   { title: 'HTMLの表をTSV/CSVとしてコピーするブックマークレット', href: '/tips/html-table-tsv-csv-copy-bookmarklet/', desc: 'ページ上の表をクリックで選んでTSV/CSVでコピー。Excel・スプレッドシートに崩れず貼り付けられる。', date: '2026.06' },
