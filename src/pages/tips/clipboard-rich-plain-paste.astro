@@ -1,0 +1,501 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'コピー＆ペーストで書式がつく時とテキストだけになる時の違い - hrの備忘録';
+const description = 'コピー＆ペーストで書式（色・フォント・リンクなど）ごと貼り付く場合と、テキストだけになる場合がある。クリップボードに複数形式が同時に入る仕組みと、コピー元×貼り付け先の組み合わせ別パターン、書式なしで貼り付けるショートカット（Ctrl+Shift+V等）をまとめた。';
+const path = '/tips/clipboard-rich-plain-paste';
+const faqItems = [
+  { question: 'コピペで書式がつく時とつかない時があるのはなぜ？', answer: 'クリップボードにはプレーンテキスト・リッチテキスト・HTMLなど複数の形式が同時にコピーされる。貼り付け先のアプリが書式つきの形式を受け取れるなら書式が再現され、プレーンテキストしか受け取れないアプリでは文字だけになる。' },
+  { question: '書式なしでペーストするにはどうすればいい？', answer: 'macOSはCmd+Option+Shift+V、WindowsはCtrl+Shift+Vで書式なしペーストできる。Google ドキュメントやSlackなど一部アプリは独自のショートカットを持つ場合もある。' },
+  { question: 'Webページからコピーすると色やリンクがつくのはなぜ？', answer: 'ブラウザはコピー時にHTMLとプレーンテキストの両方をクリップボードにセットする。HTML形式を受け取れるアプリ（Word、Google ドキュメントなど）に貼ると、色・リンク・フォントサイズなどが再現される。' },
+];
+const jsonLd = [
+  tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'),
+  faqPage(faqItems, path),
+];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">← Tips一覧</a>
+      <h1>コピー＆ペーストで書式がつく時とテキストだけになる時の違い</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        普段当たり前に使うコピペだが、あまり仕組みを知らない。たとえば、Web ページの文章をコピーして Word に貼り付けたら色やフォントまでついてきたのに、同じ内容をチャットの入力欄に貼ったらテキストだけになっていたなど、何となく挙動は知っているがよく理解していなかった。気になったので仕組みを調べてまとめてみた。
+      </p>
+
+      <nav class="toc" aria-label="目次">
+        <p class="toc-title">目次</p>
+        <ol>
+          <li><a href="#clipboard">クリップボードには複数の形式が入っている</a></li>
+          <li><a href="#source">コピー元ごとのパターン</a></li>
+          <li><a href="#destination">貼り付け先ごとのパターン</a></li>
+          <li><a href="#matrix">コピー元 × 貼り付け先の早見表</a></li>
+          <li><a href="#plain-paste">書式なしで貼り付ける方法</a></li>
+          <li><a href="#faq">よくある質問</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="clipboard">クリップボードには複数の形式が入っている</h2>
+      <p>
+        コピーしたデータは「クリップボード」という一時的な保管場所に入る。ここまでは多くの人が知っていると思う。ただ、クリップボードに入るのは「1 つのデータ」ではない。
+      </p>
+      <p>
+        コピーした瞬間に<strong>複数の形式が同時に</strong>クリップボードへセットされる。たとえば Web ページの文章をコピーすると、次の 3 つが一度に入る。
+      </p>
+      <ul>
+        <li><strong>プレーンテキスト</strong> — 装飾なしの文字列</li>
+        <li><strong>HTML</strong> — 色・フォント・リンクなどの情報を含むソースコード</li>
+        <li><strong>リッチテキスト（RTF）</strong> — アプリ間で書式を受け渡すための形式</li>
+      </ul>
+      <p>
+        コピー元のアプリが「この形式で渡せます」と用意したものがクリップボードに並ぶ。貼り付け先のアプリはその中から自分が扱える形式を選んで受け取る。書式つきになるかテキストだけになるかは「渡す側」と「受け取る側」の組み合わせで決まる。
+      </p>
+
+      <h2 id="source">コピー元ごとのパターン</h2>
+      <p>
+        コピー元のアプリによってクリップボードにセットされる形式が違う。
+      </p>
+
+      <h3>ブラウザ（Chrome・Safari・Firefox など）</h3>
+      <p>
+        Web ページからテキストを選択してコピーすると HTML とプレーンテキストの両方がセットされる。HTML 側には文字色やフォントサイズ、太字、リンク URL、背景色がそのまま含まれている。書式がリッチに貼り付く原因の多くはこれ。
+      </p>
+
+      <h3>Word・Google ドキュメント</h3>
+      <p>
+        リッチテキスト（RTF）とプレーンテキストがセットされる。見出しや太字、箇条書き、表の構造などが書式に含まれる。Google ドキュメントは HTML もセットするので、他のアプリへ貼り付けたときに書式が残りやすい。
+      </p>
+
+      <h3>メモ帳・ターミナル・コードエディタ</h3>
+      <p>
+        プレーンテキストだけ。VS Code やターミナルでコードをコピーしても書式情報は入らない。どこに貼っても文字だけになる。
+      </p>
+      <p>
+        ただし例外がある。VS Code はシンタックスハイライトの色情報を HTML としてクリップボードに含めることがある。コードを Word や Google ドキュメントに貼ったときに色つきになるのはこれが理由。
+      </p>
+
+      <h3>Excel・Google スプレッドシート</h3>
+      <p>
+        セルをコピーすると表の構造（行・列・罫線・セル内の書式）を含んだ HTML やリッチテキストがセットされる。他のアプリに貼ると表として再現されることがある。一方テキストエリアに貼るとタブ区切りのプレーンテキストになる。
+      </p>
+
+      <h2 id="destination">貼り付け先ごとのパターン</h2>
+      <p>
+        同じものをコピーしても貼り付け先で結果が変わる。受け取れる形式がアプリによって違うため。
+      </p>
+
+      <h3>Word・Google ドキュメント</h3>
+      <p>
+        リッチテキストや HTML を優先して受け取る。Web ページからコピーした文章を貼ると色やフォント、リンクがそのまま再現される。表も表として入る。
+      </p>
+
+      <h3>メモ帳（Windows）・テキストエディット（プレーン設定）</h3>
+      <p>
+        プレーンテキストしか受け取らない。何をコピーしても文字だけになる。書式を落としたいときに「一度メモ帳に貼ってからコピーし直す」というやり方はここから来ている。
+      </p>
+
+      <h3>Slack・Notion・メールの本文</h3>
+      <p>
+        アプリが独自のルールを持っていて結果がまちまち。Slack は太字やリンクを部分的に維持する。Notion は HTML を解釈してブロック構造に変換する。メールアプリ（Gmail など）はリッチテキストをほぼそのまま受け入れる。
+      </p>
+      <p>
+        「このアプリでは書式が残った」「あのアプリでは消えた」と感じるのは、どの形式を優先するかがアプリごとに違うから。
+      </p>
+
+      <h3>ブラウザのフォーム</h3>
+      <p>
+        ここも混乱しやすい。同じブラウザ上でも<strong>入力先の要素によって結果が変わる</strong>。
+      </p>
+      <ul>
+        <li><code>&lt;input&gt;</code> や <code>&lt;textarea&gt;</code> — プレーンテキストのみ。書式は入らない</li>
+        <li><code>contenteditable</code> な要素（リッチテキストエディタ） — HTML を受け取るので書式つきで貼り付く</li>
+      </ul>
+      <p>
+        Google 検索の検索ボックスに貼るとテキストだけ。Gmail の本文欄に貼ると書式つき。どちらもブラウザ上の操作だが入力欄の作りが違う。
+      </p>
+
+      <h2 id="matrix">コピー元 × 貼り付け先の早見表</h2>
+      <p>
+        よくある組み合わせを表にまとめた。
+      </p>
+      <div class="table-wrapper">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>コピー元 ＼ 貼り付け先</th>
+              <th>Word / Google ドキュメント</th>
+              <th>メモ帳 / プレーンエディタ</th>
+              <th>Slack</th>
+              <th>Notion</th>
+              <th>Gmail 本文</th>
+              <th>ブラウザの検索ボックス</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Web ページ（ブラウザ）</td>
+              <td class="rich">書式あり</td>
+              <td class="plain">テキストのみ</td>
+              <td class="partial">一部残る</td>
+              <td class="partial">ブロックに変換</td>
+              <td class="rich">書式あり</td>
+              <td class="plain">テキストのみ</td>
+            </tr>
+            <tr>
+              <td>Word / Google ドキュメント</td>
+              <td class="rich">書式あり</td>
+              <td class="plain">テキストのみ</td>
+              <td class="partial">一部残る</td>
+              <td class="partial">ブロックに変換</td>
+              <td class="rich">書式あり</td>
+              <td class="plain">テキストのみ</td>
+            </tr>
+            <tr>
+              <td>メモ帳 / ターミナル</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">テキストのみ</td>
+            </tr>
+            <tr>
+              <td>Excel / スプレッドシート</td>
+              <td class="rich">表として再現</td>
+              <td class="plain">タブ区切りテキスト</td>
+              <td class="plain">テキストのみ</td>
+              <td class="partial">表に変換</td>
+              <td class="rich">表として再現</td>
+              <td class="plain">テキストのみ</td>
+            </tr>
+            <tr>
+              <td>VS Code（コード）</td>
+              <td class="partial">色つきで入ることがある</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">テキストのみ</td>
+              <td class="plain">コードブロック化</td>
+              <td class="partial">色つきで入ることがある</td>
+              <td class="plain">テキストのみ</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>書式あり</strong> … 色・フォント・太字・リンク・表構造などが再現される</li>
+        <li><strong>テキストのみ</strong> … 装飾はすべて落ちて文字列だけが貼り付く</li>
+        <li><strong>一部残る / 変換</strong> … アプリ側のルールで一部だけ維持、または独自形式に変換される</li>
+      </ul>
+
+      <h2 id="plain-paste">書式なしで貼り付ける方法</h2>
+      <p>
+        書式つきでコピーされた内容をテキストだけで貼り付けたい場面は多い。OS やアプリごとにショートカットが用意されている。
+      </p>
+      <table class="info-table">
+        <thead>
+          <tr>
+            <th>環境</th>
+            <th>ショートカット</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>macOS（システム共通）</td>
+            <td><kbd>Cmd</kbd> + <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td>
+          </tr>
+          <tr>
+            <td>Windows（Chrome・Edge など）</td>
+            <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td>
+          </tr>
+          <tr>
+            <td>Google ドキュメント</td>
+            <td><kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td>
+          </tr>
+          <tr>
+            <td>Slack</td>
+            <td><kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td>
+          </tr>
+          <tr>
+            <td>Notion</td>
+            <td><kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td>
+          </tr>
+          <tr>
+            <td>Word（Windows）</td>
+            <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd>、または「貼り付けのオプション」→「テキストのみ保持」</td>
+          </tr>
+          <tr>
+            <td>Word（Mac）</td>
+            <td>「編集」→「形式を選択してペースト」→「テキスト」</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        覚えておくと便利なのは macOS の <kbd>Cmd</kbd> + <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> と Windows の <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd>。この 2 つがほぼ共通で使える。アプリ固有のショートカットを覚えなくてもまずこれを試せば大体うまくいく。
+      </p>
+      <p>
+        「一度メモ帳に貼ってからコピーし直す」という古典的な方法もあるが、ショートカットのほうが早い。
+      </p>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/html-table-tsv-csv-copy-bookmarklet/">HTMLの表をTSV/CSVとしてコピーするブックマークレット</a></li>
+        <li><a href="/tips/chrome-copy-all-tabs/">Chromeで開いている全タブのURLを一括コピーする方法</a></li>
+      </ul>
+
+      <h2 id="faq">よくある質問</h2>
+      <dl class="faq-list">
+        <dt>コピペで書式がつく時とつかない時があるのはなぜ？</dt>
+        <dd>クリップボードにはプレーンテキスト・リッチテキスト・HTMLなど複数の形式が同時にコピーされる。貼り付け先のアプリが書式つきの形式を受け取れるなら書式が再現され、プレーンテキストしか受け取れないアプリでは文字だけになる。</dd>
+        <dt>書式なしでペーストするにはどうすればいい？</dt>
+        <dd>macOSはCmd+Option+Shift+V、WindowsはCtrl+Shift+Vで書式なしペーストできる。Google ドキュメントやSlackなど一部アプリは独自のショートカットを持つ場合もある。</dd>
+        <dt>Webページからコピーすると色やリンクがつくのはなぜ？</dt>
+        <dd>ブラウザはコピー時にHTMLとプレーンテキストの両方をクリップボードにセットする。HTML形式を受け取れるアプリ（Word、Google ドキュメントなど）に貼ると、色・リンク・フォントサイズなどが再現される。</dd>
+      </dl>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-body kbd {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.85em;
+    box-shadow: 0 1px 0 #bbb;
+  }
+
+  .toc {
+    background: #f9f9fb;
+    border: 1px solid #e5e5ea;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  .toc ol {
+    margin-bottom: 0;
+    padding-left: 1.5rem;
+  }
+
+  .toc li {
+    margin-bottom: 0.25rem;
+  }
+
+  .toc a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    text-decoration: underline;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 700px;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    border: 1px solid #ddd;
+    padding: 0.5rem 0.6rem;
+    text-align: center;
+  }
+
+  .matrix-table th {
+    background: #f5f3ff;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.8rem;
+  }
+
+  .matrix-table th:first-child,
+  .matrix-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    background: #fafafa;
+    min-width: 160px;
+  }
+
+  .matrix-table .rich {
+    background: #f0fdf4;
+    color: #166534;
+  }
+
+  .matrix-table .plain {
+    background: #fefce8;
+    color: #854d0e;
+  }
+
+  .matrix-table .partial {
+    background: #eff6ff;
+    color: #1e40af;
+  }
+
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  .info-table th,
+  .info-table td {
+    border: 1px solid #ddd;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+
+  .info-table th {
+    background: #f5f3ff;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .info-table td:first-child {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+
+  .page-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .page-footer a + a {
+    margin-left: 0.5rem;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>
