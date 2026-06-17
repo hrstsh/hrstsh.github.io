@@ -9,6 +9,7 @@ const tools = [
   { name: 'X（Twitter）検索ツール', url: '/tools/x-search-builder/', desc: '画像付きツイートや特定ユーザーの投稿を簡単に検索。無料・登録不要。検索コマンドを覚えなくても高度な検索が可能。' },
   { name: 'ツイートのリンク化回避ツール', url: '/tools/zero-width-breaker/', desc: 'ツイートのメンション・URL・ハッシュタグのリンク化を防ぐ。見た目を変えずに Zero-Width 文字を挿入。' },
   { name: '写真のメタデータ（EXIF）編集', url: '/tools/exif-editor/', desc: '撮影日時・カメラ情報・GPS位置情報などをブラウザで編集。既存の変更や新規追加が可能。' },
+  { name: 'cron / launchd / systemd スケジュール変換', url: '/tools/schedule-builder/', desc: 'cron・launchd・systemd timer のスケジュール設定をフォームで組み立て、3形式を一括生成。cron式から launchd plist や systemd timer への変換にも対応。' },
 ];
 const items = tools.map((t) => ({ name: t.name, url: t.url }));
 const jsonLd = itemList('ツール', 'ブラウザ上で動作する便利なツール集。スタイル付きテキスト置換など、クライアントサイドで完結するユーティリティを提供しています。', 'https://hrstsh.com/tools', items);

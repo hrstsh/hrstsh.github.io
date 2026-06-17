@@ -1,0 +1,1393 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { webApplication, faqPage } from '../../../utils/jsonLd';
+
+const title = 'cron / launchd / systemd スケジュール変換ツール - hrの備忘録';
+const description = 'cron・launchd (macOS)・systemd timer (Linux) のスケジュール設定をフォームで組み立て、3形式を一括生成。cron式からの変換にも対応。ブラウザ完結・データ送信なし。';
+const pageUrl = 'https://hrstsh.com/tools/schedule-builder';
+const faqItems = [
+  { question: 'cron と launchd は何が違う？', answer: 'cron は UNIX 系で広く使われるスケジューラで「分 時 日 月 曜日」の5フィールドで指定する。launchd は macOS 専用で、plist（XML）の StartCalendarInterval や StartInterval で指定する。launchd はレンジやステップを直接書けないため、複数エントリに展開する必要がある。' },
+  { question: 'systemd timer とは？', answer: 'Linux の systemd が提供するタイマー機能。cron の代替として使われ、OnCalendar にカレンダー式を書いてスケジュールを指定する。ログが journalctl で確認でき、依存関係の管理もできる。' },
+  { question: '入力した内容はサーバーに送信される？', answer: 'いいえ。すべての処理はブラウザ内の JavaScript で完結しており、入力データが外部に送られることはない。' },
+  { question: 'cron式の「*/5」のような指定は launchd に変換できる？', answer: 'launchd の StartCalendarInterval はステップ指定に対応していないため、該当する値をすべて列挙した複数エントリに展開して出力する。たとえば「*/5 * * * *」は StartInterval（秒指定）に変換される。' },
+];
+const jsonLd = [
+  webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
+  faqPage(faqItems, pageUrl),
+];
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tools/" class="back-link">&larr; ツール一覧</a>
+      <h1>cron / launchd / systemd スケジュール変換ツール</h1>
+    </header>
+
+    <article class="article-body">
+      <p>
+        定期実行のスケジュールをフォームで組み立てて、<strong>cron</strong>・<strong>launchd</strong>（macOS）・<strong>systemd timer</strong>（Linux）の3形式をまとめて生成するツールです。
+        cron 式を貼り付けて launchd や systemd に変換することもできます。<strong>データはサーバーに送信されません</strong>。
+      </p>
+
+      <div class="tool-container">
+        <!-- モード切替 -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" data-mode="builder">スケジュール式をフォームで作成</button>
+          <button class="mode-tab" data-mode="convert">cron 式を launchd / systemd に変換</button>
+        </div>
+
+        <!-- ビルダーモード -->
+        <section id="builderMode" class="tool-section">
+          <div class="schedule-sentence">
+            <div class="field-inline">
+              <label for="month">月</label>
+              <select id="month">
+                <option value="*" selected>毎月</option>
+              </select>
+            </div>
+            <div class="field-inline">
+              <label for="day">日</label>
+              <select id="day">
+                <option value="*" selected>毎日</option>
+                <option value="1">1日</option>
+                <option value="15">15日</option>
+              </select>
+            </div>
+            <div class="field-inline">
+              <label for="weekday">曜日</label>
+              <select id="weekday">
+                <option value="*" selected>毎日</option>
+                <option value="1-5">平日（月〜金）</option>
+                <option value="0,6">週末（土日）</option>
+              </select>
+            </div>
+            <div class="field-inline">
+              <label for="hour">時</label>
+              <select id="hour">
+                <option value="*">毎時</option>
+                <option value="0">0時</option>
+                <option value="9" selected>9時</option>
+              </select>
+            </div>
+            <div class="field-inline">
+              <label for="minute">分</label>
+              <select id="minute">
+                <option value="*">毎分</option>
+                <option value="0" selected>0分</option>
+              </select>
+            </div>
+            <span class="sentence-suffix">に実行</span>
+          </div>
+
+          <div id="dayWeekdayWarning" class="field-warning hidden">
+            日と曜日を同時に指定した場合、形式によって挙動が異なります。<strong>cron</strong> ではどちらか一方に一致すれば実行されます（OR 条件）。<strong>launchd</strong> ではすべての条件に一致した場合のみ実行されます（AND 条件）。<strong>systemd timer</strong> も AND 条件です。
+          </div>
+
+          <div class="command-input-group">
+            <label for="commandInput">実行するコマンド（任意）</label>
+            <input type="text" id="commandInput" placeholder="例: /usr/local/bin/backup.sh" class="text-input" spellcheck="false">
+          </div>
+
+          <button id="buildBtn" class="primary-btn">生成する</button>
+        </section>
+
+        <!-- 変換モード -->
+        <section id="convertMode" class="tool-section hidden">
+          <div class="convert-inputs">
+            <div class="convert-field">
+              <label for="cronInput">cron 式</label>
+              <input type="text" id="cronInput" placeholder="例: */5 9-17 * * 1-5" class="text-input" spellcheck="false">
+            </div>
+            <div class="convert-field">
+              <label for="commandInputConvert">実行するコマンド（任意）</label>
+              <input type="text" id="commandInputConvert" placeholder="例: /usr/local/bin/backup.sh" class="text-input" spellcheck="false">
+            </div>
+          </div>
+          <button id="convertBtn" class="primary-btn">変換する</button>
+        </section>
+
+        <!-- 出力 -->
+        <section id="outputSection" class="tool-section hidden">
+          <div class="schedule-summary" id="scheduleSummary"></div>
+
+          <h2>次回の実行予定</h2>
+          <div id="nextRuns" class="next-runs"></div>
+
+          <div class="output-tabs">
+            <button class="output-tab active" data-format="cron">cron</button>
+            <button class="output-tab" data-format="launchd">launchd</button>
+            <button class="output-tab" data-format="systemd">systemd timer</button>
+          </div>
+
+          <div id="outputCron" class="output-panel active">
+            <div class="output-header">
+              <span class="output-label">crontab に追加する行</span>
+              <button class="copy-btn" data-target="cronCode">コピー</button>
+            </div>
+            <pre id="cronCode" class="output-code"></pre>
+            <div id="cronAnnotation" class="annotation"></div>
+            <div class="setup-guide">
+              <h3>設定方法</h3>
+              <ol>
+                <li><code>crontab -e</code> を実行して編集画面を開く</li>
+                <li>上の行をそのまま貼り付けて保存する</li>
+                <li><code>crontab -l</code> で登録内容を確認できる</li>
+              </ol>
+            </div>
+          </div>
+
+          <div id="outputLaunchd" class="output-panel">
+            <div class="output-header">
+              <span class="output-label" id="launchdFilename">~/Library/LaunchAgents/com.example.task.plist</span>
+              <button class="copy-btn" data-target="launchdCode">コピー</button>
+            </div>
+            <pre id="launchdCode" class="output-code"></pre>
+            <div id="launchdAnnotation" class="annotation"></div>
+            <p class="output-note" id="launchdNote"></p>
+            <div class="setup-guide">
+              <h3>設定方法</h3>
+              <ol>
+                <li id="launchdStep1">上の内容を <code>~/Library/LaunchAgents/com.example.task.plist</code> に保存する</li>
+                <li><strong>Label</strong> はファイル名（拡張子なし）と一致させる</li>
+                <li><strong>ProgramArguments</strong> を実際のコマンドに書き換える（引数がある場合は <code>&lt;string&gt;</code> を複数行に分ける）</li>
+                <li><code>launchctl load ~/Library/LaunchAgents/com.example.task.plist</code> で有効化する</li>
+                <li>無効化は <code>launchctl unload</code> で同じファイルを指定する</li>
+              </ol>
+            </div>
+          </div>
+
+          <div id="outputSystemd" class="output-panel">
+            <div class="output-header">
+              <span class="output-label" id="systemdTimerFilename">/etc/systemd/system/example.timer</span>
+              <button class="copy-btn" data-target="systemdCode">コピー</button>
+            </div>
+            <pre id="systemdCode" class="output-code"></pre>
+            <div id="systemdAnnotation" class="annotation"></div>
+            <div class="setup-guide">
+              <h3>設定方法</h3>
+              <ol>
+                <li id="systemdStep1">上の内容を <code>/etc/systemd/system/example.timer</code> に保存する</li>
+                <li>同名の <code>.service</code> ファイルも作成し、<code>ExecStart=</code> に実行コマンドを書く</li>
+                <li><code>sudo systemctl enable --now example.timer</code> で有効化する</li>
+                <li><code>systemctl list-timers</code> で次回実行を確認できる</li>
+              </ol>
+              <details class="service-example">
+                <summary>対応する .service ファイルの例</summary>
+                <pre id="systemdServiceCode" class="output-code"></pre>
+              </details>
+            </div>
+          </div>
+
+          <p id="copyStatus" class="status-message"></p>
+        </section>
+      </div>
+
+      <section class="usage-section">
+        <h2>使い方</h2>
+        <div id="usageBuilder">
+          <ol>
+            <li>月・日・曜日・時・分をプルダウンで選ぶ</li>
+            <li>実行するコマンドがあれば入力する（出力に反映される）</li>
+            <li>「生成する」を押すと cron・launchd・systemd timer の3形式が出力される</li>
+            <li>タブで形式を切り替え、「コピー」で使いたい形式をクリップボードに取る</li>
+          </ol>
+        </div>
+        <div id="usageConvert" class="hidden">
+          <ol>
+            <li>手元の cron 式（例: <code>0 9 * * 1-5</code>）を入力する</li>
+            <li>「変換する」を押すと launchd と systemd timer の形式に変換される</li>
+            <li>出力タブで形式を切り替え、「コピー」でクリップボードに取る</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="usage-section">
+        <h2>3つの形式の違い</h2>
+        <h3>cron</h3>
+        <p>
+          UNIX 系で広く使われるスケジューラ。「分 時 日 月 曜日」の5フィールドで実行タイミングを指定する。GitHub Actions の <code>schedule</code> も同じ書式を使う。レンジ（<code>9-17</code>）やステップ（<code>*/5</code>）を直感的に書ける。
+        </p>
+        <h3>launchd（macOS）</h3>
+        <p>
+          macOS 標準のプロセス管理。plist（XML）の <code>StartCalendarInterval</code> でスケジュールを指定する。cron と違い、レンジやステップは直接書けない。たとえば「平日の毎時」なら曜日ごとにエントリを並べる必要がある。一定間隔の繰り返しは <code>StartInterval</code>（秒単位）で表現する。
+        </p>
+        <h3>systemd timer（Linux）</h3>
+        <p>
+          systemd が提供するタイマーユニット。<code>OnCalendar</code> にカレンダー式を書く。<code>Mon..Fri *-*-* 09:00:00</code> のように人間が読める形式で、cron のステップ指定に近い表現もできる。実行ログは <code>journalctl</code> で確認できるので、cron よりデバッグしやすい面がある。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>変換時の制約</h2>
+        <p>
+          cron &rarr; launchd の変換では、cron の表現力をそのまま持ち込めない場面がある。
+        </p>
+        <ul>
+          <li><strong>ステップ指定</strong>（<code>*/5</code> など）: 純粋な等間隔なら <code>StartInterval</code>（秒指定）で表現する。時間帯の制限がある場合は個別の値に展開して複数エントリにする</li>
+          <li><strong>レンジ指定</strong>（<code>9-17</code> など）: 範囲内の値をすべて列挙した複数の <code>StartCalendarInterval</code> に展開する</li>
+          <li><strong>リスト指定</strong>（<code>1,3,5</code> など）: 同様に個別エントリへ展開する</li>
+        </ul>
+        <p>
+          この展開の結果、plist が長くなることがある。実際の運用で見づらい場合は、目的に合わせてシンプルな式に組み直すのも手。
+        </p>
+      </section>
+
+      <section class="usage-section">
+        <h2>よくある質問</h2>
+        <dl class="faq-list">
+          {faqItems.map((item) => (
+            <>
+              <dt>{item.question}</dt>
+              <dd>{item.answer}</dd>
+            </>
+          ))}
+        </dl>
+      </section>
+
+      <section class="usage-section">
+        <h2>関連記事</h2>
+        <ul>
+          <li><a href="/tips/macos-launchctl/">macOS の launchctl でコマンドを定期実行する方法</a></li>
+          <li><a href="/tried/schedule-builder/">cron / launchd / systemd 変換ツールを作ってみた</a></li>
+        </ul>
+      </section>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tools/">ツール一覧に戻る</a> &middot; <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<script>
+  // ---- 型・定数 ----
+  interface CronFields {
+    minute: string;
+    hour: string;
+    day: string;
+    month: string;
+    weekday: string;
+  }
+
+  const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
+  const MONTH_NAMES = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+  const SYSTEMD_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // ---- DOM 参照 ----
+  const modeTabs = document.querySelectorAll('.mode-tab') as NodeListOf<HTMLButtonElement>;
+  const builderMode = document.getElementById('builderMode') as HTMLElement;
+  const convertMode = document.getElementById('convertMode') as HTMLElement;
+  const buildBtn = document.getElementById('buildBtn') as HTMLButtonElement;
+  const convertBtn = document.getElementById('convertBtn') as HTMLButtonElement;
+  const cronInput = document.getElementById('cronInput') as HTMLInputElement;
+  const commandInput = document.getElementById('commandInput') as HTMLInputElement;
+  const commandInputConvert = document.getElementById('commandInputConvert') as HTMLInputElement;
+  const outputSection = document.getElementById('outputSection') as HTMLElement;
+  const outputTabs = document.querySelectorAll('.output-tab') as NodeListOf<HTMLButtonElement>;
+  const copyBtns = document.querySelectorAll('.copy-btn') as NodeListOf<HTMLButtonElement>;
+  const copyStatus = document.getElementById('copyStatus') as HTMLParagraphElement;
+
+  const selects = {
+    minute: document.getElementById('minute') as HTMLSelectElement,
+    hour: document.getElementById('hour') as HTMLSelectElement,
+    day: document.getElementById('day') as HTMLSelectElement,
+    month: document.getElementById('month') as HTMLSelectElement,
+    weekday: document.getElementById('weekday') as HTMLSelectElement,
+  };
+
+  // ---- 初期化：プルダウンの選択肢を動的に追加 ----
+  function initSelects() {
+    for (let i = 1; i <= 59; i++) {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = `${i}分`;
+      selects.minute.appendChild(opt);
+    }
+    addStepOptions(selects.minute, 59, '分');
+
+    for (let i = 1; i <= 23; i++) {
+      if (i === 9) continue;
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = `${i}時`;
+      selects.hour.appendChild(opt);
+    }
+    addStepOptions(selects.hour, 23, '時間');
+    addOption(selects.hour, '9-17', '9〜17時');
+
+    for (let i = 2; i <= 31; i++) {
+      if (i === 15) continue;
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = `${i}日`;
+      selects.day.appendChild(opt);
+    }
+
+    for (let i = 1; i <= 12; i++) {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = MONTH_NAMES[i];
+      selects.month.appendChild(opt);
+    }
+
+    for (let i = 0; i < 7; i++) {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = `${WEEKDAY_NAMES[i]}曜`;
+      selects.weekday.appendChild(opt);
+    }
+  }
+
+  function addStepOptions(select: HTMLSelectElement, max: number, unit: string) {
+    const steps = [2, 3, 5, 10, 15, 30].filter(s => s <= max);
+    for (const s of steps) {
+      const opt = document.createElement('option');
+      opt.value = `*/${s}`;
+      opt.textContent = `${s}${unit}ごと`;
+      select.appendChild(opt);
+    }
+  }
+
+  function addOption(select: HTMLSelectElement, value: string, label: string) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    select.appendChild(opt);
+  }
+
+  initSelects();
+
+  // ---- 使い方・警告の DOM 参照 ----
+  const usageBuilder = document.getElementById('usageBuilder') as HTMLElement;
+  const usageConvert = document.getElementById('usageConvert') as HTMLElement;
+  const dayWeekdayWarning = document.getElementById('dayWeekdayWarning') as HTMLElement;
+
+  // ---- モード切替（出力・入力を保持） ----
+  modeTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      modeTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const mode = tab.dataset.mode;
+      builderMode.classList.toggle('hidden', mode !== 'builder');
+      convertMode.classList.toggle('hidden', mode !== 'convert');
+      usageBuilder.classList.toggle('hidden', mode !== 'builder');
+      usageConvert.classList.toggle('hidden', mode !== 'convert');
+    });
+  });
+
+  // ---- 日＋曜日の同時指定を検知して警告 ----
+  function checkDayWeekdayConflict() {
+    const dayVal = selects.day.value;
+    const weekdayVal = selects.weekday.value;
+    dayWeekdayWarning.classList.toggle('hidden', dayVal === '*' || weekdayVal === '*');
+  }
+  selects.day.addEventListener('change', checkDayWeekdayConflict);
+  selects.weekday.addEventListener('change', checkDayWeekdayConflict);
+
+  // ---- 出力タブ切替 ----
+  outputTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      outputTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const format = tab.dataset.format;
+      document.querySelectorAll('.output-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById(`output${format!.charAt(0).toUpperCase() + format!.slice(1)}`);
+      if (panel) panel.classList.add('active');
+    });
+  });
+
+  // ---- cron 式パーサー ----
+  function parseCron(expr: string): CronFields | null {
+    const parts = expr.trim().split(/\s+/);
+    if (parts.length !== 5) return null;
+    return { minute: parts[0], hour: parts[1], day: parts[2], month: parts[3], weekday: parts[4] };
+  }
+
+  // ---- フィールド展開 ----
+  function expandField(field: string, min: number, max: number): number[] {
+    if (field === '*') {
+      const arr: number[] = [];
+      for (let i = min; i <= max; i++) arr.push(i);
+      return arr;
+    }
+
+    const results = new Set<number>();
+    for (const part of field.split(',')) {
+      const stepMatch = part.match(/^(\*|\d+-\d+)\/(\d+)$/);
+      if (stepMatch) {
+        const step = parseInt(stepMatch[2], 10);
+        let start = min;
+        let end = max;
+        if (stepMatch[1] !== '*') {
+          const range = stepMatch[1].split('-');
+          start = parseInt(range[0], 10);
+          end = parseInt(range[1], 10);
+        }
+        for (let i = start; i <= end; i += step) results.add(i);
+        continue;
+      }
+      const rangeMatch = part.match(/^(\d+)-(\d+)$/);
+      if (rangeMatch) {
+        const s = parseInt(rangeMatch[1], 10);
+        const e = parseInt(rangeMatch[2], 10);
+        for (let i = s; i <= e; i++) results.add(i);
+        continue;
+      }
+      const num = parseInt(part, 10);
+      if (!isNaN(num)) results.add(num);
+    }
+    return Array.from(results).sort((a, b) => a - b);
+  }
+
+  // ---- 純粋な等間隔かどうか判定 ----
+  function isPureInterval(fields: CronFields): { seconds: number } | null {
+    if (fields.hour === '*' && fields.day === '*' && fields.month === '*' && fields.weekday === '*') {
+      const stepMatch = fields.minute.match(/^\*\/(\d+)$/);
+      if (stepMatch) return { seconds: parseInt(stepMatch[1], 10) * 60 };
+    }
+    if (fields.minute === '*' && fields.day === '*' && fields.month === '*' && fields.weekday === '*') {
+      const stepMatch = fields.hour.match(/^\*\/(\d+)$/);
+      if (stepMatch) return { seconds: parseInt(stepMatch[1], 10) * 3600 };
+    }
+    return null;
+  }
+
+  // ---- 人間が読める表現 ----
+  function summarizeField(field: string, values: number[], unit: string): string {
+    if (field === '*') return '';
+    const stepMatch = field.match(/^\*\/(\d+)$/);
+    if (stepMatch) return `${stepMatch[1]}${unit}ごと`;
+    const rangeStepMatch = field.match(/^(\d+)-(\d+)\/(\d+)$/);
+    if (rangeStepMatch) return `${rangeStepMatch[1]}〜${rangeStepMatch[2]}${unit} ${rangeStepMatch[3]}${unit}ごと`;
+    const rangeMatch = field.match(/^(\d+)-(\d+)$/);
+    if (rangeMatch) return `${rangeMatch[1]}〜${rangeMatch[2]}${unit}`;
+    if (values.length === 1) return `${values[0]}${unit}`;
+    if (values.length <= 4) return values.map(v => `${v}`).join('・') + unit;
+    if (isConsecutive(values)) return `${values[0]}〜${values[values.length - 1]}${unit}`;
+    const step = detectStep(values);
+    if (step) return `${values[0]}〜${values[values.length - 1]}${unit} ${step}${unit}ごと`;
+    return values.map(v => `${v}`).join('・') + unit;
+  }
+
+  function isConsecutive(arr: number[]): boolean {
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i] !== arr[i - 1] + 1) return false;
+    }
+    return arr.length > 1;
+  }
+
+  function detectStep(arr: number[]): number | null {
+    if (arr.length < 2) return null;
+    const step = arr[1] - arr[0];
+    for (let i = 2; i < arr.length; i++) {
+      if (arr[i] - arr[i - 1] !== step) return null;
+    }
+    return step;
+  }
+
+  function toHumanReadable(fields: CronFields): string {
+    const parts: string[] = [];
+
+    const interval = isPureInterval(fields);
+    if (interval) {
+      if (interval.seconds < 3600) return `${interval.seconds / 60}分ごと`;
+      return `${interval.seconds / 3600}時間ごと`;
+    }
+
+    if (fields.month !== '*') {
+      const months = expandField(fields.month, 1, 12);
+      parts.push(summarizeField(fields.month, months, '月'));
+    }
+
+    if (fields.day !== '*') {
+      const days = expandField(fields.day, 1, 31);
+      parts.push(summarizeField(fields.day, days, '日'));
+    }
+
+    if (fields.weekday !== '*') {
+      const days = expandField(fields.weekday, 0, 6);
+      if (days.length === 5 && days[0] === 1 && days[4] === 5) {
+        parts.push('平日');
+      } else if (days.length === 2 && days[0] === 0 && days[1] === 6) {
+        parts.push('週末');
+      } else {
+        parts.push(days.map(d => WEEKDAY_NAMES[d] + '曜').join('・'));
+      }
+    }
+
+    if (fields.hour === '*' && fields.minute === '*') {
+      parts.push('毎分');
+    } else if (fields.hour === '*') {
+      const mins = expandField(fields.minute, 0, 59);
+      const minSummary = summarizeField(fields.minute, mins, '分');
+      parts.push(`毎時 ${minSummary}`);
+    } else if (fields.minute === '*') {
+      const hours = expandField(fields.hour, 0, 23);
+      const hourSummary = summarizeField(fields.hour, hours, '時');
+      parts.push(`${hourSummary}台の毎分`);
+    } else {
+      const hours = expandField(fields.hour, 0, 23);
+      const mins = expandField(fields.minute, 0, 59);
+      const hourSummary = summarizeField(fields.hour, hours, '時');
+      const minSummary = summarizeField(fields.minute, mins, '分');
+
+      if (hours.length === 1 && mins.length === 1) {
+        parts.push(`${hours[0]}:${String(mins[0]).padStart(2, '0')}`);
+      } else {
+        parts.push(`${hourSummary} ${minSummary}`);
+      }
+    }
+
+    return parts.join(' ') || '（不明）';
+  }
+
+  // ---- cron アノテーション生成 ----
+  function cronAnnotation(fields: CronFields): string {
+    const labels = [
+      { field: fields.minute, name: '分' },
+      { field: fields.hour, name: '時' },
+      { field: fields.day, name: '日' },
+      { field: fields.month, name: '月' },
+      { field: fields.weekday, name: '曜日' },
+    ];
+
+    function describeField(value: string, name: string): string {
+      if (value === '*') return `${name}: 毎${name === '曜日' ? '日' : name}`;
+      const stepMatch = value.match(/^\*\/(\d+)$/);
+      if (stepMatch) return `${name}: ${stepMatch[1]}${name === '曜日' ? '日' : name}ごと`;
+      const rangeMatch = value.match(/^(\d+)-(\d+)$/);
+      if (rangeMatch) {
+        if (name === '曜日') return `${name}: ${WEEKDAY_NAMES[+rangeMatch[1]]}〜${WEEKDAY_NAMES[+rangeMatch[2]]}`;
+        return `${name}: ${rangeMatch[1]}〜${rangeMatch[2]}`;
+      }
+      if (name === '曜日') {
+        const nums = value.split(',').map(Number);
+        return `${name}: ${nums.map(n => WEEKDAY_NAMES[n]).join('・')}`;
+      }
+      return `${name}: ${value}`;
+    }
+
+    const lines = labels.map(l => describeField(l.field, l.name));
+
+    return `┌ ${lines[0]}
+│ ┌ ${lines[1]}
+│ │ ┌ ${lines[2]}
+│ │ │ ┌ ${lines[3]}
+│ │ │ │ ┌ ${lines[4]}
+${fields.minute} ${fields.hour} ${fields.day} ${fields.month} ${fields.weekday}`;
+  }
+
+  // ---- cron 式生成 ----
+  function toCron(fields: CronFields, cmd: string): string {
+    const expr = `${fields.minute} ${fields.hour} ${fields.day} ${fields.month} ${fields.weekday}`;
+    if (cmd) return `${expr}  ${cmd}`;
+    return expr;
+  }
+
+  // ---- launchd plist 生成 ----
+  function toLaunchd(fields: CronFields, cmd: string): { plist: string; note: string; annotations: string[] } {
+    const cmdStr = cmd || '/path/to/command';
+    const annotations: string[] = [];
+    const interval = isPureInterval(fields);
+
+    if (interval) {
+      annotations.push(`Label: この plist の識別名。ファイル名（拡張子なし）と一致させる`);
+      annotations.push(`ProgramArguments: 実行するコマンド。引数がある場合は <string> を複数行に分ける`);
+      annotations.push(`StartInterval: ${interval.seconds}秒（= ${interval.seconds >= 3600 ? interval.seconds / 3600 + '時間' : interval.seconds / 60 + '分'}）ごとに実行`);
+
+      const plist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.task</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>${escapeXml(cmdStr)}</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>${interval.seconds}</integer>
+</dict>
+</plist>`;
+      return { plist, note: '', annotations };
+    }
+
+    const minutes = expandField(fields.minute, 0, 59);
+    const hours = expandField(fields.hour, 0, 23);
+    const days = expandField(fields.day, 1, 31);
+    const months = expandField(fields.month, 1, 12);
+    const weekdays = expandField(fields.weekday, 0, 6);
+
+    const isAllMinutes = fields.minute === '*';
+    const isAllHours = fields.hour === '*';
+    const isAllDays = fields.day === '*';
+    const isAllMonths = fields.month === '*';
+    const isAllWeekdays = fields.weekday === '*';
+
+    interface CalendarEntry { Minute?: number; Hour?: number; Day?: number; Month?: number; Weekday?: number }
+    const entries: CalendarEntry[] = [];
+
+    const mList = isAllMinutes ? [undefined] : minutes;
+    const hList = isAllHours ? [undefined] : hours;
+    const dList = isAllDays ? [undefined] : days;
+    const moList = isAllMonths ? [undefined] : months;
+    const wList = isAllWeekdays ? [undefined] : weekdays;
+
+    for (const mo of moList) {
+      for (const d of dList) {
+        for (const w of wList) {
+          for (const h of hList) {
+            for (const m of mList) {
+              const entry: CalendarEntry = {};
+              if (m !== undefined) entry.Minute = m;
+              if (h !== undefined) entry.Hour = h;
+              if (d !== undefined) entry.Day = d;
+              if (mo !== undefined) entry.Month = mo;
+              if (w !== undefined) entry.Weekday = w;
+              entries.push(entry);
+            }
+          }
+        }
+      }
+    }
+
+    annotations.push(`Label: この plist の識別名。ファイル名（拡張子なし）と一致させる`);
+    annotations.push(`ProgramArguments: 実行するコマンド。引数がある場合は <string> を複数行に分ける`);
+
+    const calParts: string[] = [];
+    if (!isAllMinutes) calParts.push(`Minute = ${minutes.join(', ')}`);
+    if (!isAllHours) calParts.push(`Hour = ${hours.join(', ')}`);
+    if (!isAllDays) calParts.push(`Day = ${days.join(', ')}`);
+    if (!isAllMonths) calParts.push(`Month = ${months.join(', ')}`);
+    if (!isAllWeekdays) calParts.push(`Weekday = ${weekdays.map(w => `${w}(${WEEKDAY_NAMES[w]})`).join(', ')}`);
+    annotations.push(`StartCalendarInterval: ${calParts.join(' / ')}${entries.length > 1 ? `（${entries.length}エントリに展開）` : ''}`);
+
+    function entryToXml(e: CalendarEntry, indent: string): string {
+      const lines: string[] = [`${indent}<dict>`];
+      if (e.Minute !== undefined) { lines.push(`${indent}  <key>Minute</key>`); lines.push(`${indent}  <integer>${e.Minute}</integer>`); }
+      if (e.Hour !== undefined) { lines.push(`${indent}  <key>Hour</key>`); lines.push(`${indent}  <integer>${e.Hour}</integer>`); }
+      if (e.Day !== undefined) { lines.push(`${indent}  <key>Day</key>`); lines.push(`${indent}  <integer>${e.Day}</integer>`); }
+      if (e.Month !== undefined) { lines.push(`${indent}  <key>Month</key>`); lines.push(`${indent}  <integer>${e.Month}</integer>`); }
+      if (e.Weekday !== undefined) { lines.push(`${indent}  <key>Weekday</key>`); lines.push(`${indent}  <integer>${e.Weekday}</integer>`); }
+      lines.push(`${indent}</dict>`);
+      return lines.join('\n');
+    }
+
+    let calendarXml: string;
+    if (entries.length === 1) {
+      calendarXml = `  <key>StartCalendarInterval</key>\n${entryToXml(entries[0], '  ')}`;
+    } else {
+      const xmlEntries = entries.map(e => entryToXml(e, '    ')).join('\n');
+      calendarXml = `  <key>StartCalendarInterval</key>\n  <array>\n${xmlEntries}\n  </array>`;
+    }
+
+    let note = '';
+    if (entries.length > 1) {
+      note = `launchd はレンジ・ステップに非対応のため、${entries.length}個の CalendarInterval エントリに展開しています。`;
+    }
+
+    const plist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.task</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>${escapeXml(cmdStr)}</string>
+  </array>
+${calendarXml}
+</dict>
+</plist>`;
+    return { plist, note, annotations };
+  }
+
+  function escapeXml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // ---- systemd timer 生成 ----
+  function toSystemd(fields: CronFields, cmd: string): { timer: string; service: string; annotations: string[] } {
+    const cmdStr = cmd || '/path/to/command';
+    const annotations: string[] = [];
+    const interval = isPureInterval(fields);
+
+    if (interval) {
+      let timeStr: string;
+      if (interval.seconds >= 3600 && interval.seconds % 3600 === 0) {
+        timeStr = `${interval.seconds / 3600}h`;
+      } else if (interval.seconds >= 60 && interval.seconds % 60 === 0) {
+        timeStr = `${interval.seconds / 60}min`;
+      } else {
+        timeStr = `${interval.seconds}s`;
+      }
+      annotations.push(`OnBootSec: 起動後 ${timeStr} で初回実行`);
+      annotations.push(`OnUnitActiveSec: 以降 ${timeStr} ごとに繰り返し`);
+
+      const timer = `[Unit]
+Description=Scheduled task
+
+[Timer]
+OnBootSec=${timeStr}
+OnUnitActiveSec=${timeStr}
+
+[Install]
+WantedBy=timers.target`;
+
+      const service = `[Unit]
+Description=Scheduled task
+
+[Service]
+Type=oneshot
+ExecStart=${cmdStr}`;
+
+      return { timer, service, annotations };
+    }
+
+    const weekdays = fields.weekday === '*' ? '*' :
+      expandField(fields.weekday, 0, 6).map(d => SYSTEMD_WEEKDAYS[d]).join(',');
+
+    const monthPart = fields.month === '*' ? '*' :
+      expandField(fields.month, 1, 12).join(',');
+
+    const dayPart = fields.day === '*' ? '*' :
+      expandField(fields.day, 1, 31).join(',');
+
+    const hourPart = fields.hour === '*' ? '*' :
+      expandField(fields.hour, 0, 23).join(',');
+
+    const minPart = fields.minute === '*' ? '*' :
+      expandField(fields.minute, 0, 59).map(m => String(m).padStart(2, '0')).join(',');
+
+    let calendar = '';
+    if (weekdays !== '*') {
+      calendar = `${weekdays} *-${monthPart}-${dayPart} ${hourPart}:${minPart}:00`;
+    } else {
+      calendar = `*-${monthPart}-${dayPart} ${hourPart}:${minPart}:00`;
+    }
+
+    const calParts: string[] = [];
+    if (weekdays !== '*') calParts.push(`曜日: ${weekdays}`);
+    calParts.push(`日時: *-${monthPart}-${dayPart} ${hourPart}:${minPart}:00`);
+    annotations.push(`OnCalendar: ${calParts.join(' ')}`);
+    annotations.push(`Persistent: 前回の実行時刻を過ぎていた場合、次回起動時に補完実行する`);
+
+    const timer = `[Unit]
+Description=Scheduled task
+
+[Timer]
+OnCalendar=${calendar}
+Persistent=true
+
+[Install]
+WantedBy=timers.target`;
+
+    const service = `[Unit]
+Description=Scheduled task
+
+[Service]
+Type=oneshot
+ExecStart=${cmdStr}`;
+
+    return { timer, service, annotations };
+  }
+
+  // ---- 次回実行日時を算出 ----
+  function getNextRuns(fields: CronFields, count: number): Date[] {
+    const results: Date[] = [];
+    const now = new Date();
+    const candidate = new Date(now);
+    candidate.setSeconds(0, 0);
+    candidate.setMinutes(candidate.getMinutes() + 1);
+
+    const maxIterations = 525600;
+    let iterations = 0;
+
+    while (results.length < count && iterations < maxIterations) {
+      iterations++;
+      const m = candidate.getMinutes();
+      const h = candidate.getHours();
+      const d = candidate.getDate();
+      const mo = candidate.getMonth() + 1;
+      const w = candidate.getDay();
+
+      const matchMinute = fields.minute === '*' || expandField(fields.minute, 0, 59).includes(m);
+      const matchHour = fields.hour === '*' || expandField(fields.hour, 0, 23).includes(h);
+      const matchDay = fields.day === '*' || expandField(fields.day, 1, 31).includes(d);
+      const matchMonth = fields.month === '*' || expandField(fields.month, 1, 12).includes(mo);
+      const matchWeekday = fields.weekday === '*' || expandField(fields.weekday, 0, 6).includes(w);
+
+      if (matchMinute && matchHour && matchDay && matchMonth && matchWeekday) {
+        results.push(new Date(candidate));
+      }
+
+      candidate.setMinutes(candidate.getMinutes() + 1);
+    }
+
+    return results;
+  }
+
+  function formatDate(d: Date): string {
+    const w = WEEKDAY_NAMES[d.getDay()];
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}（${w}）${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  // ---- アノテーション描画 ----
+  function renderAnnotations(container: HTMLElement, annotations: string[]) {
+    container.innerHTML = annotations
+      .map(a => {
+        const [label, ...rest] = a.split(': ');
+        return `<div class="annotation-item"><span class="annotation-key">${label}</span><span class="annotation-value">${rest.join(': ')}</span></div>`;
+      })
+      .join('');
+  }
+
+  // ---- メイン処理 ----
+  function generate(fields: CronFields, cmd: string) {
+    const humanText = toHumanReadable(fields);
+    const nextRuns = getNextRuns(fields, 5);
+
+    // サマリー
+    const summaryEl = document.getElementById('scheduleSummary') as HTMLElement;
+    summaryEl.textContent = `${humanText} に実行`;
+
+    // 次回実行
+    const nextRunsEl = document.getElementById('nextRuns') as HTMLElement;
+    if (nextRuns.length > 0) {
+      nextRunsEl.innerHTML = '<ol>' + nextRuns.map(d => `<li>${formatDate(d)}</li>`).join('') + '</ol>';
+    } else {
+      nextRunsEl.textContent = '（1年以内に実行予定がありません）';
+    }
+
+    // cron
+    const cronStr = toCron(fields, cmd);
+    (document.getElementById('cronCode') as HTMLElement).textContent = cronStr;
+    const cronAnnotEl = document.getElementById('cronAnnotation') as HTMLElement;
+    cronAnnotEl.innerHTML = `<pre class="annotation-pre">${cronAnnotation(fields)}</pre>`;
+    if (!cmd) {
+      cronAnnotEl.innerHTML += `<p class="annotation-hint">コマンドを指定していないため、cron 式のみ出力しています。crontab では式の後ろに実行コマンドを書きます。</p>`;
+    }
+
+    // launchd
+    const { plist, note, annotations: launchdAnno } = toLaunchd(fields, cmd);
+    (document.getElementById('launchdCode') as HTMLElement).textContent = plist;
+    renderAnnotations(document.getElementById('launchdAnnotation') as HTMLElement, launchdAnno);
+    const launchdNote = document.getElementById('launchdNote') as HTMLElement;
+    launchdNote.textContent = note;
+    launchdNote.classList.toggle('hidden', !note);
+    if (!cmd) {
+      launchdNote.textContent = (note ? note + ' ' : '') + 'ProgramArguments の /path/to/command を実際のコマンドパスに書き換えてください。';
+      launchdNote.classList.remove('hidden');
+    }
+
+    // systemd
+    const { timer, service, annotations: systemdAnno } = toSystemd(fields, cmd);
+    (document.getElementById('systemdCode') as HTMLElement).textContent = timer;
+    renderAnnotations(document.getElementById('systemdAnnotation') as HTMLElement, systemdAnno);
+    (document.getElementById('systemdServiceCode') as HTMLElement).textContent = service;
+    if (!cmd) {
+      const systemdAnnoEl = document.getElementById('systemdAnnotation') as HTMLElement;
+      systemdAnnoEl.innerHTML += `<p class="annotation-hint">ExecStart の /path/to/command を実際のコマンドパスに書き換えてください。</p>`;
+    }
+
+    outputSection.classList.remove('hidden');
+  }
+
+  // ---- ビルダーモード ----
+  buildBtn.addEventListener('click', () => {
+    const fields: CronFields = {
+      minute: selects.minute.value,
+      hour: selects.hour.value,
+      day: selects.day.value,
+      month: selects.month.value,
+      weekday: selects.weekday.value,
+    };
+    generate(fields, commandInput.value.trim());
+  });
+
+  // ---- 変換モード ----
+  convertBtn.addEventListener('click', () => {
+    const expr = cronInput.value.trim();
+    if (!expr) {
+      alert('cron 式を入力してください');
+      return;
+    }
+    const fields = parseCron(expr);
+    if (!fields) {
+      alert('cron 式の形式が正しくありません（5フィールド: 分 時 日 月 曜日）');
+      return;
+    }
+    generate(fields, commandInputConvert.value.trim());
+  });
+
+  // ---- コピー ----
+  copyBtns.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.target;
+      if (!targetId) return;
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      try {
+        await navigator.clipboard.writeText(target.textContent || '');
+        copyStatus.textContent = 'クリップボードにコピーしました';
+        copyStatus.style.color = '#38a169';
+        setTimeout(() => { copyStatus.textContent = ''; }, 3000);
+      } catch {
+        alert('クリップボードへのコピーに失敗しました');
+      }
+    });
+  });
+</script>
+
+<style>
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+
+  .article-header { margin-bottom: 2rem; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 { font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+  .article-body p, .article-body ul, .article-body ol { margin-bottom: 1rem; }
+  .article-body li { margin-bottom: 0.25rem; }
+  .article-body ol { padding-left: 2rem; }
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .tool-container {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+
+  .tool-section { margin-bottom: 1.5rem; }
+  .tool-section:last-child { margin-bottom: 0; }
+
+  .hidden { display: none !important; }
+
+  /* モードタブ */
+  .mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .mode-tab {
+    padding: 0.75rem 1.25rem;
+    background: none;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .mode-tab:hover { color: #333; }
+  .mode-tab.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+  }
+
+  /* フォーム（文章形式） */
+  .schedule-sentence {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .field-inline {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .field-inline label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #888;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .field-inline select {
+    padding: 0.55rem 0.7rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: white;
+    min-width: 110px;
+  }
+
+  .field-inline select:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .sentence-suffix {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #333;
+    padding-bottom: 0.55rem;
+    white-space: nowrap;
+  }
+
+  .field-warning {
+    font-size: 0.85rem;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .command-input-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .command-input-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #888;
+    margin-bottom: 0.4rem;
+  }
+
+  .text-input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: white;
+    font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+  }
+
+  .text-input:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .convert-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .convert-field label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #888;
+    margin-bottom: 0.4rem;
+  }
+
+  .primary-btn {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .primary-btn:active { transform: translateY(0); }
+
+  /* スケジュールサマリー */
+  .schedule-summary {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #333;
+    padding: 0.8rem 1rem;
+    background: white;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+    margin-bottom: 1.5rem;
+  }
+
+  /* 出力タブ */
+  .output-tabs {
+    display: flex;
+    gap: 0;
+    margin-top: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .output-tab {
+    padding: 0.6rem 1rem;
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .output-tab:hover { color: #333; }
+  .output-tab.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+  }
+
+  .output-panel { display: none; margin-top: 1rem; }
+  .output-panel.active { display: block; }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .output-label {
+    font-size: 0.8rem;
+    color: #888;
+    font-family: 'Source Code Pro', monospace;
+  }
+
+  .copy-btn {
+    padding: 0.35rem 0.75rem;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .copy-btn:hover { background: #5a67d8; }
+
+  .output-code {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    white-space: pre;
+    margin: 0;
+  }
+
+  /* アノテーション */
+  .annotation {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #f0f4ff;
+    border-radius: 6px;
+    font-size: 0.85rem;
+  }
+
+  .annotation-item {
+    padding: 0.2rem 0;
+    line-height: 1.5;
+  }
+
+  .annotation-key {
+    font-weight: 600;
+    color: #4a5568;
+    margin-right: 0.5rem;
+  }
+
+  .annotation-key::after {
+    content: ':';
+  }
+
+  .annotation-value {
+    color: #555;
+  }
+
+  .annotation-pre {
+    background: none;
+    color: #4a5568;
+    padding: 0;
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    white-space: pre;
+    border-radius: 0;
+  }
+
+  .annotation-hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #b45309;
+    padding: 0.4rem 0.6rem;
+    background: #fef3c7;
+    border-radius: 4px;
+  }
+
+  .output-note {
+    font-size: 0.85rem;
+    color: #b45309;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    background: #fef3c7;
+    border-radius: 4px;
+  }
+
+  .status-message {
+    margin-top: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+
+  /* 設定ガイド */
+  .setup-guide {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+  }
+
+  .setup-guide h3 {
+    font-size: 0.9rem !important;
+    font-weight: 600;
+    color: #555;
+    margin: 0 0 0.5rem !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .setup-guide ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.7;
+  }
+
+  .setup-guide li {
+    margin-bottom: 0.3rem;
+  }
+
+  .setup-guide code {
+    font-size: 0.8rem;
+  }
+
+  .service-example {
+    margin-top: 0.75rem;
+  }
+
+  .service-example summary {
+    font-size: 0.85rem;
+    color: #667eea;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .service-example summary:hover {
+    color: #5a67d8;
+  }
+
+  .service-example .output-code {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .next-runs { padding: 0; }
+
+  .next-runs ol {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+
+  .next-runs li {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.9rem;
+    padding: 0.2rem 0;
+    color: #444;
+  }
+
+  .usage-section { margin-top: 2rem; }
+  .usage-section h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .usage-section ul, .usage-section ol { padding-left: 2rem; }
+
+  .faq-list dt { font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; }
+  .faq-list dd { margin-left: 0; margin-bottom: 0.5rem; line-height: 1.6; }
+
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+  .page-footer a { color: #667eea; text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+  .page-footer a + a { margin-left: 0.5rem; }
+
+  @media (max-width: 768px) {
+    .tool-container { padding: 1rem; }
+    .schedule-sentence { gap: 0.5rem; }
+    .field-inline select { min-width: 90px; font-size: 0.9rem; }
+    .mode-tab, .output-tab { padding: 0.6rem 0.75rem; font-size: 0.85rem; }
+  }
+
+  @media (max-width: 480px) {
+    .schedule-sentence {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .field-inline { flex-direction: row; align-items: center; gap: 0.75rem; }
+    .field-inline label { margin-bottom: 0; min-width: 2.5em; }
+    .field-inline select { flex: 1; }
+    .sentence-suffix {
+      align-self: flex-end;
+      padding-bottom: 0;
+      margin-top: 0.25rem;
+    }
+  }
+</style>
