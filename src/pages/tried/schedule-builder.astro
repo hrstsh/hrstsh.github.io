@@ -1,0 +1,327 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'cron / launchd / systemd 変換ツールを作ってみた - hrの備忘録';
+const description = 'Mac 買い替えを機に cron から launchd へ移行。仕様差を調べるうちに cron / launchd / systemd を相互変換するブラウザツールを作った記録。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/schedule-builder', toIsoDate('2026.06'), 'tried');
+
+const cronExample = `# 平日9時に実行
+0 9 * * 1-5
+
+# 5分ごと
+*/5 * * * *
+
+# 毎月1日と15日の0時
+0 0 1,15 * *`;
+
+const launchdSimple = `<key>StartCalendarInterval</key>
+<dict>
+  <key>Hour</key>
+  <integer>9</integer>
+  <key>Minute</key>
+  <integer>0</integer>
+</dict>`;
+
+const launchdExpanded = `<key>StartCalendarInterval</key>
+<array>
+  <dict>
+    <key>Weekday</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <dict>
+    <key>Weekday</key>
+    <integer>2</integer>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <!-- ... 水・木・金も同様 -->
+</array>`;
+
+const launchdInterval = `<key>StartInterval</key>
+<integer>300</integer>`;
+
+const systemdCalendar = `[Timer]
+OnCalendar=Mon..Fri *-*-* 09:00:00
+Persistent=true`;
+
+const systemdInterval = `[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min`;
+
+const expandField = `function expandField(field: string, min: number, max: number): number[] {
+  if (field === '*') {
+    const arr: number[] = [];
+    for (let i = min; i <= max; i++) arr.push(i);
+    return arr;
+  }
+
+  const results = new Set<number>();
+  for (const part of field.split(',')) {
+    // ステップ: */5 や 9-17/2
+    const stepMatch = part.match(/^(\\*|\\d+-\\d+)\\/(\\d+)$/);
+    if (stepMatch) {
+      const step = parseInt(stepMatch[2], 10);
+      let start = min, end = max;
+      if (stepMatch[1] !== '*') {
+        const range = stepMatch[1].split('-');
+        start = parseInt(range[0], 10);
+        end = parseInt(range[1], 10);
+      }
+      for (let i = start; i <= end; i += step) results.add(i);
+      continue;
+    }
+    // レンジ: 9-17
+    const rangeMatch = part.match(/^(\\d+)-(\\d+)$/);
+    if (rangeMatch) {
+      for (let i = parseInt(rangeMatch[1], 10); i <= parseInt(rangeMatch[2], 10); i++)
+        results.add(i);
+      continue;
+    }
+    // 単一値
+    const num = parseInt(part, 10);
+    if (!isNaN(num)) results.add(num);
+  }
+  return Array.from(results).sort((a, b) => a - b);
+}`;
+
+const combinationLogic = `// 各フィールドを展開して組み合わせを生成
+const mList = isAllMinutes ? [undefined] : minutes;
+const hList = isAllHours ? [undefined] : hours;
+// ...
+
+for (const h of hList) {
+  for (const m of mList) {
+    for (const w of wList) {
+      const entry = {};
+      if (m !== undefined) entry.Minute = m;
+      if (h !== undefined) entry.Hour = h;
+      if (w !== undefined) entry.Weekday = w;
+      entries.push(entry);
+    }
+  }
+}`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">&larr; やってみた一覧</a>
+      <h1>cron / launchd / systemd 変換ツールを作ってみた</h1>
+      <p class="article-meta">Mac 買い替えで cron → launchd 移行。仕様差を調べるうちにツール化した記録</p>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <nav class="toc">
+        <h2>目次</h2>
+        <ol>
+          <li><a href="#spec-diff">3形式の仕様差</a></li>
+          <li><a href="#design">変換ロジックの設計</a></li>
+          <li><a href="#expand">フィールド展開の実装</a></li>
+          <li><a href="#launchd-convert">cron → launchd 変換の勘所</a></li>
+          <li><a href="#systemd-convert">cron → systemd 変換</a></li>
+          <li><a href="#stumble">つまずいたところ</a></li>
+          <li><a href="#wrapup">できあがったもの</a></li>
+        </ol>
+      </nav>
+
+      <p>
+        Mac を買い替えて旧 Mac から環境を移行した際、ついでに cron から launchd に乗り換えた。改めて cron・launchd・systemd timer の仕様差を整理し、変換ツールも作ったのでその記録。
+      </p>
+
+      <h2 id="spec-diff">3形式の仕様差</h2>
+      <p>
+        まず、同じ「平日9時に実行」を3形式で書くとこうなる。
+      </p>
+
+      <h3>cron</h3>
+      <CodeBlock code={cronExample} language="bash" />
+      <p>
+        5フィールド（分 時 日 月 曜日）で表現する。レンジ（<code>1-5</code>）、ステップ（<code>*/5</code>）、リスト（<code>1,15</code>）が書けるので、たいていのパターンは1行で収まる。
+      </p>
+
+      <h3>launchd（macOS）</h3>
+      <p>
+        単純なケースは <code>StartCalendarInterval</code> で素直に書ける。
+      </p>
+      <CodeBlock code={launchdSimple} language="xml" />
+      <p>
+        問題は「平日9時」のような指定。launchd の CalendarInterval はレンジもステップも受け付けないため、曜日を1つずつ列挙する必要がある。
+      </p>
+      <CodeBlock code={launchdExpanded} language="xml" />
+      <p>
+        一方「5分ごと」のような等間隔は <code>StartInterval</code>（秒数指定）で書く。CalendarInterval とは別の仕組み。
+      </p>
+      <CodeBlock code={launchdInterval} language="xml" />
+
+      <h3>systemd timer</h3>
+      <p>
+        <code>OnCalendar</code> はかなり柔軟で、cron に近い感覚で書ける。
+      </p>
+      <CodeBlock code={systemdCalendar} language="ini" />
+      <p>
+        等間隔の場合は <code>OnUnitActiveSec</code> を使う。
+      </p>
+      <CodeBlock code={systemdInterval} language="ini" />
+
+      <h2 id="design">変換ロジックの設計</h2>
+      <p>
+        3形式を相互変換するにあたって、内部表現を cron の5フィールド（minute, hour, day, month, weekday）に統一した。フォームからの入力もこの形式にまとめて、出力時にそれぞれの形式に変換する。
+      </p>
+      <p>
+        変換の方針は大きく2つに分かれる。
+      </p>
+      <ul>
+        <li><strong>純粋な等間隔</strong>（<code>*/5 * * * *</code> のように、1フィールドだけステップで他が全ワイルドカード）: launchd は <code>StartInterval</code>、systemd は <code>OnUnitActiveSec</code> で出力</li>
+        <li><strong>それ以外</strong>: cron のフィールドを数値の配列に展開して、launchd は CalendarInterval のエントリ群に、systemd は OnCalendar の式に変換</li>
+      </ul>
+      <p>
+        この「等間隔かどうか」の分岐を最初に入れたおかげで、後の処理がだいぶ整理できた。
+      </p>
+
+      <h2 id="expand">フィールド展開の実装</h2>
+      <p>
+        変換の核になるのは、cron フィールド（<code>*/5</code> や <code>9-17</code> や <code>1,3,5</code>）を数値の配列に展開する関数。
+      </p>
+      <CodeBlock code={expandField} language="typescript" />
+      <p>
+        ステップ・レンジ・リスト・単一値を正規表現で判定して、Set に追加してからソートする。カンマ区切りの各パートを独立に処理するので、<code>1-5,15,*/10</code> のような混合指定にも対応できる。
+      </p>
+
+      <h2 id="launchd-convert">cron → launchd 変換の勘所</h2>
+      <p>
+        展開した数値の配列を組み合わせて CalendarInterval のエントリを生成する。ここが一番ややこしかった。
+      </p>
+      <CodeBlock code={combinationLogic} language="typescript" />
+      <p>
+        ポイントは <code>*</code>（毎回）のフィールドをどう扱うか。cron で <code>*</code> のフィールドは「すべての値にマッチ」だが、launchd では CalendarInterval のキーを<strong>省略する</strong>ことで同じ意味になる。たとえば Minute を省略すると「毎分」を意味する。これを <code>undefined</code> で表現して、値がある場合だけ XML のキーを出力するようにした。
+      </p>
+      <p>
+        フィールドが多い式（<code>0 9-17 * * 1-5</code> など）を展開すると、9時間 &times; 5曜日 = 45エントリになる。plist としては冗長だが、launchd の仕様上これ以外に正確な表現方法がない。ツールとしては正確さを優先して全展開する方針にした。
+      </p>
+
+      <h2 id="systemd-convert">cron → systemd 変換</h2>
+      <p>
+        systemd の OnCalendar は cron よりも表現力があるので、変換は比較的素直。<code>Mon..Fri</code> のようにレンジが書けるし、カンマ区切りのリストも使える。
+      </p>
+      <p>
+        フォーマットは <code>曜日 年-月-日 時:分:秒</code>。曜日は <code>Mon,Tue,Wed</code> のように英語略称で並べ、日時部分は <code>*</code> をそのまま使える。cron のフィールドをほぼそのまま埋め込めるので、launchd ほどの展開は必要なかった。
+      </p>
+
+      <h2 id="stumble">つまずいたところ</h2>
+      <h3>launchd の曜日は 0=日曜</h3>
+      <p>
+        cron も launchd も 0 が日曜なので問題ないと思っていたが、一部の cron 実装では 7 も日曜として扱う。今回は 0-6 に正規化する方針にしたが、7 を入力されたときの処理を入れ忘れて最初はおかしな曜日が出ていた。
+      </p>
+
+      <h3>「次回実行日時」の算出が意外に重い</h3>
+      <p>
+        次の実行タイミングを5件表示する機能をつけた。単純に現在時刻から1分ずつ進めてマッチするか判定するブルートフォースで実装したが、<code>0 0 29 2 *</code>（2月29日、つまりうるう年だけ）のようなレアケースだと数年分を回す必要がある。上限を1年分（525,600回）に設定して、見つからなければ「1年以内に実行予定がありません」と表示するようにした。
+      </p>
+
+      <h3>等間隔検出の判定</h3>
+      <p>
+        <code>*/5 * * * *</code> は「5分ごと」なので <code>StartInterval: 300</code> にしたいが、<code>*/5 9-17 * * *</code> は「9時台〜17時台の5分ごと」なので等間隔ではない。最初は minute フィールドだけ見て判定していたが、他のフィールドに制約があるケースを見落としていた。「ステップ指定のフィールドが1つだけ、かつ他が全て <code>*</code>」の場合のみ等間隔と判定するように修正した。
+      </p>
+
+      <h2 id="wrapup">できあがったもの</h2>
+      <p>
+        <a href="/tools/schedule-builder/">cron / launchd / systemd スケジュール変換ツール</a>として公開した。フォームで月・日・曜日・時・分を選ぶと3形式をタブで切り替えて確認でき、手元の cron 式を貼り付けて launchd・systemd に変換することもできる。
+      </p>
+      <p>
+        今回の Mac 移行では、旧 Mac の crontab にあった5つのジョブを全部このツールで launchd に変換した。レンジやステップがあると plist が長くなるのは避けられないが、手で展開するよりは漏れがない。Linux サーバー側の systemd timer もここから生成している。
+      </p>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tools/schedule-builder/">cron / launchd / systemd スケジュール変換ツール</a></li>
+        <li><a href="/tips/macos-launchctl/">macOS の launchctl でコマンドを定期実行する方法</a></li>
+        <li><a href="/tried/google-analytics-fetcher/">GA4・Search Console のデータ取得を定期実行で自動化してみた</a></li>
+      </ul>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tried/">やってみた一覧に戻る</a> &middot; <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+  .article-header { margin-bottom: 2rem; }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .article-meta {
+    font-size: 0.95rem;
+    color: #4a5568;
+    margin-top: 0.25rem;
+  }
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+  .article-body h3 { font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+  .article-body p, .article-body ul, .article-body ol { margin-bottom: 1rem; }
+  .article-body li { margin-bottom: 0.25rem; }
+  .article-body ol { padding-left: 2rem; }
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .toc {
+    background: #f8f9fa;
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+  .toc h2 {
+    font-size: 1rem !important;
+    margin: 0 0 0.75rem !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .toc ol {
+    margin: 0 !important;
+    padding-left: 1.25rem;
+  }
+  .toc li {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  .toc a { color: #667eea; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+  .page-footer a { color: #667eea; text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+  .page-footer a + a { margin-left: 0.5rem; }
+</style>

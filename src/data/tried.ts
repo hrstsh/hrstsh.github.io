@@ -10,6 +10,12 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'cron / launchd / systemd 変換ツールを作ってみた',
+    href: '/tried/schedule-builder/',
+    desc: 'Mac 買い替えを機に cron から launchd へ移行。仕様差を調べるうちに cron / launchd / systemd を相互変換するツールを作った記録。',
+    date: '2026.06',
+  },
+  {
     title: 'GA4・Search Console のデータ取得を定期実行で自動化してみた',
     href: '/tried/google-analytics-fetcher/',
     desc: 'サイトの GA4 と Search Console データを API で取得し、launchd で毎日自動実行して Markdown に蓄積する仕組みを構築した手記。',
