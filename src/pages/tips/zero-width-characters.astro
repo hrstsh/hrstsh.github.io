@@ -1,0 +1,356 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const title = 'ゼロ幅文字の仕組みと検出・除去方法まとめ - hrの備忘録';
+const description = 'X(Twitter)のリンク化回避にも使われる「ゼロ幅文字」の正体を解説。ZWS・ZWNJ・ZWJ・BOMの4種類の違い、コピペで混入する経路、JavaScript・ターミナルでの検出・除去方法をまとめた。';
+const path = '/tips/zero-width-characters';
+const faqItems = [
+  { question: 'ゼロ幅文字はどこから混入する？', answer: 'Webページからのコピペ、テキストエディタの自動挿入、チャットアプリの変換処理などで混入する。目に見えないため気づきにくい。' },
+  { question: 'ゼロ幅文字を検出するには？', answer: 'テキストエディタの正規表現検索で [\\u200B-\\u200D\\uFEFF] を使うか、JavaScriptで文字列の .length と見た目の文字数を比較する方法がある。' },
+  { question: 'ゼロ幅文字を除去するには？', answer: 'JavaScriptなら str.replace(/[\\u200B-\\u200D\\uFEFF]/g, \"\") で一括除去できる。ターミナルではsedコマンドでも対応可能。' },
+  { question: 'ゼロ幅文字をあえて使う場面はある？', answer: 'SNSの自動リンク化を防ぐ、長い英単語やURLに改行位置のヒントを入れる、アラビア文字の結合制御など、意図的に挿入するケースがある。' },
+];
+const jsonLd = [
+  tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'),
+  faqPage(faqItems, path),
+];
+
+const detectSnippet = `function findZeroWidth(text) {
+  const zwChars = {
+    '\\u200B': 'Zero-Width Space (ZWS)',
+    '\\u200C': 'Zero-Width Non-Joiner (ZWNJ)',
+    '\\u200D': 'Zero-Width Joiner (ZWJ)',
+    '\\uFEFF': 'BOM / Zero-Width No-Break Space',
+  };
+
+  const found = [];
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (zwChars[char]) {
+      found.push({ position: i, name: zwChars[char], codePoint: char.codePointAt(0).toString(16) });
+    }
+  }
+  return found;
+}`;
+
+const removeSnippet = `// ゼロ幅文字をまとめて除去
+function removeZeroWidth(text) {
+  return text.replace(/[\\u200B-\\u200D\\uFEFF]/g, '');
+}
+
+// 使用例
+const dirty = 'hello\\u200Bworld';
+console.log(dirty.length);                 // 11（見た目は10文字）
+console.log(removeZeroWidth(dirty).length); // 10`;
+
+const sedSnippet = `# macOS (BSD sed) — ゼロ幅スペース (U+200B) を除去
+sed $'s/\\xe2\\x80\\x8b//g' input.txt > output.txt
+
+# GNU sed（Linux）
+sed 's/\\xe2\\x80\\x8b//g' input.txt > output.txt`;
+
+const breakExample = `// @ の直後にゼロ幅スペースを挿入
+'@username'.replace(/@/g, '@\\u200B')
+// → '@\\u200Busername'
+// 見た目は @username のまま、リンク判定だけ途切れる`;
+---
+
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <main>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">&larr; Tips一覧</a>
+      <h1>ゼロ幅文字の仕組みと検出・除去方法まとめ</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X(Twitter) にツイートするとき、<code>@</code> を含む文がメンションリンクになったり、URLが勝手にリンク化されたりして困ることがある。これを防ぐ方法として、見えない「ゼロ幅文字」を間に挟む手法がある。<a href="/tools/zero-width-breaker/">リンク化回避ツール</a>としても公開しているが、そもそもゼロ幅文字とは何なのか、なぜ見えないのにリンクを壊せるのか、改めて仕組みを調べてみた。
+      </p>
+
+      <nav class="toc">
+        <h2>目次</h2>
+        <ol>
+          <li><a href="#what">ゼロ幅文字の種類</a></li>
+          <li><a href="#where">どこから混入するか</a></li>
+          <li><a href="#trouble">混入するとどうなるか</a></li>
+          <li><a href="#detect">検出する方法</a></li>
+          <li><a href="#remove">除去する方法</a></li>
+          <li><a href="#use">あえて使う場面</a></li>
+          <li><a href="#caution">注意点</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="what">ゼロ幅文字の種類</h2>
+      <p>
+        Unicode にはゼロ幅の文字がいくつかある。よく遭遇するのは次の 4 つ。
+      </p>
+      <table class="char-table">
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>コードポイント</th>
+            <th>略称</th>
+            <th>役割</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Zero-Width Space</td>
+            <td><code>U+200B</code></td>
+            <td>ZWS</td>
+            <td>改行可能な位置を示す。表示幅ゼロのスペース</td>
+          </tr>
+          <tr>
+            <td>Zero-Width Non-Joiner</td>
+            <td><code>U+200C</code></td>
+            <td>ZWNJ</td>
+            <td>文字の結合を抑制する。ペルシャ語・アラビア語で使われる</td>
+          </tr>
+          <tr>
+            <td>Zero-Width Joiner</td>
+            <td><code>U+200D</code></td>
+            <td>ZWJ</td>
+            <td>文字を結合させる。絵文字の合成（家族絵文字など）に使われる</td>
+          </tr>
+          <tr>
+            <td>BOM / Zero-Width No-Break Space</td>
+            <td><code>U+FEFF</code></td>
+            <td>BOM</td>
+            <td>ファイル先頭でエンコーディングを示す。本文中に残ると不可視文字になる</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        この中で日常的に問題を起こしやすいのが ZWS（<code>U+200B</code>）と BOM（<code>U+FEFF</code>）だ。ZWS は Web ページや SNS で頻繁に使われており、コピペで意図せず持ち込まれることが多い。BOM はテキストファイルの先頭に残っていて、スクリプトの読み込みや CSV のパースで邪魔になることがある。
+      </p>
+      <p>
+        ZWJ はふだん見かけない文字に思えるが、実は毎日のように使っている。スマートフォンの絵文字で「家族」や「カップル」「肌の色違い」の絵文字を出すとき、内部では複数の絵文字を ZWJ でつないで 1 つの絵文字として表示している。たとえば「👩‍👩‍👧‍👦」は、女性+ZWJ+女性+ZWJ+女の子+ZWJ+男の子の 7 文字で構成されている。
+      </p>
+
+      <h2 id="where">どこから混入するか</h2>
+      <p>
+        ゼロ幅文字がテキストに紛れ込む経路はいくつかある。
+      </p>
+      <ul>
+        <li><strong>Web ページからのコピペ</strong>: CMS や WYSIWYG エディタが行間や単語区切りに ZWS を挿入していることがある。見た目は普通のテキストだが、コピーすると一緒について来る</li>
+        <li><strong>SNS・チャットアプリ</strong>: 一部のアプリは文字列の整形時にゼロ幅文字を挿入する。Slack や Discord でコピーしたテキストに混入するケースが報告されている</li>
+        <li><strong>テキストファイルの BOM</strong>: Windows のメモ帳で UTF-8 保存すると、ファイル先頭に BOM（<code>U+FEFF</code>）が付く。別の環境で開いたとき、この 3 バイトがゴミ文字として表示されたりパースエラーの原因になったりする</li>
+        <li><strong>PDF からのコピー</strong>: PDF の内部構造によっては、行末のハイフネーションや段組みの折り返しにゼロ幅文字が埋め込まれていることがある</li>
+        <li><strong>意図的な埋め込み</strong>: テキストの出所を追跡する「フィンガープリンティング」に使われることもある。文書の特定箇所にゼロ幅文字を仕込んで、流出元を特定する手法</li>
+      </ul>
+
+      <h2 id="trouble">混入するとどうなるか</h2>
+      <p>
+        見えない文字が入っているだけなので表示は壊れない。問題になるのは文字列を「データ」として扱うときだ。
+      </p>
+      <ul>
+        <li><strong>文字列比較の失敗</strong>: 見た目は同じ <code>"hello"</code> でも、片方にゼロ幅文字が入っていれば <code>===</code> は <code>false</code> になる。デバッグで目視しても違いが見えない</li>
+        <li><strong>検索のすり抜け</strong>: テキスト中に ZWS が入っていると、その語を検索してもヒットしないことがある。「ユーザー名」と「ユー&#x200B;ザー名」（ZWS入り）は別の文字列</li>
+        <li><strong>正規表現のミスマッチ</strong>: <code>/^[a-z]+$/</code> のようなパターンに ZWS 入りの文字列を通すと、見た目は英小文字だけなのにマッチしない</li>
+        <li><strong>CSV・JSON のパースエラー</strong>: BOM がファイル先頭にあると、最初のキー名に BOM がくっついて認識されない。<code>"name"</code> ではなく <code>"﻿name"</code> になる</li>
+        <li><strong>文字数カウントのずれ</strong>: 入力バリデーションで「10文字以内」としているのに、ゼロ幅文字の分だけ実際のバイト数が増える</li>
+      </ul>
+
+      <h2 id="detect">検出する方法</h2>
+      <h3>JavaScript で検出する</h3>
+      <p>
+        文字列を 1 文字ずつ走査して、ゼロ幅文字のコードポイントに一致するものを探す。
+      </p>
+      <CodeBlock code={detectSnippet} language="javascript" />
+      <p>
+        手っ取り早く「ゼロ幅文字が混じっているかどうか」だけ知りたければ、正規表現でテストするだけでよい。
+      </p>
+      <pre><code class="language-javascript">/[​-‍﻿]/.test(text)</code></pre>
+
+      <h3>テキストエディタで確認する</h3>
+      <ul>
+        <li><strong>VS Code</strong>: 設定で <code>editor.renderWhitespace</code> を <code>"all"</code> にすると空白系の文字が可視化される。さらに <code>editor.unicodeHighlight.ambiguousCharacters</code> を有効にすると、見慣れない Unicode 文字がハイライトされる</li>
+        <li><strong>正規表現検索</strong>: 多くのエディタで Ctrl+H（置換）を開き、正規表現モードで <code>[​-‍﻿]</code> を検索すれば該当箇所が見つかる</li>
+      </ul>
+
+      <h3>ターミナルで確認する</h3>
+      <pre><code class="language-bash"># hexdump でバイト列を確認（e2 80 8b が ZWS）
+hexdump -C file.txt | grep 'e2 80 8b'
+
+# cat -v で非表示文字を可視化
+cat -v file.txt</code></pre>
+
+      <h2 id="remove">除去する方法</h2>
+      <h3>JavaScript で除去する</h3>
+      <CodeBlock code={removeSnippet} language="javascript" />
+
+      <h3>ターミナルで除去する</h3>
+      <CodeBlock code={sedSnippet} language="bash" />
+      <p>
+        ZWS（<code>U+200B</code>）の UTF-8 バイト列は <code>e2 80 8b</code>。ZWNJ は <code>e2 80 8c</code>、ZWJ は <code>e2 80 8d</code>。まとめて除去したい場合は sed を複数回パイプするか、perl で書くとまとめやすい。
+      </p>
+      <pre><code class="language-bash"># perl でゼロ幅文字を一括除去
+perl -CSD -pe 's/[\x&#123;200B}-\x&#123;200D}\x&#123;FEFF}]//g' input.txt &gt; output.txt</code></pre>
+
+      <h2 id="use">あえて使う場面</h2>
+      <p>
+        ゼロ幅文字は厄介な存在だが、逆に便利な使い道もある。
+      </p>
+
+      <h3>SNS の自動リンク化を防ぐ</h3>
+      <p>
+        X(Twitter) では <code>@</code> に続く文字列がメンション、<code>.</code> を含むものが URL、<code>#</code> に続くものがハッシュタグとして自動的にリンクになる。メールアドレスを文として載せたいだけなのに、勝手にメンションリンクになるのは困る。
+      </p>
+      <CodeBlock code={breakExample} language="javascript" />
+      <p>
+        <code>@</code> と <code>u</code> の間にゼロ幅スペースが入るだけで、X のリンク検出は「@ の後に何もない」と判断する。画面上は <code>@username</code> に見えるのに、クリックできるリンクにはならない。
+      </p>
+      <p>
+        この仕組みを使ったツールを<a href="/tools/zero-width-breaker/">ツイートのリンク化回避ツール</a>として公開している。テキストを入れてボタンを押すだけで、メンション・URL・ハッシュタグのリンク化を防いだテキストが得られる。
+      </p>
+
+      <h3>長い文字列に改行位置のヒントを入れる</h3>
+      <p>
+        ZWS は「ここで改行してもいい」という情報を持つ。長い英単語や URL がコンテナからはみ出すとき、適当な位置に ZWS を挿入すると、ブラウザがそこで折り返してくれる。CSS の <code>word-break</code> で一律に割るより、意味のある区切り位置を指定できる。
+      </p>
+      <pre><code class="language-text">https://example.com/very/long/path/to/resource
+↓ スラッシュの後ろに ZWS を入れると、そこで折り返せる
+https://example.com/very/&#x200B;long/&#x200B;path/&#x200B;to/&#x200B;resource</code></pre>
+      <p>
+        HTML では <code>&amp;#x200B;</code> または <code>&lt;wbr&gt;</code> タグで同じことができる。<code>&lt;wbr&gt;</code> は「Word Break Opportunity」の略で、ゼロ幅スペースと同じ役割を HTML タグとして表現したもの。
+      </p>
+
+      <h3>テキストのフィンガープリンティング</h3>
+      <p>
+        機密文書を複数人に配布するとき、各コピーの異なる位置にゼロ幅文字を仕込んでおくと、流出したテキストからどのコピーが漏れたか特定できる。実際にニュースメディアや企業の内部文書で使われているとされる手法で、目に見えないため受け取った側は気づきにくい。
+      </p>
+
+      <h2 id="caution">注意点</h2>
+      <ul>
+        <li>ゼロ幅文字はスクリーンリーダーの読み上げに影響することがある。アクセシビリティを考えると、公開コンテンツでの多用は避けたい</li>
+        <li>サービスによってはゼロ幅文字を自動で除去する処理が入っている。投稿先で効くかどうかは事前に確認する</li>
+        <li>リンク化回避やフィンガープリンティングに使う場合、受け取った側がゼロ幅文字を除去すれば効果はなくなる。あくまで「気づかれにくい」だけで「破れない」仕組みではない</li>
+        <li>プログラムのソースコードにゼロ幅文字が混入すると、コンパイルエラーや実行時の不具合の原因になる。コードレビューでは目視で発見できないため、リンターやエディタの設定で検出するのが確実</li>
+      </ul>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tools/zero-width-breaker/">ツイートのリンク化回避ツール</a></li>
+        <li><a href="/tips/clipboard-rich-plain-paste/">コピー＆ペーストで書式がつく時とテキストだけになる時の違い</a></li>
+        <li><a href="/tips/twitter-advanced-search-operators/">X(Twitter)の検索演算子まとめ</a></li>
+      </ul>
+
+      <h2>よくある質問</h2>
+      <dl class="faq-list">
+        <dt>ゼロ幅文字はどこから混入する？</dt>
+        <dd>Webページからのコピペ、テキストエディタの自動挿入、チャットアプリの変換処理などで混入する。目に見えないため気づきにくい。</dd>
+        <dt>ゼロ幅文字を検出するには？</dt>
+        <dd>テキストエディタの正規表現検索で <code>[​-‍﻿]</code> を使うか、JavaScriptで文字列の <code>.length</code> と見た目の文字数を比較する方法がある。</dd>
+        <dt>ゼロ幅文字を除去するには？</dt>
+        <dd>JavaScriptなら <code>str.replace(/[​-‍﻿]/g, "")</code> で一括除去できる。ターミナルではsedコマンドでも対応可能。</dd>
+        <dt>ゼロ幅文字をあえて使う場面はある？</dt>
+        <dd>SNSの自動リンク化を防ぐ、長い英単語やURLに改行位置のヒントを入れる、アラビア文字の結合制御など、意図的に挿入するケースがある。</dd>
+      </dl>
+    </article>
+
+    <footer class="page-footer">
+      <a href="/tips/">Tips一覧に戻る</a> &middot; <a href="/">トップに戻る</a>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.7;
+  }
+  .article-header { margin-bottom: 2rem; }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+  .article-body h3 { font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+  .article-body p, .article-body ul, .article-body ol { margin-bottom: 1rem; }
+  .article-body li { margin-bottom: 0.25rem; }
+  .article-body ol { padding-left: 2rem; }
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  .char-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  .char-table th, .char-table td {
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  .char-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+  .char-table td code {
+    font-size: 0.85em;
+  }
+  .toc {
+    background: #f8f9fa;
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+  .toc h2 {
+    font-size: 1rem !important;
+    margin: 0 0 0.75rem !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .toc ol {
+    margin: 0 !important;
+    padding-left: 1.25rem;
+  }
+  .toc li {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
+  .toc a { color: #667eea; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .page-footer {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+  }
+  .page-footer a { color: #667eea; text-decoration: none; }
+  .page-footer a:hover { text-decoration: underline; }
+  .page-footer a + a { margin-left: 0.5rem; }
+  .faq-list dt { font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; }
+  .faq-list dd { margin-left: 0; margin-bottom: 0.5rem; line-height: 1.6; }
+</style>
