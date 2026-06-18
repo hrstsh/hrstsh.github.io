@@ -1,0 +1,77 @@
+---
+import Layout from './Layout.astro';
+import SidePanel from '../components/SidePanel.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  currentTags: string[];
+  noindex?: boolean;
+}
+
+const { title, description, image, jsonLd, currentTags, noindex } = Astro.props;
+const currentHref = Astro.url.pathname;
+---
+
+<Layout title={title} description={description} image={image} jsonLd={jsonLd} noindex={noindex}>
+  <div class="article-with-sidebar">
+    <aside class="sidebar" aria-label="サイドナビゲーション">
+      <SidePanel currentHref={currentHref} currentTags={currentTags} />
+    </aside>
+    <div class="article-main">
+      <slot />
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .article-with-sidebar {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    position: sticky;
+    top: calc(var(--header-height) + 1.5rem);
+    max-height: calc(100vh - var(--header-height) - 3rem);
+    overflow-y: auto;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+  }
+
+  .sidebar:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .article-main {
+    flex: 1;
+    min-width: 0;
+    max-width: 720px;
+  }
+
+  @media (max-width: 1023px) {
+    .sidebar {
+      display: none;
+    }
+
+    .article-with-sidebar {
+      max-width: 720px;
+      padding: 3rem 1.5rem 4rem;
+    }
+  }
+</style>

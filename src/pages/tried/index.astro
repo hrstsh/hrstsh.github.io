@@ -1,5 +1,5 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import { triedPosts } from '../../data/tried';
 import { itemList } from '../../utils/jsonLd';
 
@@ -7,8 +7,7 @@ const items = triedPosts.map((p) => ({ name: p.title, url: p.href }));
 const jsonLd = itemList('やってみた', '実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。', 'https://hrstsh.com/tried', items);
 ---
 
-<Layout title="やってみた - hrの備忘録" description="実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。" jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title="やってみた - hrの備忘録" description="実際に試したことの手記やレポート。GitHub Pages の立ち上げ、カスタムドメイン設定など。" jsonLd={jsonLd} currentTags={[]}>
     <header class="page-header">
       <h1>やってみた</h1>
       <p class="subtitle">実際に試したことの手記やレポート</p>
@@ -40,16 +39,9 @@ const jsonLd = itemList('やってみた', '実際に試したことの手記や
     <footer class="page-footer">
       <a href="/">トップに戻る</a>
     </footer>
-  </main>
-</Layout>
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 3rem 1.5rem 4rem;
-  }
-
   .page-header {
     margin-bottom: 2rem;
     padding-bottom: 1.25rem;

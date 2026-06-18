@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'YouTubeのサムネイル画像を取得・保存する方法 - hrの備忘録';
@@ -11,10 +12,10 @@ const faqItems = [
   { question: 'サムネイルを取得するのにアプリやサイトは必要？', answer: '不要。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
+const currentTags = ['youtube'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>YouTubeのサムネイル画像を取得・保存する方法</h1>
@@ -113,20 +114,10 @@ https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg</code></pre>
 
     </article>
 
-    <footer class="page-footer">
-      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tips/youtube-thumbnail-download/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -206,25 +197,9 @@ https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg</code></pre>
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
 
-  .page-footer a {
-    color: #667eea;
-    text-decoration: none;
-  }
 
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
 
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 
   .faq-list dt {
     font-weight: 600;

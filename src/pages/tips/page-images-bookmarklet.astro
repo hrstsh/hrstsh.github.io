@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
@@ -14,10 +15,10 @@ const faqItems = [
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
 
 const bookmarkletCode = `javascript:(function(){var imgs=[].slice.call(document.images).map(function(i){return i.currentSrc||i.src;}).filter(function(u,n,a){return u&&a.indexOf(u)===n;});if(!imgs.length){alert('画像が見つかりませんでした');return;}var w=window.open('','_blank');var h='<meta charset=utf-8><title>画像一覧 ('+imgs.length+')</title><body style="font-family:sans-serif;padding:16px"><p>'+imgs.length+' 件の画像</p><textarea style="width:100%;height:120px">'+imgs.join('\\n')+'</textarea>';imgs.forEach(function(u){h+='<div style="margin:8px 0"><a href="'+u+'" target="_blank"><img src="'+u+'" style="max-width:200px;max-height:200px;vertical-align:middle"></a></div>';});w.document.write(h);w.document.close();})();`;
+const currentTags = ['bookmarklet'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>ページ内の画像を一覧表示・一括取得するブックマークレット</h1>
@@ -91,20 +92,10 @@ const bookmarkletCode = `javascript:(function(){var imgs=[].slice.call(document.
 
     </article>
 
-    <footer class="page-footer">
-      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tips/page-images-bookmarklet/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -184,25 +175,9 @@ const bookmarkletCode = `javascript:(function(){var imgs=[].slice.call(document.
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
 
-  .page-footer a {
-    color: #667eea;
-    text-decoration: none;
-  }
 
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
 
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 
   .faq-list dt {
     font-weight: 600;

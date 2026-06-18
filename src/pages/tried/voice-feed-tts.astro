@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
@@ -57,10 +58,11 @@ else:
     text_for_tts, skipped_japanese = extract_for_english_tts(text)
     adapter = KokoroAdapter(model_dir=..., voice=..., speed=...)
     # 英語時: VOICEVOX で前置き再生しつつ Kokoro 合成を並列実行`;
+
+const currentTags = ['macos', 'automation'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tried/" class="back-link">← やってみた一覧</a>
       <h1>Mac でローカル TTS 基盤（VOICEVOX + Kokoro）を作ってみた</h1>
@@ -118,20 +120,10 @@ else:
       </p>
     </article>
 
-    <footer class="page-footer">
-      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tried/voice-feed-tts/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -228,23 +220,4 @@ else:
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    font-size: 0.95rem;
-  }
-
-  .page-footer a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
-
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 </style>

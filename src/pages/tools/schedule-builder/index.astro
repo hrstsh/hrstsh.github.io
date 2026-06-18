@@ -1,5 +1,6 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import ArticleLayout from '../../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../../components/ArticleFooterNav.astro';
 import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'cron / launchd / systemd スケジュール変換ツール - hrの備忘録';
@@ -15,10 +16,11 @@ const jsonLd = [
   webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
   faqPage(faqItems, pageUrl),
 ];
+
+const currentTags = ['automation'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tools/" class="back-link">&larr; ツール一覧</a>
       <h1>cron / launchd / systemd スケジュール変換ツール</h1>
@@ -254,11 +256,8 @@ const jsonLd = [
       </section>
     </article>
 
-    <footer class="page-footer">
-      <a href="/tools/">ツール一覧に戻る</a> &middot; <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tools/schedule-builder/" currentTags={currentTags} backHref="/tools/" backLabel="← ツール一覧に戻る" />
+</ArticleLayout>
 
 <script>
   // ---- 型・定数 ----
@@ -944,13 +943,6 @@ ExecStart=${cmdStr}`;
 </script>
 
 <style>
-  main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header { margin-bottom: 2rem; }
 
   .back-link {
@@ -1359,15 +1351,6 @@ ExecStart=${cmdStr}`;
   .faq-list dt { font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; }
   .faq-list dd { margin-left: 0; margin-bottom: 0.5rem; line-height: 1.6; }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
-  .page-footer a { color: #667eea; text-decoration: none; }
-  .page-footer a:hover { text-decoration: underline; }
-  .page-footer a + a { margin-left: 0.5rem; }
 
   @media (max-width: 768px) {
     .tool-container { padding: 1rem; }

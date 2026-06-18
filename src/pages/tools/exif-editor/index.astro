@@ -1,5 +1,6 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import ArticleLayout from '../../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../../components/ArticleFooterNav.astro';
 import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = '写真のメタデータ（EXIF）編集ツール - 撮影日時・カメラ情報をブラウザで編集 - hrの備忘録';
@@ -14,10 +15,11 @@ const jsonLd = [
   webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
   faqPage(faqItems, pageUrl),
 ];
+
+const currentTags = ['dev'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tools/" class="back-link">← ツール一覧</a>
       <h1>写真のメタデータ（EXIF）編集ツール</h1>
@@ -125,8 +127,9 @@ const jsonLd = [
         </dl>
       </section>
     </article>
-  </main>
-</Layout>
+
+    <ArticleFooterNav currentHref="/tools/exif-editor/" currentTags={currentTags} backHref="/tools/" backLabel="← ツール一覧に戻る" />
+</ArticleLayout>
 
 <script src="https://unpkg.com/piexifjs@1.0.6/piexif.js"></script>
 <script is:inline>
@@ -533,13 +536,6 @@ const jsonLd = [
 </script>
 
 <style>
-  main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }

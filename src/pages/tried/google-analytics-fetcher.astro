@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
@@ -40,10 +41,11 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   launchctl load "$DEST"
   echo "有効化しました。指定した時刻に日次実行されます。"
 fi`;
+
+const currentTags = ['automation', 'dev'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tried/" class="back-link">← やってみた一覧</a>
       <h1>GA4・Search Console のデータ取得を定期実行で自動化してみた</h1>
@@ -105,20 +107,10 @@ fi`;
       </p>
     </article>
 
-    <footer class="page-footer">
-      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tried/google-analytics-fetcher/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -172,23 +164,4 @@ fi`;
     font-size: 0.9em;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    font-size: 0.95rem;
-  }
-
-  .page-footer a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
-
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 </style>

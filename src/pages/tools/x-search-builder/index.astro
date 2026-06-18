@@ -1,5 +1,6 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import ArticleLayout from '../../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../../components/ArticleFooterNav.astro';
 import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'X（Twitter）検索ツール - 画像・ユーザー・期間で絞り込み | hrの備忘録';
@@ -15,10 +16,11 @@ const jsonLd = [
     'https://hrstsh.com/tools/x-search-builder/'
   ),
 ];
+
+const currentTags = ['twitter'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tools/" class="back-link">← ツール一覧</a>
       <h1>X（Twitter）検索ツール</h1>
@@ -203,8 +205,9 @@ const jsonLd = [
         </dl>
       </section>
     </article>
-  </main>
-</Layout>
+
+    <ArticleFooterNav currentHref="/tools/x-search-builder/" currentTags={currentTags} backHref="/tools/" backLabel="← ツール一覧に戻る" />
+</ArticleLayout>
 
 <script>
   const COOKIE_NAME = 'x-search-builder-state';
@@ -567,13 +570,6 @@ const jsonLd = [
 </script>
 
 <style>
-  main {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2rem 1rem 5rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
