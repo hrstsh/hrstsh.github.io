@@ -1,0 +1,278 @@
+---
+import { tags, getTagsByGroup } from '../data/tags';
+import { getAllArticles, getRelatedArticles, getArticlesByTag } from '../utils/articles';
+
+interface Props {
+  currentHref: string;
+  currentTags: string[];
+}
+
+const { currentHref, currentTags } = Astro.props;
+
+const platformTags = getTagsByGroup('platform');
+const methodTags = getTagsByGroup('method');
+
+const allArticles = getAllArticles();
+const tagCounts = new Map<string, number>();
+for (const tag of tags) {
+  tagCounts.set(tag.id, allArticles.filter(a => a.tags.includes(tag.id)).length);
+}
+
+const related = getRelatedArticles(currentHref, currentTags);
+
+const sectionCounts = {
+  tips: allArticles.filter(a => a.section === 'tips').length,
+  tried: allArticles.filter(a => a.section === 'tried').length,
+  tools: allArticles.filter(a => a.section === 'tools').length,
+};
+
+const allArticlesJson = JSON.stringify(
+  allArticles
+    .filter(a => a.href !== currentHref)
+    .map(a => ({ t: a.title, h: a.href, tags: a.tags }))
+);
+---
+
+<nav class="side-panel" aria-label="カテゴリナビゲーション">
+  <div class="side-panel-group">
+    <div class="side-panel-group-title">プラットフォーム</div>
+    {platformTags.map(tag => (
+      <button
+        class={`side-panel-tag ${currentTags.includes(tag.id) ? 'is-active' : ''}`}
+        data-tag={tag.id}
+        type="button"
+      >
+        <span>{tag.label}</span>
+        <span class="side-panel-count">{tagCounts.get(tag.id)}</span>
+      </button>
+    ))}
+  </div>
+
+  <div class="side-panel-group">
+    <div class="side-panel-group-title">手法</div>
+    {methodTags.map(tag => (
+      <button
+        class={`side-panel-tag ${currentTags.includes(tag.id) ? 'is-active' : ''}`}
+        data-tag={tag.id}
+        type="button"
+      >
+        <span>{tag.label}</span>
+        <span class="side-panel-count">{tagCounts.get(tag.id)}</span>
+      </button>
+    ))}
+  </div>
+
+  <hr class="side-panel-divider" />
+
+  <div class="side-panel-related" id="side-panel-related">
+    <div class="side-panel-group-title" id="side-panel-related-title" style={currentTags.length === 0 ? 'display:none' : ''}>関連する記事</div>
+    <div class="side-panel-related-list" id="side-panel-related-list">
+      {related.length > 0 ? (
+        related.map(a => (
+          <a class="side-panel-article" href={a.href}>{a.title}</a>
+        ))
+      ) : currentTags.length > 0 ? (
+        <span class="side-panel-empty">タグが一致する記事はありません</span>
+      ) : null}
+    </div>
+  </div>
+
+  <hr class="side-panel-divider" />
+
+  <div class="side-panel-group">
+    <div class="side-panel-group-title">セクション</div>
+    <a class="side-panel-section" href="/tips/">
+      <span>Tips</span>
+      <span class="side-panel-count">{sectionCounts.tips}</span>
+    </a>
+    <a class="side-panel-section" href="/tried/">
+      <span>やってみた</span>
+      <span class="side-panel-count">{sectionCounts.tried}</span>
+    </a>
+    <a class="side-panel-section" href="/tools/">
+      <span>ツール</span>
+      <span class="side-panel-count">{sectionCounts.tools}</span>
+    </a>
+    <a class="side-panel-section" href="/cheatsheets/">
+      <span>チートシート</span>
+      <span class="side-panel-count">3</span>
+    </a>
+  </div>
+</nav>
+
+<script define:vars={{ allArticlesJson }}>
+  const articles = JSON.parse(allArticlesJson);
+  const panel = document.querySelector('.side-panel');
+  if (panel) {
+    let activeTagId = null;
+    panel.addEventListener('click', (e) => {
+      const btn = e.target.closest('.side-panel-tag');
+      if (!btn) return;
+
+      const tagId = btn.dataset.tag;
+      if (activeTagId === tagId) {
+        activeTagId = null;
+        btn.classList.remove('is-selected');
+      } else {
+        panel.querySelectorAll('.side-panel-tag.is-selected').forEach(el => el.classList.remove('is-selected'));
+        activeTagId = tagId;
+        btn.classList.add('is-selected');
+      }
+
+      const list = document.getElementById('side-panel-related-list');
+      const relatedTitle = document.getElementById('side-panel-related-title');
+      if (!list) return;
+
+      if (relatedTitle) relatedTitle.style.display = '';
+
+      if (!activeTagId) {
+        const initBtns = panel.querySelectorAll('.side-panel-tag.is-active');
+        const initTags = Array.from(initBtns).map(b => b.dataset.tag);
+        if (initTags.length === 0) {
+          if (relatedTitle) relatedTitle.style.display = 'none';
+          list.innerHTML = '';
+          return;
+        }
+        const filtered = articles
+          .filter(a => a.tags.some(t => initTags.includes(t)))
+          .slice(0, 5);
+        renderList(list, filtered);
+      } else {
+        const filtered = articles.filter(a => a.tags.includes(activeTagId)).slice(0, 8);
+        renderList(list, filtered);
+      }
+    });
+  }
+
+  function renderList(container, items) {
+    if (items.length === 0) {
+      container.innerHTML = '<span class="side-panel-empty">タグが一致する記事はありません</span>';
+      return;
+    }
+    container.innerHTML = items
+      .map(a => `<a class="side-panel-article" href="${a.h}">${a.t}</a>`)
+      .join('');
+  }
+</script>
+
+<style>
+  .side-panel {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .side-panel-group {
+    margin-bottom: 0.25rem;
+  }
+
+  .side-panel-group-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    margin: 0.75rem 0 0.25rem;
+    padding-left: 0.25rem;
+  }
+
+  .side-panel-group:first-child .side-panel-group-title {
+    margin-top: 0;
+  }
+
+  .side-panel-tag {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: none;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    text-align: left;
+  }
+
+  .side-panel-tag:hover {
+    background: rgba(102, 126, 234, 0.06);
+  }
+
+  .side-panel-tag.is-active > span:first-child::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    margin-right: 0.35rem;
+    vertical-align: middle;
+  }
+
+  .side-panel-tag.is-selected {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .side-panel-count {
+    font-size: 0.6875rem;
+    font-family: 'Source Code Pro', monospace;
+    opacity: 0.6;
+  }
+
+  .side-panel-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 0.75rem 0;
+  }
+
+  .side-panel-related {
+    min-height: 2rem;
+  }
+
+  .side-panel-related-list :global(.side-panel-article) {
+    display: block;
+    font-size: 0.8125rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    line-height: 1.5;
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+
+  .side-panel-related-list :global(.side-panel-article:hover) {
+    background: rgba(102, 126, 234, 0.06);
+    color: var(--color-primary);
+  }
+
+  .side-panel-related-list :global(.side-panel-empty) {
+    display: block;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+    opacity: 0.5;
+  }
+
+  .side-panel-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+
+  .side-panel-section:hover {
+    background: rgba(102, 126, 234, 0.06);
+    color: var(--color-primary);
+  }
+
+</style>

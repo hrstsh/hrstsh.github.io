@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
@@ -95,10 +96,10 @@ row.onclick = () => {
 };`;
 
 const bookmarkletCode =`javascript:(function(){if(!location.href.includes('youtube.com/watch')){alert('YouTubeの動画ページで実行してください');return;}var o=document.getElementById('yt-mr-panel');if(o){o.remove();return;}var NOD='この動画には、もっとも再生された部分のデータがありません。';function findMarkers(d){var muts=d&&d.frameworkUpdates&&d.frameworkUpdates.entityBatchUpdate&&d.frameworkUpdates.entityBatchUpdate.mutations;if(!muts)return null;for(var i=0;i<muts.length;i++){var pl=muts[i].payload;if(pl&&pl.macroMarkersListEntity&&pl.macroMarkersListEntity.markersList){var ml=pl.macroMarkersListEntity.markersList;if(ml.markers&&ml.markers.length&&ml.markers[0].intensityScoreNormalized!==undefined)return ml.markers;}}return null;}var p=document.createElement('div');p.id='yt-mr-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:320px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #f00;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#f00;font-weight:bold';ttl.textContent='もっとも再生された部分';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#f00;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px;display:none';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var rd=document.createElement('div');rd.textContent='読み込み中...';rd.style.color='#888';p.appendChild(rd);document.body.appendChild(p);cl.onclick=function(){p.remove();};function msg(t){rd.style.color='#888';rd.textContent=t;}function show(markers){var sum=0;markers.forEach(function(mk){sum+=Number(mk.intensityScoreNormalized);});var th=sum/markers.length*1.3;var groups=[],cur=null;markers.forEach(function(mk,idx){var score=Number(mk.intensityScoreNormalized),start=parseInt(mk.startMillis,10)/1000;if(score>=th){if(cur&&idx===cur.endIdx+1){cur.endIdx=idx;if(score>cur.maxScore){cur.maxScore=score;cur.peakStart=start;}}else{cur={endIdx:idx,peakStart:start,maxScore:score};groups.push(cur);}}});if(!groups.length){msg('該当する部分が見つかりませんでした。');return;}groups.sort(function(a,b){return b.maxScore-a.maxScore;});var top=groups.slice(0,10);var maxScore=top[0].maxScore;top.sort(function(a,b){return a.peakStart-b.peakStart;});function fmt(sec){sec=Math.floor(sec);var h=Math.floor(sec/3600),m=Math.floor(sec/60)-h*60,s=sec-h*3600-m*60;function p(n){return n<10?'0'+n:''+n;}return h>0?h+':'+p(m)+':'+p(s):m+':'+p(s);}var lt=top.map(function(g){return fmt(g.peakStart)+'（再生数の多さ '+Math.round(g.maxScore*100)+'%）';}).join('\\n');ttl.textContent='もっとも再生された部分（'+top.length+'件）';rd.textContent='';rd.style.color='';top.forEach(function(g){var pct=(g.maxScore/maxScore*100).toFixed(1);var bg='linear-gradient(to right,rgba(255,0,0,0.1) '+pct+'%,transparent '+pct+'%)';var bgHov='linear-gradient(to right,rgba(255,0,0,0.2) '+pct+'%,rgba(255,245,245,1) '+pct+'%)';var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;padding:5px 0;border-bottom:1px solid #f0f0f0;line-height:1.5;cursor:pointer;background:'+bg;row.onmouseover=function(){row.style.background=bgHov;};row.onmouseout=function(){row.style.background=bg;};row.onclick=function(){var vid=document.querySelector('video');if(vid)vid.currentTime=g.peakStart;};var ts=document.createElement('span');ts.style.cssText='color:#f00;font-weight:bold;flex-shrink:0;min-width:52px';ts.textContent=fmt(g.peakStart);var lb=document.createElement('span');lb.style.cssText='color:#333;flex:1';lb.textContent='再生数の多さ '+Math.round(g.maxScore*100)+'%';row.appendChild(ts);row.appendChild(lb);rd.appendChild(row);});cp.style.display='';cp.onclick=function(){navigator.clipboard.writeText(lt).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){cp.textContent='失敗';setTimeout(function(){cp.textContent='コピー';},2000);});};}var vid=new URLSearchParams(location.search).get('v');var d=window.ytInitialData;var dv=d&&d.currentVideoEndpoint&&d.currentVideoEndpoint.watchEndpoint&&d.currentVideoEndpoint.watchEndpoint.videoId;var mk=dv&&dv===vid?findMarkers(d):null;if(mk){show(mk);return;}fetch(location.href).then(function(r){return r.text();}).then(function(h){var parts=h.split('var ytInitialData = ');if(parts.length<2)parts=h.split('window["ytInitialData"] = ');var m2=null;if(parts.length>1){try{m2=findMarkers(JSON.parse(parts[1].split(';</script>')[0]));}catch(e){}}if(m2){show(m2);}else{msg(NOD);}}).catch(function(){msg('データを取得できませんでした。ページを再読み込みしてから試してください。');});})();`;
+const currentTags = ['youtube', 'bookmarklet'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット</h1>
@@ -191,20 +192,10 @@ const bookmarkletCode =`javascript:(function(){if(!location.href.includes('youtu
 
     </article>
 
-    <footer class="page-footer">
-      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tips/youtube-most-replayed-bookmarklet/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -295,25 +286,9 @@ const bookmarkletCode =`javascript:(function(){if(!location.href.includes('youtu
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
 
-  .page-footer a {
-    color: #667eea;
-    text-decoration: none;
-  }
 
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
 
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 
   .faq-list dt {
     font-weight: 600;

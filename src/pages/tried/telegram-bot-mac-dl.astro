@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
@@ -68,10 +69,11 @@ atexit.register(_terminate_active_subprocesses)`;
 const configAllowed = `# 許可するユーザー ID のリスト（カンマ区切り）
 _raw_ids = os.getenv("ALLOWED_USER_IDS", "").strip()
 ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip()]`;
+
+const currentTags = ['macos', 'automation'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tried/" class="back-link">← やってみた一覧</a>
       <h1>外出先から自宅の Mac を操作する Telegram Bot を作ってみた</h1>
@@ -134,20 +136,10 @@ ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip
       </p>
     </article>
 
-    <footer class="page-footer">
-      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tried/telegram-bot-mac-dl/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -244,23 +236,4 @@ ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    font-size: 0.95rem;
-  }
-
-  .page-footer a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
-
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 </style>

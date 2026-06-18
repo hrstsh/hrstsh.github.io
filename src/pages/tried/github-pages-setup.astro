@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
@@ -12,6 +13,8 @@ const faqItems = [
   { question: 'Xserverでドメインだけ取得できる？', answer: 'できる。Xserverのドメイン取得サービスで契約し、DNS管理画面から GitHub 向けに A レコードを設定する。Xserverのホスティング契約は不要で、ドメインだけ取得する形で利用できる。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tried'), faqPage(faqItems, path)];
+
+const currentTags = ['dev', 'github'];
 
 const folderTree = `├── .github/workflows/  ... デプロイ設定（GitHub Actions）
 ├── src/
@@ -40,8 +43,7 @@ const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
 )}`;
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tried/" class="back-link">← やってみた一覧</a>
       <h1>GitHub Pages を作成して公開してみた</h1>
@@ -161,20 +163,10 @@ const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
       </dl>
     </article>
 
-    <footer class="page-footer">
-      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tried/github-pages-setup/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -254,25 +246,6 @@ const analyticsCode = `<!-- Layout.astro の head 内・本番環境のみ -->
     border: 1px solid rgba(102, 126, 234, 0.2);
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    font-size: 0.95rem;
-  }
-
-  .page-footer a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
-
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 
   .faq-list dt {
     font-weight: 600;

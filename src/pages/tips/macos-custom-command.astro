@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
@@ -83,10 +84,10 @@ const directoryStructure = `~/MyCommands/
       └── amv.py     # Python本体`;
 
 const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
+const currentTags = ['macos', 'cli'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>Macで自作コマンドを作って登録する方法</h1>
@@ -220,17 +221,11 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
         一度覚えてしまえばいろいろな場面で応用できるので、ぜひ試してみてください。
       </p>
     </article>
-  </main>
-</Layout>
+
+    <ArticleFooterNav currentHref="/tips/macos-custom-command/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -306,23 +301,7 @@ const chmodCommand = `chmod +x ~/MyCommands/amv/amv`;
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
 
-  .page-footer a {
-    color: #667eea;
-    text-decoration: none;
-  }
 
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
 
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 </style>

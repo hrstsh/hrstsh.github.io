@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
@@ -54,10 +55,10 @@ tables.forEach((t) => {
 });`;
 
 const bookmarkletCode = `javascript:(function(){var mode=confirm('OK=TSV（Excel/スプレッドシート向け）, キャンセル=CSV')?'tsv':'csv';function cell(c){return c.innerText.replace(/[\\t\\r\\n]+/g,' ').trim();}function rows(t){return [].map.call(t.rows,function(tr){return [].map.call(tr.cells,cell);});}function tsv(r){return r.map(function(x){return x.join('\\t');}).join('\\n');}function csv(r){return r.map(function(x){return x.map(function(c){return /[\",\\n]/.test(c)?'\"'+c.replace(/\"/g,'\"\"')+'\"':c;}).join(',');}).join('\\n');}function out(t){var r=rows(t);if(!r.length){alert('この表には行がありません');return;}var text=mode==='tsv'?tsv(r):csv(r);navigator.clipboard.writeText(text).then(function(){toast(r.length+'行を'+mode.toUpperCase()+'でコピーしました');}).catch(function(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(r.length+'行を'+mode.toUpperCase()+'でコピーしました');}catch(e){toast('コピーに失敗しました');}ta.remove();});}function toast(m){var d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#667eea;color:#fff;padding:8px 16px;border-radius:4px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(function(){d.remove();},2000);}var tables=[].slice.call(document.querySelectorAll('table'));if(!tables.length){alert('このページには表（table要素）が見つかりませんでした');return;}if(tables.length===1){out(tables[0]);return;}function clear(){tables.forEach(function(t){t.style.outline='';t.style.cursor='';t.removeEventListener('click',pick,true);});}function pick(e){e.preventDefault();e.stopPropagation();var t=e.currentTarget;clear();out(t);}tables.forEach(function(t){t.style.outline='2px solid #667eea';t.style.cursor='pointer';t.addEventListener('click',pick,true);});toast('コピーしたい表をクリックしてください（'+tables.length+'個）');})();`;
+const currentTags = ['bookmarklet', 'dev'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>HTMLの表をTSV/CSVとしてコピーするブックマークレット</h1>
@@ -140,20 +141,10 @@ const bookmarkletCode = `javascript:(function(){var mode=confirm('OK=TSV（Excel
 
     </article>
 
-    <footer class="page-footer">
-      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tips/html-table-tsv-csv-copy-bookmarklet/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -233,25 +224,9 @@ const bookmarkletCode = `javascript:(function(){var mode=confirm('OK=TSV（Excel
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
 
-  .page-footer a {
-    color: #667eea;
-    text-decoration: none;
-  }
 
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
 
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 
   .faq-list dt {
     font-weight: 600;

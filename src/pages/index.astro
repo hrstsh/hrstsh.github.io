@@ -1,7 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import ArticleLayout from '../layouts/ArticleLayout.astro';
 import { triedPosts } from '../data/tried';
 import { tipPosts } from '../data/tips';
+import { toolEntries } from '../data/tools';
 import { webSite, organization } from '../utils/jsonLd';
 
 const siteName = 'hrの備忘録';
@@ -10,15 +11,7 @@ const jsonLd = [webSite(siteName, siteDesc), organization(siteName)];
 
 const tips = tipPosts.slice(0, 6);
 
-const tools = [
-  { name: 'JSON整形', href: '/tools/json-formatter/' },
-  { name: 'SQL整形', href: '/tools/sql-formatter/' },
-  { name: 'スタイル付きテキスト置換', href: '/tools/styled-text-replacer/' },
-  { name: 'X検索', href: '/tools/x-search-builder/' },
-  { name: 'リンク化回避', href: '/tools/zero-width-breaker/' },
-  { name: 'EXIF編集', href: '/tools/exif-editor/' },
-  { name: 'スケジュール変換', href: '/tools/schedule-builder/' },
-];
+const tools = toolEntries.map(t => ({ name: t.shortName, href: t.href }));
 const sheets = [
   { name: 'Git', href: '/cheatsheets/git-cheatsheet/' },
   { name: 'Docker', href: '/cheatsheets/docker-cheatsheet/' },
@@ -26,8 +19,7 @@ const sheets = [
 ];
 ---
 
-<Layout title={siteName} description={siteDesc} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={siteName} description={siteDesc} jsonLd={jsonLd} currentTags={[]}>
     <header class="masthead">
       <h1>hrの備忘録</h1>
       <p class="tagline">開発と日常の作業メモ</p>
@@ -100,16 +92,9 @@ const sheets = [
         </div>
       </div>
     </section>
-  </main>
-</Layout>
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 3.5rem 1.5rem 4rem;
-  }
-
   .masthead {
     border-left: 3px solid var(--color-primary);
     padding-left: 1.15rem;

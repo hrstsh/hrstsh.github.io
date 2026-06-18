@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
@@ -49,10 +50,10 @@ articles.forEach((art) => {
 const result = texts.join('\\n\\n');`;
 
 const bookmarkletCode = `javascript:(function(){if(!/(twitter|x)\\.com/.test(location.host)||!location.pathname.includes('/status/')){alert('X(Twitter)のスレッド（ツイートの詳細）ページで実行してください');return;}function handleOf(a){var n=a.querySelector('[data-testid=\\"User-Name\\"]');if(!n)return null;var m=n.innerText.match(/@\\w+/);return m?m[0]:null;}var arts=document.querySelectorAll('article[data-testid=\\"tweet\\"]');if(!arts.length){alert('ツイートが見つかりません。ページを開き直してから実行してください。');return;}var author=handleOf(arts[0]),seen={},texts=[];arts.forEach(function(a){if(handleOf(a)!==author)return;var b=a.querySelector('[data-testid=\\"tweetText\\"]');if(!b)return;var t=b.innerText.trim();if(!t||seen[t])return;seen[t]=1;texts.push(t);});if(!texts.length){alert('本文が取得できませんでした。スレッドを下にスクロールしてから試してください。');return;}var result=texts.join('\\n\\n');var o=document.getElementById('x-thread-panel');if(o){o.remove();return;}var p=document.createElement('div');p.id='x-thread-panel';p.style.cssText='position:fixed;top:60px;right:16px;width:380px;max-height:80vh;overflow-y:auto;background:#fff;border:1px solid #ddd;border-top:3px solid #1d9bf0;border-radius:4px;z-index:99999;padding:12px 16px;font-size:13px;font-family:sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px';var ttl=document.createElement('span');ttl.style.cssText='color:#1d9bf0;font-weight:bold';ttl.textContent='スレッド ('+texts.length+'件 / '+author+')';var btns=document.createElement('div');var cp=document.createElement('button');cp.style.cssText='padding:3px 10px;background:#1d9bf0;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;margin-right:6px';cp.textContent='コピー';var cl=document.createElement('button');cl.style.cssText='background:none;border:none;font-size:16px;cursor:pointer';cl.textContent='×';btns.appendChild(cp);btns.appendChild(cl);hdr.appendChild(ttl);hdr.appendChild(btns);p.appendChild(hdr);var ta=document.createElement('textarea');ta.value=result;ta.style.cssText='width:100%;height:60vh;box-sizing:border-box;border:1px solid #eee;border-radius:4px;padding:8px;font-size:12px;line-height:1.6;resize:vertical;white-space:pre-wrap';p.appendChild(ta);document.body.appendChild(p);cl.onclick=function(){p.remove();};cp.onclick=function(){navigator.clipboard.writeText(result).then(function(){cp.textContent='コピーしました';setTimeout(function(){cp.textContent='コピー';},2000);}).catch(function(){ta.select();cp.textContent='手動でコピーを';setTimeout(function(){cp.textContent='コピー';},2000);});};})();`;
+const currentTags = ['twitter', 'bookmarklet'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>X(Twitter)のスレッド（連投）を1つのテキストにまとめてコピーするブックマークレット</h1>
@@ -135,20 +136,10 @@ const bookmarkletCode = `javascript:(function(){if(!/(twitter|x)\\.com/.test(loc
 
     </article>
 
-    <footer class="page-footer">
-      <a href="/tips/">Tips一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tips/twitter-thread-copy-bookmarklet/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -228,25 +219,9 @@ const bookmarkletCode = `javascript:(function(){if(!/(twitter|x)\\.com/.test(loc
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.95rem;
-  }
 
-  .page-footer a {
-    color: #667eea;
-    text-decoration: none;
-  }
 
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
 
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 
   .faq-list dt {
     font-weight: 600;

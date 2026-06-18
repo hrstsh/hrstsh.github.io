@@ -1,5 +1,6 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import ArticleLayout from '../../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../../components/ArticleFooterNav.astro';
 import { webApplication, faqPage } from '../../../utils/jsonLd';
 
 const title = 'スタイル付きテキスト置換 - hrの備忘録';
@@ -14,10 +15,11 @@ const jsonLd = [
   webApplication(title.replace(/ - hrの備忘録$/, ''), description, pageUrl),
   faqPage(faqItems, pageUrl),
 ];
+
+const currentTags = ['dev'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tools/" class="back-link">← ツール一覧</a>
       <h1>スタイル付きテキスト置換</h1>
@@ -152,8 +154,9 @@ const jsonLd = [
         </dl>
       </section>
     </article>
-  </main>
-</Layout>
+
+    <ArticleFooterNav currentHref="/tools/styled-text-replacer/" currentTags={currentTags} backHref="/tools/" backLabel="← ツール一覧に戻る" />
+</ArticleLayout>
 
 <script>
   let loadedHtml = '';
@@ -287,13 +290,6 @@ const jsonLd = [
 </script>
 
 <style>
-  main {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }

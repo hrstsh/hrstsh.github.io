@@ -1,5 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
@@ -55,10 +56,11 @@ const contextMenuPrevent = `document.addEventListener('contextmenu', (e) => {
         showTweetContextMenu(e.clientX, e.clientY, imageUrls, tweetLink);
     }
 }, true);`;
+
+const currentTags = ['twitter', 'chrome-extension'];
 ---
 
-<Layout title={title} description={description} jsonLd={jsonLd}>
-  <main>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tried/" class="back-link">← やってみた一覧</a>
       <h1>X の検索を保存する Chrome 拡張を作ってみた</h1>
@@ -120,20 +122,10 @@ const contextMenuPrevent = `document.addEventListener('contextmenu', (e) => {
       </p>
     </article>
 
-    <footer class="page-footer">
-      <a href="/tried/">やってみた一覧に戻る</a> · <a href="/">トップに戻る</a>
-    </footer>
-  </main>
-</Layout>
+    <ArticleFooterNav currentHref="/tried/twitter-search-save/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
 
 <style>
-  main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-    line-height: 1.7;
-  }
-
   .article-header {
     margin-bottom: 2rem;
   }
@@ -230,23 +222,4 @@ const contextMenuPrevent = `document.addEventListener('contextmenu', (e) => {
     padding: 0;
   }
 
-  .page-footer {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    font-size: 0.95rem;
-  }
-
-  .page-footer a {
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  .page-footer a:hover {
-    text-decoration: underline;
-  }
-
-  .page-footer a + a {
-    margin-left: 0.5rem;
-  }
 </style>

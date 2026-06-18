@@ -1,0 +1,110 @@
+---
+import { getTag } from '../data/tags';
+import { getRelatedArticles } from '../utils/articles';
+
+interface Props {
+  currentHref: string;
+  currentTags: string[];
+  backHref: string;
+  backLabel: string;
+}
+
+const { currentHref, currentTags, backHref, backLabel } = Astro.props;
+const related = getRelatedArticles(currentHref, currentTags);
+const tagObjects = currentTags.map(id => getTag(id)).filter(Boolean);
+---
+
+<footer class="article-footer-nav">
+  {tagObjects.length > 0 && (
+    <div class="article-tags">
+      {tagObjects.map(tag => (
+        <span class="article-tag-pill">{tag!.label}</span>
+      ))}
+    </div>
+  )}
+
+  {related.length > 0 && (
+    <div class="article-related">
+      <div class="article-related-title">関連する記事</div>
+      <ul class="article-related-list">
+        {related.map(a => (
+          <li><a href={a.href}>{a.title}</a></li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <div class="article-back">
+    <a href={backHref} class="back-link">{backLabel}</a>
+  </div>
+</footer>
+
+<style>
+  .article-footer-nav {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .article-tag-pill {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+  }
+
+  .article-related {
+    margin-bottom: 1.5rem;
+  }
+
+  .article-related-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .article-related-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .article-related-list li {
+    padding: 0.25rem 0;
+  }
+
+  .article-related-list a {
+    font-size: 0.875rem;
+    color: var(--color-text-muted) !important;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    line-height: 1.6;
+  }
+
+  .article-related-list a:hover {
+    color: var(--color-primary) !important;
+  }
+
+  .article-back {
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  /* PC ではサイドパネルがあるのでタグと関連記事は非表示 */
+  @media (min-width: 1024px) {
+    .article-tags,
+    .article-related {
+      display: none;
+    }
+  }
+</style>
