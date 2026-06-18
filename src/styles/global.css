@@ -9,10 +9,14 @@
   --color-bg: #f8fafc;
   --color-bg-card: #ffffff;
   --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-card: rgba(102, 126, 234, 0.08);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
   --shadow-hover: 0 8px 24px rgba(102, 126, 234, 0.25);
+  --shadow-card: 0 1px 4px rgba(102, 126, 234, 0.06);
+  --shadow-card-hover: 0 6px 20px rgba(102, 126, 234, 0.15);
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -36,6 +40,10 @@ html {
 
 body {
   background: var(--color-bg);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(102, 126, 234, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(118, 75, 162, 0.05) 0%, transparent 60%);
+  background-attachment: fixed;
   color: var(--color-text);
   line-height: 1.7;
   min-height: 100vh;
@@ -107,7 +115,6 @@ h1 {
 
 .page-header {
   border-image: none !important;
-  border-bottom: 1px solid var(--color-border) !important;
 }
 
 .article-body h2,
@@ -192,10 +199,21 @@ figure img {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: none;
   z-index: 1000;
   transform: translateY(0);
   transition: transform 0.25s ease;
+}
+
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  opacity: 0.5;
 }
 
 .site-header.is-hidden {
