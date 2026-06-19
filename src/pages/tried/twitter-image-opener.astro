@@ -1,0 +1,619 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'X のタイムラインから画像を自動で開く Chrome 拡張を作ってみた - hrの備忘録';
+const description = 'X(Twitter) のタイムラインをスクロールしながら、キーワードにマッチした画像付きツイートの画像を自動で別タブに開く／ダウンロードする Chrome 拡張を作った手記。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/twitter-image-opener', toIsoDate('2026.06'), 'tried');
+
+const tryOpenImages = `function tryOpenImages(tweet, retries) {
+  const images = tweet.querySelectorAll('[data-testid="tweetPhoto"] img');
+
+  // 画像要素がまだ読み込まれていなければリトライ（500ms × 最大5回）
+  if (images.length === 0) {
+    if (retries > 0) {
+      setTimeout(() => tryOpenImages(tweet, retries - 1), 500);
+    }
+    return;
+  }
+
+  for (const img of images) {
+    // 動画プレーヤー内のサムネイルは除外
+    if (img.closest('[data-testid="videoPlayer"]')) continue;
+
+    // &name=small や &name=medium を &name=orig に置き換えて原寸取得
+    let url = img.src;
+    if (url.includes('&name=')) {
+      url = url.replace(/&name=[^&]+/, '&name=orig');
+    }
+
+    // content script からはタブ操作・DL できないので background へ委譲
+    if (mode === 'download') {
+      // URL からファイルID と拡張子を抽出してファイル名を組み立てる
+      const match = url.match(/\\/media\\/([^?]+)\\?format=(\\w+)/);
+      const filename = match
+        ? match[1] + '.' + match[2]
+        : 'image_' + Date.now() + '.jpg';
+      chrome.runtime.sendMessage({ action: 'downloadImage', url, filename, downloadFolder });
+    } else {
+      chrome.runtime.sendMessage({ action: 'openImage', url });
+    }
+  }
+}`;
+
+const checkTweet = `function checkTweet(tweet) {
+  // 処理済みフラグで同じツイートの二重処理を防ぐ
+  if (tweet.dataset.imageOpenerProcessed) return;
+  if (!enabled) return;
+
+  // キーワードが設定されていれば本文に含まれるか照合
+  if (keyword) {
+    const textEl = tweet.querySelector('[data-testid="tweetText"]');
+    if (!textEl || !textEl.textContent.includes(keyword)) return;
+  }
+
+  tweet.dataset.imageOpenerProcessed = 'true';
+  tryOpenImages(tweet, 5);
+}`;
+
+const observerCode = `const observer = new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+      // 追加されたノード自体がツイートの場合
+      if (node.matches?.('[data-testid="tweet"]')) {
+        checkTweet(node);
+      }
+      // 追加されたコンテナの子孫にツイートがある場合
+      for (const t of node.querySelectorAll?.('[data-testid="tweet"]') ?? []) {
+        checkTweet(t);
+      }
+    }
+  }
+});
+
+// body 全体を subtree ごと監視してスクロールで追加されるツイートを拾う
+observer.observe(document.body, { childList: true, subtree: true });`;
+
+const openImageCode = `if (message.action === 'openImage') {
+  // active: false でバックグラウンドタブとして開く（フォーカスを奪わない）
+  chrome.tabs.create({ url: message.url, active: false });
+}`;
+
+const downloadCode = `if (message.action === 'downloadImage') {
+  // フォルダ名があればスラッシュ区切りでパスにする（DLフォルダ内にサブフォルダが作られる）
+  const filename = message.downloadFolder
+    ? message.downloadFolder + '/' + message.filename
+    : message.filename;
+
+  chrome.downloads.download({ url: message.url, filename });
+}`;
+
+const downloadDedupCode = `// 同じURLを過去にDL済みか Chrome のダウンロード履歴から検索
+chrome.downloads.search({ url: message.url }, (results) => {
+  const alreadyDownloaded = results && results.some((r) => r.state === 'complete');
+  if (alreadyDownloaded) return; // 完了済みがあればスキップ
+  chrome.downloads.download({ url: message.url, filename });
+});`;
+
+const filenameCode = `// /media/XXXXX?format=jpg から ID と拡張子を取り出す
+const match = url.match(/\\/media\\/([^?]+)\\?format=(\\w+)/);
+const filename = match
+  ? match[1] + '.' + match[2]       // 例: AbCdEfG.jpg
+  : 'image_' + Date.now() + '.jpg'; // URL が想定外ならタイムスタンプで代替`;
+
+const fullManifest = `{
+  "manifest_version": 3,
+  "name": "Twitter Image Opener",
+  "version": "1.3",
+  "description": "指定キーワードと画像を含むツイートの画像を自動で別タブに開く／ダウンロードする",
+  "permissions": ["storage", "downloads"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://twitter.com/*", "https://x.com/*"],
+      "js": ["content_script.js"],
+      "run_at": "document_end"
+    }
+  ]
+}`;
+
+const fullContentScript = `let keyword = '';
+let enabled = true;
+let mode = 'tab';
+let downloadFolder = '';
+
+chrome.storage.local.get(['keyword', 'enabled', 'mode', 'downloadFolder'], (result) => {
+  keyword = result.keyword || '';
+  enabled = result.enabled !== false;
+  mode = result.mode || 'tab';
+  downloadFolder = result.downloadFolder || '';
+});
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.keyword) keyword = changes.keyword.newValue || '';
+  if (changes.enabled) enabled = changes.enabled.newValue !== false;
+  if (changes.mode) mode = changes.mode.newValue || 'tab';
+  if (changes.downloadFolder) downloadFolder = changes.downloadFolder.newValue || '';
+});
+
+function tryOpenImages(tweet, retries) {
+  const images = tweet.querySelectorAll('[data-testid="tweetPhoto"] img');
+
+  if (images.length === 0) {
+    if (retries > 0) {
+      setTimeout(() => tryOpenImages(tweet, retries - 1), 500);
+    }
+    return;
+  }
+
+  for (const img of images) {
+    if (img.closest('[data-testid="videoPlayer"]')) continue;
+
+    let url = img.src;
+    if (url.includes('&name=')) {
+      url = url.replace(/&name=[^&]+/, '&name=orig');
+    }
+
+    if (mode === 'download') {
+      const match = url.match(/\\/media\\/([^?]+)\\?format=(\\w+)/);
+      const filename = match
+        ? match[1] + '.' + match[2]
+        : 'image_' + Date.now() + '.jpg';
+      chrome.runtime.sendMessage({ action: 'downloadImage', url, filename, downloadFolder });
+    } else {
+      chrome.runtime.sendMessage({ action: 'openImage', url });
+    }
+  }
+}
+
+function checkTweet(tweet) {
+  if (tweet.dataset.imageOpenerProcessed) return;
+  if (!enabled) return;
+
+  if (keyword) {
+    const textEl = tweet.querySelector('[data-testid="tweetText"]');
+    if (!textEl || !textEl.textContent.includes(keyword)) return;
+  }
+
+  tweet.dataset.imageOpenerProcessed = 'true';
+  tryOpenImages(tweet, 5);
+}
+
+const observer = new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+      if (node.matches?.('[data-testid="tweet"]')) {
+        checkTweet(node);
+      }
+      for (const t of node.querySelectorAll?.('[data-testid="tweet"]') ?? []) {
+        checkTweet(t);
+      }
+    }
+  }
+});
+
+observer.observe(document.body, { childList: true, subtree: true });`;
+
+const fullBackground = `chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === 'openImage') {
+    chrome.tabs.create({ url: message.url, active: false });
+  }
+  if (message.action === 'downloadImage') {
+    const filename = message.downloadFolder
+      ? message.downloadFolder + '/' + message.filename
+      : message.filename;
+
+    chrome.downloads.search({ url: message.url }, (results) => {
+      const alreadyDownloaded = results && results.some((r) => r.state === 'complete');
+      if (alreadyDownloaded) {
+        console.log('[ImageOpener:BG] ダウンロード済みスキップ:', message.filename);
+        return;
+      }
+      chrome.downloads.download({ url: message.url, filename });
+    });
+  }
+});`;
+
+const fullPopupJs = `const input = document.getElementById('keyword');
+const toggle = document.getElementById('enabled');
+const modeSelect = document.getElementById('mode');
+const folderSection = document.getElementById('folderSection');
+const folderInput = document.getElementById('downloadFolder');
+const status = document.getElementById('status');
+
+function updateFolderVisibility() {
+  folderSection.classList.toggle('visible', modeSelect.value === 'download');
+}
+
+chrome.storage.local.get(['keyword', 'enabled', 'mode', 'downloadFolder'], (result) => {
+  input.value = result.keyword || '';
+  toggle.checked = result.enabled !== false;
+  modeSelect.value = result.mode || 'tab';
+  folderInput.value = result.downloadFolder || '';
+  updateFolderVisibility();
+});
+
+toggle.addEventListener('change', () => {
+  chrome.storage.local.set({ enabled: toggle.checked });
+});
+
+modeSelect.addEventListener('change', updateFolderVisibility);
+
+document.getElementById('save').addEventListener('click', () => {
+  chrome.storage.local.set({
+    keyword: input.value,
+    mode: modeSelect.value,
+    downloadFolder: folderInput.value.trim(),
+  }, () => {
+    status.textContent = '保存しました';
+    setTimeout(() => { status.textContent = ''; }, 2000);
+  });
+});`;
+
+const currentTags = ['twitter', 'chrome-extension'];
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>X のタイムラインから画像を自動で開く Chrome 拡張を作ってみた</h1>
+      <p class="article-meta">キーワードにマッチしたツイートの画像を自動で別タブに開く／ダウンロードする Chrome 拡張</p>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        X でこの人の投稿する画像はよく保存する、このキャラのタグがついた画像はよく保存するといったことないでしょうか。投稿者やハッシュタグの条件で自動で画像が開いたりダウンロードできたりしたら便利だと思い Chrome 拡張を作ってみました。
+      </p>
+
+      <nav class="toc" aria-label="目次">
+        <p class="toc-title">目次</p>
+        <ol>
+          <li><a href="#overview">何ができるか</a></li>
+          <li><a href="#mutation-observer">MutationObserver でタイムラインを監視する</a></li>
+          <li><a href="#check-tweet">ツイートの判定と画像取得</a>
+            <ol>
+              <li><a href="#orig-url">画像 URL の原寸指定</a></li>
+            </ol>
+          </li>
+          <li><a href="#open-tab">content script から別タブを開く</a></li>
+          <li><a href="#download">chrome.downloads API でダウンロードする</a>
+            <ol>
+              <li><a href="#filename">ファイル名の組み立て</a></li>
+              <li><a href="#dedup">chrome.downloads.search で重複を除去する</a></li>
+            </ol>
+          </li>
+          <li><a href="#pitfalls">つまずいたところ</a></li>
+          <li><a href="#full-source">全ソースコード</a></li>
+          <li><a href="#related">関連記事</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="overview">何ができるか</h2>
+      <p>
+        タイムラインに流れてくるツイートを監視し、条件に合う画像付きツイートを見つけたら画像を自動で処理する。動作モードは 2 つ。
+      </p>
+      <ul>
+        <li><strong>別タブで開く</strong> — 画像を原寸（<code>name=orig</code>）で非アクティブタブに開く</li>
+        <li><strong>ダウンロード</strong> — 指定フォルダに保存する（重複チェックつき）</li>
+      </ul>
+      <p>
+        キーワードを設定するとそのキーワードを含むツイートだけが対象になる。空欄なら画像付きツイートすべてが対象。設定はポップアップ UI から切り替えられる。
+      </p>
+
+      <h2 id="mutation-observer">MutationObserver でタイムラインを監視する</h2>
+      <p>
+        X は SPA なので、スクロールに応じて DOM にツイートが追加される。ページ読み込み時に全ツイートが揃っているわけではないため、<code>MutationObserver</code> で DOM の変更を検知した。
+      </p>
+      <CodeBlock code={observerCode} language="javascript" />
+      <p>
+        <code>document.body</code> を <code>childList: true, subtree: true</code> で監視し、追加されたノードから <code>[data-testid="tweet"]</code> にマッチする要素を探す。ここで 2 パターンの拾い方をしている。追加されたノード自体が <code>[data-testid="tweet"]</code> である場合と、追加されたコンテナの子孫にツイートがある場合だ。X はタイムラインの描画タイミングによって両方のケースが起きるので、<code>node.matches</code> と <code>node.querySelectorAll</code> の両方で探索した。
+      </p>
+
+      <h2 id="check-tweet">ツイートの判定と画像取得</h2>
+      <p>
+        ツイートを見つけたら、キーワード照合と処理済みチェックを行う。
+      </p>
+      <CodeBlock code={checkTweet} language="javascript" />
+      <p>
+        <code>dataset.imageOpenerProcessed</code> で同じツイートの二重処理を防いだ。X は DOM の再利用や再描画が多く、このフラグがないと同じ画像が何度も開かれる。
+      </p>
+
+      <p>
+        画像の取得では、ツイートが DOM に追加された直後だと <code>[data-testid="tweetPhoto"] img</code> がまだ存在しないことがあった。500ms 間隔で最大 5 回リトライする形で対処した。500ms も 5 回も適当な決め打ちで、回線が遅い環境だと足りないかもしれない。
+      </p>
+      <CodeBlock code={tryOpenImages} language="javascript" />
+
+      <h3 id="orig-url">画像 URL の原寸指定</h3>
+      <p>
+        X の画像 URL には <code>&amp;name=small</code> や <code>&amp;name=medium</code> といったサイズ指定のパラメータがつく。これを <code>&amp;name=orig</code> に差し替えると原寸画像が取れる。正規表現で <code>&amp;name=</code> 以降を一括置換した。
+      </p>
+      <p>
+        動画のサムネイルを誤って開かないよう <code>img.closest('[data-testid="videoPlayer"]')</code> で動画プレーヤー内の img は除外した。
+      </p>
+
+      <h2 id="open-tab">content script から別タブを開く</h2>
+      <p>
+        Manifest V3 の content script には <code>chrome.tabs</code> API の権限がない。別タブを開くには <code>chrome.runtime.sendMessage</code> で background の service worker にメッセージを送り、そちらで <code>chrome.tabs.create</code> を呼ぶ必要があった。
+      </p>
+      <CodeBlock code={openImageCode} language="javascript" />
+      <p>
+        <code>active: false</code> を指定することで、タブが非アクティブ（バックグラウンド）で開かれる。これがないと画像を開くたびにフォーカスがそちらに移ってしまい、タイムラインのスクロールが中断される。タイムラインを流し見しながら裏でタブを溜めていく用途では必須だった。
+      </p>
+
+      <h2 id="download">chrome.downloads API でダウンロードする</h2>
+      <p>
+        ダウンロードモードでは <code>chrome.downloads.download</code> を使った。content script からは呼べないため、こちらも background 経由になる。
+      </p>
+      <CodeBlock code={downloadCode} language="javascript" />
+      <p>
+        <code>filename</code> にスラッシュ区切りのパスを渡すと、Chrome のダウンロードフォルダ内にサブフォルダを作ってそこに保存してくれる。ポップアップ UI でフォルダ名を指定できるようにした。
+      </p>
+
+      <h3 id="filename">ファイル名の組み立て</h3>
+      <p>
+        X の画像 URL は <code>https://pbs.twimg.com/media/XXXXX?format=jpg&amp;name=orig</code> のような形式になっている。ここから <code>/media/</code> 以降のファイル ID と <code>format</code> パラメータを正規表現で取り出し、<code>XXXXX.jpg</code> のようなファイル名を組み立てた。
+      </p>
+      <CodeBlock code={filenameCode} language="javascript" />
+      <p>
+        URL の形式が想定外だった場合は <code>image_</code> + タイムスタンプでフォールバックした。
+      </p>
+
+      <h3 id="dedup">chrome.downloads.search で重複を除去する</h3>
+      <p>
+        タイムラインを行き来すると同じツイートが再表示されることがある。content script 側の <code>dataset</code> フラグは DOM が再構築されるとリセットされるため、同じ画像を二重にダウンロードしてしまう。
+      </p>
+      <p>
+        これを防ぐために <code>chrome.downloads.search</code> を使った。URL を検索キーにして過去のダウンロード履歴を引き、<code>state === 'complete'</code> のものがあればスキップする。
+      </p>
+      <CodeBlock code={downloadDedupCode} language="javascript" />
+      <p>
+        <code>chrome.downloads.search</code> は URL の完全一致で検索できる。ダウンロード履歴は Chrome が管理しているので、拡張機能側で別途リストを持つ必要がない。ブラウザを再起動しても履歴は残っているため、セッションをまたいだ重複除去にもなった。
+      </p>
+
+      <h2 id="pitfalls">つまずいたところ</h2>
+      <p>
+        画像の遅延読み込みが一番手こずった。ツイートの DOM ノードが追加された時点では <code>[data-testid="tweetPhoto"] img</code> がまだ存在せず <code>querySelectorAll</code> で 0 件になる。最初はタイミングの問題だと気づかず「セレクタが間違っているのでは」と探し回った。
+      </p>
+      <p>
+        もうひとつは <code>data-testid</code> への依存。<a href="/tried/twitter-search-save/">検索保存の拡張</a>を作ったときも同じ課題にぶつかったが、X が DOM 構造を変えると一斉に動かなくなる。対象のセレクタを一か所にまとめておけば修正は楽だが、根本的にはどうしようもない。
+      </p>
+
+      <h2 id="full-source">全ソースコード</h2>
+      <p>
+        以下がファイル構成と各ファイルの全体。このままコピーすれば <code>chrome://extensions/</code> から読み込んで使える。
+      </p>
+      <pre><code class="language-text">twitter-image-opener/
+├── manifest.json
+├── content_script.js
+├── background.js
+├── popup.html
+└── popup.js</code></pre>
+
+      <h3>manifest.json</h3>
+      <CodeBlock code={fullManifest} language="json" />
+
+      <h3>content_script.js</h3>
+      <CodeBlock code={fullContentScript} language="javascript" />
+
+      <h3>background.js</h3>
+      <CodeBlock code={fullBackground} language="javascript" />
+
+      <h3>popup.html</h3>
+      <p>
+        ポップアップの HTML はスタイルを含むため長いが、やっていることは有効/無効トグル・動作モード選択・キーワード入力・保存ボタンの 4 つ。
+      </p>
+      <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;style&gt;
+    body &#123; width: 300px; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; &#125;
+    h1 &#123; font-size: 15px; margin: 0 0 12px; &#125;
+    .toggle-row &#123; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; &#125;
+    .toggle-label &#123; font-weight: bold; &#125;
+    .toggle &#123; position: relative; width: 44px; height: 24px; &#125;
+    .toggle input &#123; opacity: 0; width: 0; height: 0; &#125;
+    .toggle .slider &#123; position: absolute; inset: 0; background: #ccc; border-radius: 12px; cursor: pointer; transition: background 0.2s; &#125;
+    .toggle .slider::before &#123; content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; &#125;
+    .toggle input:checked + .slider &#123; background: #1d9bf0; &#125;
+    .toggle input:checked + .slider::before &#123; transform: translateX(20px); &#125;
+    label.field &#123; display: block; margin-bottom: 6px; font-weight: bold; &#125;
+    input[type="text"], select &#123; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; &#125;
+    select &#123; margin-bottom: 12px; &#125;
+    .folder-section &#123; margin-bottom: 12px; display: none; &#125;
+    .folder-section.visible &#123; display: block; &#125;
+    .folder-hint &#123; font-size: 11px; color: #888; margin-top: 4px; &#125;
+    button &#123; margin-top: 10px; width: 100%; padding: 8px; background: #1d9bf0; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; &#125;
+    button:hover &#123; background: #1a8cd8; &#125;
+    .status &#123; margin-top: 8px; color: #16a34a; font-size: 12px; min-height: 18px; &#125;
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Twitter Image Opener&lt;/h1&gt;
+  &lt;div class="toggle-row"&gt;
+    &lt;span class="toggle-label"&gt;有効&lt;/span&gt;
+    &lt;label class="toggle"&gt;
+      &lt;input type="checkbox" id="enabled"&gt;
+      &lt;span class="slider"&gt;&lt;/span&gt;
+    &lt;/label&gt;
+  &lt;/div&gt;
+  &lt;label class="field"&gt;動作モード&lt;/label&gt;
+  &lt;select id="mode"&gt;
+    &lt;option value="tab"&gt;別タブで開く&lt;/option&gt;
+    &lt;option value="download"&gt;ダウンロード&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;div class="folder-section" id="folderSection"&gt;
+    &lt;label class="field"&gt;保存先フォルダ&lt;/label&gt;
+    &lt;input type="text" id="downloadFolder" placeholder="例: twitter_images"&gt;
+    &lt;div class="folder-hint"&gt;ダウンロードフォルダ内のサブフォルダ名&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;label class="field"&gt;キーワード&lt;/label&gt;
+  &lt;input type="text" id="keyword" placeholder="空欄で全ツイート対象"&gt;
+  &lt;div class="folder-hint"&gt;空欄にすると画像付きツイートすべてが対象になります&lt;/div&gt;
+  &lt;button id="save"&gt;保存&lt;/button&gt;
+  &lt;div class="status" id="status"&gt;&lt;/div&gt;
+  &lt;script src="popup.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+      <h3>popup.js</h3>
+      <CodeBlock code={fullPopupJs} language="javascript" />
+
+      <h2 id="related">関連記事</h2>
+      <ul>
+        <li><a href="/tried/twitter-search-save/">X の検索を保存する Chrome 拡張を作ってみた</a> — 検索クエリの保存・管理と、右クリックで画像を開く機能</li>
+      </ul>
+    </article>
+
+    <ArticleFooterNav currentHref="/tried/twitter-image-opener/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 1.25rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .toc {
+    background: rgba(102, 126, 234, 0.05);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding-left: 1.4rem;
+  }
+
+  .toc > ol > li {
+    margin-bottom: 0.3rem;
+  }
+
+  .toc ol ol {
+    margin-top: 0.2rem;
+    padding-left: 1.2rem;
+  }
+
+  .toc ol ol li {
+    margin-bottom: 0.2rem;
+  }
+
+  .toc a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+</style>
