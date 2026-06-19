@@ -11,6 +11,13 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'X のタイムラインから画像を自動で開く Chrome 拡張を作ってみた',
+    href: '/tried/twitter-image-opener/',
+    desc: 'X(Twitter) のタイムラインを監視し、キーワードにマッチした画像付きツイートの画像を自動で別タブに開く／ダウンロードする Chrome 拡張を作った手記。',
+    date: '2026.06',
+    tags: ['twitter', 'chrome-extension'],
+  },
+  {
     title: 'cron / launchd / systemd 変換ツールを作ってみた',
     href: '/tried/schedule-builder/',
     desc: 'Mac 買い替えを機に cron から launchd へ移行。仕様差を調べるうちに cron / launchd / systemd を相互変換するツールを作った記録。',
