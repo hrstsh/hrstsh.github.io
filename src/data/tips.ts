@@ -11,6 +11,7 @@ export interface TipPost {
 }
 
 export const tipPosts: TipPost[] = [
+  { title: '音声・動画のファイル形式比較まとめ', href: '/tips/audio-video-file-formats/', desc: 'MP3・AAC・Opus・H.264・AV1 など主要なファイル形式の違いと、YouTube・Netflix・X が何を使っているかをまとめた。', date: '2026.06', tags: ['dev'] },
   { title: 'ゼロ幅文字の仕組みと検出・除去方法まとめ', href: '/tips/zero-width-characters/', desc: 'X(Twitter)のリンク化回避にも使われる「ゼロ幅文字」の正体を解説。4種類の違い、コピペでの混入経路、検出・除去方法をまとめた。', date: '2026.06', tags: ['twitter', 'dev'] },
   { title: 'コピー＆ペーストで書式がつく時とテキストだけになる時の違い', href: '/tips/clipboard-rich-plain-paste/', desc: 'クリップボードに複数形式が同時に入る仕組みと、コピー元×貼り付け先の組み合わせ別パターン、書式なしペーストの方法をまとめた。', date: '2026.06', tags: ['macos'] },
   { title: 'launchctl の使い方', href: '/tips/macos-launchctl/', desc: 'macOSで定期実行・常駐処理を設定するlaunchctlを初心者向けに解説。plistの全キーと取りうる値、配置場所、bootstrap/bootout、デバッグまで。', date: '2026.06', tags: ['macos', 'automation', 'cli'] },
