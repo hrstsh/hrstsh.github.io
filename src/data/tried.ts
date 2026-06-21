@@ -11,6 +11,13 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: '.NET の Web アプリを Python (FastAPI) で書き換えてみた',
+    href: '/tried/dotnet-to-fastapi/',
+    desc: 'ASP.NET Core MVC で動いていた Web アプリを FastAPI に書き換えた記録。Controller と Router、Razor と Jinja2、Dapper と sqlite3 など両者の対応関係を整理。',
+    date: '2026.06',
+    tags: ['python', 'dev'],
+  },
+  {
     title: 'X のタイムラインから画像を自動で開く Chrome 拡張を作ってみた',
     href: '/tried/twitter-image-opener/',
     desc: 'X(Twitter) のタイムラインを監視し、キーワードにマッチした画像付きツイートの画像を自動で別タブに開く／ダウンロードする Chrome 拡張を作った手記。',
