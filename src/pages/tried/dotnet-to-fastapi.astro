@@ -1,0 +1,1185 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = '.NET の Web アプリを Python (FastAPI) で書き換えてみた - hrの備忘録';
+const description = 'ASP.NET Core MVC で動いていた Web アプリを Python の FastAPI に書き換えた記録。Controller と Router、Razor と Jinja2、Dapper と sqlite3 など、両者の対応関係を実例ベースで整理した。';
+const path = '/tried/dotnet-to-fastapi';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tried');
+
+const currentTags = ['python', 'dev'];
+
+// --- .NET 側のサンプルコード ---
+
+const dotnetStructure = `MyApp/
+├── MyApp.sln
+├── MyApp/
+│   ├── MyApp.csproj
+│   ├── Program.cs                 # エントリポイント
+│   ├── appsettings.json           # 設定
+│   ├── Controllers/
+│   │   └── ItemController.cs      # ルーティング + ハンドラ
+│   ├── Services/
+│   │   └── ItemService.cs         # ビジネスロジック
+│   ├── Models/
+│   │   ├── Entities/
+│   │   │   └── ItemEntity.cs      # テーブルに対応する型
+│   │   ├── ViewModels/
+│   │   │   └── ItemViewModel.cs   # View に渡すモデル
+│   │   └── DTOs/
+│   │       └── AddItemRequest.cs  # POST リクエスト
+│   ├── DataAccess/
+│   │   ├── DbConnectionFactory.cs # DB 接続管理
+│   │   └── ItemRepository.cs      # SQL 実行（Dapper）
+│   ├── Views/
+│   │   ├── Shared/
+│   │   │   └── _Layout.cshtml     # 共通レイアウト
+│   │   └── Item/
+│   │       └── Index.cshtml       # 個別ページ
+│   └── wwwroot/                   # 静的ファイル
+│       ├── css/
+│       ├── js/
+│       └── lib/                   # Bootstrap, jQuery 等`;
+
+const fastapiStructure = `my-app/
+├── app/
+│   ├── main.py            # エントリポイント・ルーター登録
+│   ├── config.py           # 設定（環境変数）
+│   ├── templating.py       # Jinja2 インスタンス
+│   ├── routers/
+│   │   └── items.py        # ルーティング + ハンドラ
+│   ├── db/
+│   │   ├── __init__.py     # sqlite3 接続管理
+│   │   └── queries.py      # SQL クエリ関数
+│   ├── templates/
+│   │   ├── base.html       # 共通レイアウト
+│   │   ├── items.html      # 個別ページ
+│   │   └── components/     # HTMX 用パーシャル
+│   └── static/
+│       ├── css/
+│       └── js/
+├── data/                   # SQLite DB ファイル
+├── requirements.txt
+└── tests/`;
+
+const programCs = `var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllersWithViews();
+
+// DB 接続文字列を appsettings.json から取得して DI に登録
+var connStr = builder.Configuration.GetConnectionString("Default")
+    ?? "Data Source=data/app.db";
+builder.Services.AddSingleton(new DatabaseConfig(connStr));
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+app.MapControllers();
+app.Run();`;
+
+const mainPy = `from pathlib import Path
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from app.routers import items
+
+BASE_DIR = Path(__file__).resolve().parent
+
+app = FastAPI(title="My App")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+app.include_router(items.router)`;
+
+const controllerCs = `public class ItemController : Controller
+{
+    private readonly IItemService _service;
+
+    public ItemController(IItemService service)
+    {
+        _service = service;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+        var model = _service.CreateIndexViewModel();
+        return View(model);
+    }
+
+    [Route("items/add")]
+    [HttpPost]
+    public IActionResult AddItem(AddItemRequest request)
+    {
+        _service.AddItem(request);
+        return RedirectToAction("Index");
+    }
+
+    [Route("items/delete")]
+    [HttpPost]
+    public IActionResult DeleteItem(int id)
+    {
+        _service.DeleteItem(id);
+        return RedirectToAction("Index");
+    }
+}`;
+
+const routerPy = `from contextlib import closing
+from fastapi import APIRouter, Form, Request
+from app.db import get_connection, queries
+from app.templating import templates
+
+router = APIRouter()
+
+@router.get("/")
+async def index(request: Request):
+    with closing(get_connection()) as conn:
+        rows = queries.load_items(conn)
+    return templates.TemplateResponse(request, "items.html", {"items": rows})
+
+@router.post("/items")
+async def add_item(request: Request, name: str = Form("")):
+    if name.strip():
+        with closing(get_connection()) as conn:
+            queries.insert_item(conn, name.strip())
+            rows = queries.load_items(conn)
+    return templates.TemplateResponse(
+        request, "components/item_list.html", {"items": rows}
+    )
+
+@router.post("/items/{item_id}/delete")
+async def delete_item(request: Request, item_id: int):
+    with closing(get_connection()) as conn:
+        queries.delete_item(conn, item_id)
+        rows = queries.load_items(conn)
+    return templates.TemplateResponse(
+        request, "components/item_list.html", {"items": rows}
+    )`;
+
+const serviceCs = `public class ItemService : IItemService
+{
+    private readonly IItemRepository _repository;
+    private readonly DatabaseConfig _dbConfig;
+
+    public ItemService(IItemRepository repository, DatabaseConfig dbConfig)
+    {
+        _repository = repository;
+        _dbConfig = dbConfig;
+    }
+
+    public IndexViewModel CreateIndexViewModel()
+    {
+        using var db = new SqliteConnection(_dbConfig.ConnectionString);
+        var model = new IndexViewModel
+        {
+            Items = _repository.LoadItems(db)
+        };
+        return model;
+    }
+
+    public void AddItem(AddItemRequest request)
+    {
+        using var db = new SqliteConnection(_dbConfig.ConnectionString);
+        _repository.InsertItem(db, request);
+    }
+
+    public void DeleteItem(int id)
+    {
+        using var db = new SqliteConnection(_dbConfig.ConnectionString);
+        _repository.DeleteItem(db, id);
+    }
+}`;
+
+const dapperSample = `public IEnumerable<ItemEntity> LoadItems(SqliteConnection db)
+{
+    db.Open();
+    var sql = @"SELECT * FROM Items";
+    return db.Query<ItemEntity>(sql);
+}
+
+public void InsertItem(SqliteConnection db, AddItemRequest request)
+{
+    db.Open();
+    var sql = @"INSERT INTO Items(Name, CreatedAt) VALUES(@Name, @CreatedAt)";
+    db.Query(sql, new { Name = request.Name, CreatedAt = DateTime.Now.ToString("d") });
+}
+
+public void DeleteItem(SqliteConnection db, int id)
+{
+    db.Open();
+    var sql = @"DELETE FROM Items WHERE Id = @id";
+    db.Query(sql, new { id = id });
+}`;
+
+const sqlite3Sample = `import sqlite3
+from pathlib import Path
+
+DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "app.db"
+
+def get_connection() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH, timeout=5)
+    conn.row_factory = sqlite3.Row  # カラム名でアクセス可能にする
+    conn.execute("PRAGMA journal_mode=WAL")
+    return conn`;
+
+const queriesPy = `def load_items(conn: sqlite3.Connection) -> list[sqlite3.Row]:
+    return conn.execute("SELECT Id, Name, CreatedAt FROM Items").fetchall()
+
+def insert_item(conn: sqlite3.Connection, name: str) -> None:
+    conn.execute(
+        "INSERT INTO Items (Name, CreatedAt) VALUES (?, ?)",
+        (name, datetime.now().isoformat(timespec="seconds")),
+    )
+    conn.commit()
+
+def delete_item(conn: sqlite3.Connection, item_id: int) -> None:
+    conn.execute("DELETE FROM Items WHERE Id = ?", (item_id,))
+    conn.commit()`;
+
+const razorSample = `@model IndexViewModel
+@{
+    ViewData["Title"] = "アイテム一覧";
+}
+
+<h2>アイテム一覧</h2>
+<form method="post" action="/items/add">
+    <input type="text" name="Name" />
+    <button type="submit">追加</button>
+</form>
+
+<ul>
+@foreach (var item in Model.Items)
+{
+    <li>
+        @item.Name
+        <button onclick="deleteItem(@item.Id)">削除</button>
+    </li>
+}
+</ul>`;
+
+const jinja2Sample = `{% extends "base.html" %}
+{% block content %}
+<h2>アイテム一覧</h2>
+<form method="post" action="/items"
+      hx-post="/items" hx-target="#item-list">
+    <input type="text" name="name" />
+    <button type="submit">追加</button>
+</form>
+
+<div id="item-list">
+    {% include "components/item_list.html" %}
+</div>
+{% endblock %}`;
+
+const jinja2Partial = `<!-- components/item_list.html -->
+<ul>
+{% for item in items %}
+    <li>
+        {{ item["Name"] }}
+        <button hx-post="/items/{{ item['Id'] }}/delete"
+                hx-target="#item-list">
+            削除
+        </button>
+    </li>
+{% endfor %}
+</ul>`;
+
+const baseHtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My App</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+    <nav>
+        <a href="/">ホーム</a>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>`;
+
+const layoutCshtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MyApp</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/">ホーム</a>
+    </nav>
+    <main>
+        @RenderBody()
+    </main>
+</body>
+</html>`;
+
+const appsettingsJson = `{
+  "ConnectionStrings": {
+    "Default": "Data Source=wwwroot/DB/MyDB.db"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information"
+    }
+  }
+}`;
+
+const configPy = `import os
+from pathlib import Path
+
+_BASE_DIR = Path(__file__).resolve().parent.parent
+
+DB_PATH = Path(
+    os.environ.get("APP_DB_PATH", str(_BASE_DIR / "data" / "app.db"))
+).expanduser()
+
+STATIC_DIR = Path(
+    os.environ.get("APP_STATIC_DIR", str(_BASE_DIR / "app" / "static"))
+).expanduser()`;
+
+const dbConfigCs = `// DI で接続文字列を共有するための設定クラス
+public class DatabaseConfig
+{
+    public string ConnectionString { get; }
+
+    public DatabaseConfig(string connectionString)
+    {
+        ConnectionString = connectionString;
+    }
+}
+
+// 使う側では DI で受け取り、using で接続を開閉する
+using var db = new SqliteConnection(_dbConfig.ConnectionString);`;
+
+const templatingPy = `from pathlib import Path
+from fastapi.templating import Jinja2Templates
+
+templates = Jinja2Templates(directory=Path(__file__).resolve().parent / "templates")`;
+
+const lifespanPy = `from contextlib import asynccontextmanager
+from fastapi import FastAPI
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 起動時の初期化処理（DB マイグレーションなど）
+    print("アプリケーション起動")
+    yield
+    # 終了時のクリーンアップ
+    print("アプリケーション終了")
+
+app = FastAPI(title="My App", lifespan=lifespan)`;
+
+const uvicornCmd = `# 開発時（ファイル変更で自動リロード）
+uvicorn app.main:app --reload --port 8000
+
+# 本番（全インターフェースでリッスン）
+uvicorn app.main:app --host 0.0.0.0 --port 8000`;
+
+const requirementsTxt = `fastapi
+uvicorn[standard]
+jinja2
+python-multipart`;
+
+const requirementsDevTxt = `# requirements-dev.txt
+-r requirements.txt
+pytest
+httpx
+mypy
+ruff`;
+
+const testSample = `from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_index():
+    response = client.get("/")
+    assert response.status_code == 200
+
+def test_add_item():
+    response = client.post("/items", data={"name": "テスト"})
+    assert response.status_code == 200`;
+
+const plistSample = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.myapp.web</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/path/to/my-app/.venv/bin/uvicorn</string>
+        <string>app.main:app</string>
+        <string>--host</string>
+        <string>0.0.0.0</string>
+        <string>--port</string>
+        <string>8000</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/path/to/my-app</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>`;
+
+const formParamCs = `// POST リクエストを受け取るための DTO クラス
+public class AddItemRequest
+{
+    public string Name { get; set; }
+    public int Category { get; set; }
+}
+
+// Controller 側ではこう受け取る
+[HttpPost]
+public IActionResult AddItem(AddItemRequest request)
+{
+    // ASP.NET が自動的にフォームの値を AddItemRequest にマッピングする
+    _service.AddItem(request);
+    return View("RedirectIndex");
+}`;
+
+const formParamPy = `# FastAPI 側ではデコレータの引数として受け取る
+@router.post("/items")
+async def add_item(
+    request: Request,
+    name: str = Form(""),          # <input name="name"> に対応
+    category: int = Form(0),       # <input name="category"> に対応
+):
+    if name.strip():
+        with closing(get_connection()) as conn:
+            queries.insert_item(conn, name.strip(), category)
+    ...`;
+
+const htmxDeleteExample = `<!-- 削除ボタン -->
+<button hx-post="/items/42/delete"
+        hx-target="#item-list"
+        hx-swap="innerHTML">
+    削除
+</button>
+
+<!--
+  hx-post   : POST /items/42/delete にリクエストを送る
+  hx-target : レスポンス HTML で #item-list の中身を差し替える
+  hx-swap   : 差し替え方法（innerHTML = 中身だけ入れ替え）
+-->`;
+
+const entityCs = `// テーブルのカラムに対応するクラス
+public class ItemEntity
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string CreatedAt { get; set; }
+}
+
+// Dapper がクエリ結果を自動で ItemEntity にマッピングする
+// → row.Id, row.Name のようにプロパティでアクセスできる`;
+
+const rowFactoryPy = `# sqlite3.Row を使うと、辞書のようにカラム名でアクセスできる
+conn.row_factory = sqlite3.Row
+
+row = conn.execute("SELECT Id, Name FROM Items").fetchone()
+print(row["Id"])     # => 1
+print(row["Name"])   # => "りんご"
+
+# row_factory を設定しないと、タプルで返る
+# row = (1, "りんご")  ← カラム名がわからない`;
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>.NET の Web アプリを Python (FastAPI) で書き換えてみた</h1>
+      <p class="article-meta">ASP.NET Core MVC → FastAPI へ移行した際の対応関係と、書き換えで気づいたことの記録</p>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        C# と .NET の勉強を目的に、自分用の Web アプリを ASP.NET Core MVC で組んだことがあった。
+        ローカルの macOS で動かす個人ツールで、SQLite にデータを入れて Razor で画面を返すだけのシンプルな構成。
+        せっかく作ったのでそのまま機能を足しながら日常的に使っていたが、ふだん書く言語が Python に寄ってきたこともあり、いつか書き換えたいとは思っていた。
+      </p>
+      <p>
+        書き換え先に FastAPI を選んだのは、比較的新しいフレームワークで自分が最もよく使う Python であること、それにこの規模のアプリにちょうどいい軽量さだったから。
+      </p>
+      <p>
+        この記事では、ASP.NET Core MVC と FastAPI の対応関係を整理しながら、書き換えの過程で気づいたことをまとめる。
+      </p>
+
+      <nav class="toc">
+        <h2>目次</h2>
+        <ol>
+          <li><a href="#about-frameworks">ASP.NET Core MVC と FastAPI</a></li>
+          <li><a href="#why-fastapi">なぜ FastAPI にしたか</a></li>
+          <li><a href="#about-htmx">HTMX とは</a></li>
+          <li><a href="#project-structure">プロジェクト構成の比較</a></li>
+          <li><a href="#entrypoint">エントリポイント</a></li>
+          <li><a href="#controller-router">Controller → Router</a></li>
+          <li><a href="#db-access">DB アクセス: Dapper → sqlite3</a></li>
+          <li><a href="#template">テンプレート: Razor → Jinja2</a></li>
+          <li><a href="#config">設定管理</a></li>
+          <li><a href="#runtime">実行環境とデプロイ</a></li>
+          <li><a href="#testing">テスト</a></li>
+          <li><a href="#packages">パッケージ管理</a></li>
+          <li><a href="#mapping-table">対応関係のまとめ</a></li>
+          <li><a href="#retrospective">書き換えてみて</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="about-frameworks">ASP.NET Core MVC と FastAPI</h2>
+      <p>
+        まず今回の主役である 2 つのフレームワークを簡単に整理しておく。
+      </p>
+
+      <h3>ASP.NET Core MVC</h3>
+      <p>
+        Microsoft の Web フレームワーク。C# で書き、MVC（Model-View-Controller）パターンに沿ってアプリケーションを構成する。
+      </p>
+      <p>
+        .NET のエコシステムは成熟していて、DI（依存性注入）コンテナやミドルウェアパイプラインが標準で組み込まれている。
+        NuGet でパッケージ管理し、<code>dotnet</code> CLI でビルド・実行する。
+        HTTP サーバーも Kestrel が内蔵されているので、アプリ単体で起動すればそのままリクエストを受けられる。
+      </p>
+      <p>
+        型が強く、コンパイル時にエラーを拾ってくれる安心感がある一方、クラスやインターフェースの定義が増えがちで、小規模なアプリでもファイル数が膨らみやすい。
+      </p>
+
+      <h3>FastAPI</h3>
+      <p>
+        Python の Web フレームワーク。2018 年にリリースされた比較的新しいフレームワークで、Python の型ヒント（type hints）を活用するのが特徴。
+      </p>
+      <p>
+        Python の Web フレームワークといえば Django や Flask が有名だが、FastAPI はこの 2 つとは少し立ち位置が違う。
+        Django は「全部入り」で、ORM・管理画面・認証などが最初からセットになっている。
+        Flask は「最小限」で、必要な機能をプラグインで足していくスタイル。
+        FastAPI は Flask に近い軽量さを持ちつつ、型ヒントによる自動バリデーションと API ドキュメント自動生成（Swagger UI）が標準で付いてくる。
+      </p>
+      <p>
+        もう一つの特徴は非同期（async/await）対応。
+        FastAPI は ASGI（Asynchronous Server Gateway Interface）という非同期対応のインターフェース仕様に準拠している。
+        従来の Python Web フレームワーク（Django や Flask）は WSGI（Web Server Gateway Interface）という同期的なインターフェースが主流だったが、
+        ASGI はリクエストを非同期に処理できるため、I/O 待ちが多い場面でのスループットが高い。
+      </p>
+      <p>
+        ただし ASGI アプリケーション単体では HTTP リクエストを受けられないので、Uvicorn のような ASGI サーバーが別途必要になる。
+        .NET の Kestrel のように「フレームワークにサーバーが内蔵されている」わけではないのがこの点の違い。
+      </p>
+
+      <h2 id="why-fastapi">なぜ FastAPI にしたか</h2>
+      <p>
+        書き換えたいとは思いつつ、.NET のまま使い続けていたのは「動いているから」に尽きる。ただ、macOS で <code>dotnet</code> を使う運用にはいくつか面倒な点があった。
+      </p>
+      <ul>
+        <li>.NET ランタイムのバージョン管理（メジャーバージョンが上がるたびに <code>.csproj</code> の <code>TargetFramework</code> を書き換えてパッケージを更新する必要がある）</li>
+        <li>ビルド時間の長さ（自分しか使わないアプリで毎回コンパイルが走るのが重い）</li>
+        <li>NuGet パッケージの依存解決がたまに壊れる</li>
+      </ul>
+      <p>
+        自分しか使わないローカルツールにしては構えが大きい、というのが正直な感覚だった。
+      </p>
+      <p>
+        書き換え先を Python にしたのは、ふだん最もよく書いている言語だったから。macOS なら Homebrew で <code>python3</code> が入るし、SQLite は標準ライブラリに含まれている。インタプリタ言語なのでビルド不要、ファイルを書き換えたら即反映される。
+      </p>
+      <p>
+        Python の Web フレームワークの中で FastAPI を選んだのは、比較的新しいフレームワークであることと、型ヒントベースのバリデーションが .NET の「型で守る」感覚に近かったこと。
+        Flask も候補にあったが、Flask は型ヒントがあくまでドキュメント的な役割にとどまる。
+        FastAPI は型ヒントからバリデーションルールと API ドキュメントが自動生成されるので、書いた型が実際に動作に効く。
+      </p>
+      <p>
+        Django は今回の用途に対して機能が多すぎた。ORM も管理画面も認証も不要で、SQLite を直接叩いて HTML を返すだけのアプリには FastAPI くらいの粒度がちょうどいい。
+      </p>
+
+      <h2 id="about-htmx">HTMX とは</h2>
+      <p>
+        HTMX は、HTML の属性だけでサーバーとの非同期通信を実現するライブラリ。JavaScript をほぼ書かずに、ページの部分更新ができる。
+      </p>
+      <p>
+        従来の Web アプリでは、フォーム送信後にサーバーがページ全体を返してリダイレクト → ページ丸ごと再読み込みという流れが一般的だった。
+        部分更新をやりたければ jQuery の <code>$.ajax()</code> や <code>fetch()</code> で JavaScript を書く必要がある。
+        React や Vue のような SPA フレームワークを入れる手もあるが、自分用のツールにはオーバースペック。
+      </p>
+      <p>
+        HTMX はその中間を埋めてくれる。
+      </p>
+      <CodeBlock code={htmxDeleteExample} language="html" />
+      <p>
+        この例だと、削除ボタンを押すと HTMX が <code>POST /items/42/delete</code> をバックグラウンドで送信し、サーバーが返した HTML 断片で <code>#item-list</code> の中身を差し替える。ページ全体のリロードは起きない。
+      </p>
+      <p>
+        サーバー側は「HTML の断片を返すだけ」でよくて、JSON API を設計する必要がない。
+        テンプレートエンジンで HTML を生成する従来のサーバーサイドレンダリングの延長線上で部分更新が実現できるのが、自分のようなバックエンド寄りの人間にはありがたかった。
+      </p>
+      <p>
+        .NET 版ではフォーム送信のたびにページ全体をリダイレクトで再読み込みしていたが、HTMX を入れたことで操作のたびに画面がちらつくことがなくなった。
+      </p>
+
+      <h2 id="project-structure">プロジェクト構成の比較</h2>
+      <p>
+        .NET（ASP.NET Core MVC）のプロジェクトはこんな形になる。Controller・Service・Model・View がフォルダで分かれていて、それぞれが役割ごとのレイヤーを持つ構造。
+      </p>
+      <CodeBlock code={dotnetStructure} language="text" />
+      <p>
+        Models の中が Entities・ViewModels・DTOs と分かれ、さらに DataAccess が独立しているのが .NET の MVC らしいところ。
+        Entity はデータベースのテーブルに対応するクラス、ViewModel は画面に渡すデータをまとめたクラス、DTO（Data Transfer Object）はフォームの入力値などリクエストデータを受け取るクラス。
+        Repository は DB へのクエリ実行を担当する。それぞれ専用のクラスを作るのが .NET の流儀。
+      </p>
+
+      <p>
+        FastAPI 版はこうなった。
+      </p>
+      <CodeBlock code={fastapiStructure} language="text" />
+      <p>
+        ルーター（= Controller）・DB・テンプレート（= View）でフォルダを分けている。.NET 版にあった Service 層・ViewModel・Entity・DTO がまるごとない。
+      </p>
+      <p>
+        .NET 版では Controller → Service → Repository → Entity / ViewModel と 4 つのレイヤーを通るのが定番だったが、
+        FastAPI ではルーターから直接 DB 関数を呼んでテンプレートに渡す 2 層構成にした。
+        レイヤーが減った分だけ追うコードも減る。
+        チーム開発やテスタビリティを考えれば層を分けたほうがいいが、自分専用ツールならこのくらいの粒度がちょうどいい。
+      </p>
+
+      <h2 id="entrypoint">エントリポイント</h2>
+      <p>
+        アプリケーションの起動地点がどう違うかを見てみる。
+      </p>
+
+      <h3>ASP.NET Core の Program.cs</h3>
+      <p>
+        .NET の <code>Program.cs</code> はビルダーパターンでサービス登録やミドルウェアの設定を行い、最後に <code>app.Run()</code> で起動する。
+      </p>
+      <CodeBlock code={programCs} language="csharp" />
+      <p>
+        <code>builder.Services.AddControllersWithViews()</code> で MVC に必要なサービス一式を DI コンテナに登録し、DB の接続文字列も <code>DatabaseConfig</code> として DI に入れておく。
+        この「ビルダーでサービスを登録 → パイプラインを構築 → 起動」という流れは ASP.NET Core の基本パターン。
+      </p>
+      <p>
+        <code>app.Run()</code> を呼ぶと内蔵の Kestrel サーバーが HTTP リクエストの受付を開始する。
+        別途 Web サーバーを用意しなくてもアプリが起動するのは便利だが、裏を返すとアプリのコードとサーバーの起動が一体化している。
+      </p>
+
+      <h3>FastAPI の main.py</h3>
+      <p>
+        FastAPI 版の <code>main.py</code> はこう書く。
+      </p>
+      <CodeBlock code={mainPy} language="python" />
+      <p>
+        <code>FastAPI()</code> のインスタンスを作って、ルーターを <code>include_router</code> で登録するだけ。.NET の <code>Program.cs</code> と比べるとかなり短い。
+      </p>
+      <p>
+        ここで一つ気になるのが「サーバーの起動コードがない」こと。
+        FastAPI は ASGI アプリケーションを定義するだけで、HTTP サーバーとしての起動は Uvicorn に任せる。
+        つまり <code>main.py</code> は「アプリの定義」だけを書くファイルで、「起動」は別のコマンド（<code>uvicorn app.main:app</code>）で行う。
+      </p>
+      <p>
+        .NET では <code>builder.Services.AddControllersWithViews()</code> で MVC の一式を DI コンテナに登録するが、FastAPI にはそういう仕組みがない。
+        ルーターのモジュールを <code>import</code> して <code>include_router</code> するだけ。
+        DI に慣れていると最初は「これだけで動くの？」と思うが、Python ではモジュールの import 自体が事実上の DI として機能する。
+      </p>
+
+      <h3>lifespan（起動・終了時の処理）</h3>
+      <p>
+        .NET の <code>Program.cs</code> で起動時に DB 初期化などを書いていた部分は、FastAPI では <code>lifespan</code> で書く。
+        <code>@asynccontextmanager</code> で囲んだジェネレータの <code>yield</code> 前が起動処理、<code>yield</code> 後が終了処理にあたる。
+      </p>
+      <CodeBlock code={lifespanPy} language="python" />
+      <p>
+        .NET だと <code>Program.cs</code> の上から下に初期化コードを書けば起動時に実行されるし、終了処理は <code>IHostedService</code> や <code>IDisposable</code> で書くのが一般的。
+        FastAPI の lifespan は Python のコンテキストマネージャの仕組みを使っていて、<code>yield</code> の前後で起動・終了を分けるのは Python らしい書き方。
+        最初は少し独特に感じたが、起動と終了の処理が 1 つの関数にまとまるので見通しはよい。
+      </p>
+
+      <h2 id="controller-router">Controller → Router</h2>
+      <p>
+        リクエストを受けて処理を振り分ける部分。.NET では Controller、FastAPI では Router と呼ぶ。名前は違うが、やっていることは同じ。
+      </p>
+
+      <h3>ASP.NET Core の Controller</h3>
+      <p>
+        .NET の Controller はクラスにアクションメソッドを並べる形。<code>[Route]</code> 属性でパスを、<code>[HttpPost]</code> で HTTP メソッドを指定する。
+      </p>
+      <CodeBlock code={controllerCs} language="csharp" />
+      <p>
+        Controller クラスは <code>Controller</code> を継承し、メソッドごとに <code>[Route("...")]</code> と <code>[HttpPost]</code> などの属性（Attribute）を付けてルーティングを定義する。
+        GET では <code>return View(model)</code> で Razor テンプレートをレンダリングし、POST では <code>RedirectToAction</code> で一覧に戻る。
+        コンストラクタで <code>IItemService</code> を受け取っているのは DI（依存性注入）のパターン。
+      </p>
+
+      <h3>FastAPI の Router</h3>
+      <p>
+        FastAPI の Router は関数にデコレータを付ける形。<code>@router.get("/")</code> や <code>@router.post("/items")</code> で同じことを書ける。
+      </p>
+      <CodeBlock code={routerPy} language="python" />
+      <p>
+        .NET の「クラス + 属性」に対して、FastAPI は「関数 + デコレータ」。パスとHTTPメソッドの指定方法が違うだけで、やっていることは変わらない。
+      </p>
+      <p>
+        FastAPI 版では HTMX のパーシャルレスポンスを返している。
+        POST の処理が終わったら更新後のリスト HTML だけを返して、HTMX が画面の該当部分だけを差し替える。
+        .NET 版の「POST → リダイレクト → ページ全体を再読み込み」に比べて、画面がちらつかない。
+      </p>
+
+      <h3>POST パラメータの受け取り方</h3>
+      <p>
+        フォームから送信されたデータをサーバー側でどう受け取るかは、両者で書き方が結構違う。
+      </p>
+      <p>
+        .NET は DTO（Data Transfer Object）クラスを定義して、ASP.NET のモデルバインド機能で自動マッピングする。
+      </p>
+      <CodeBlock code={formParamCs} language="csharp" />
+      <p>
+        FastAPI は <code>Form(...)</code> で各フィールドを関数の引数として直接受け取る。
+      </p>
+      <CodeBlock code={formParamPy} language="python" />
+      <p>
+        .NET の方式は「フィールドが増えても DTO クラスに足すだけ」で管理しやすいが、クラスファイルが増える。
+        FastAPI の方式は関数の引数を見ればフォームの項目がわかるのが利点。
+        ただしフィールドが 10 個を超えるような大きなフォームだと引数が長くなるので、そういう場合は Pydantic の <code>BaseModel</code> にまとめることもできる。
+      </p>
+
+      <h3>Service 層はどこに行ったか</h3>
+      <p>
+        .NET 版にはこういう Service クラスがあった。Controller から呼ばれ、ViewModel の組み立てと Repository の呼び出しを担当する。
+      </p>
+      <CodeBlock code={serviceCs} language="csharp" />
+      <p>
+        Controller → Service → Repository の 3 層構造は .NET の定番パターンだが、見てのとおり Service がやっていることは「DB から取ってきて ViewModel に詰める」だけ。
+        ビジネスロジックが薄いアプリだと、Service 層はただの受け渡し役になりがち。
+      </p>
+      <p>
+        FastAPI 版ではこの層を作らなかった。
+        ルーターの関数内で直接 <code>queries.load_items(conn)</code> を呼び、結果をテンプレートに辞書で渡している。
+        Python は関数ベースなので「わざわざクラスにまとめる必要がない」場面が多い。処理が複雑になったらモジュールを切り出せばよくて、最初から層を設けなくても困らなかった。
+      </p>
+
+      <h2 id="db-access">DB アクセス: Dapper → sqlite3 標準ライブラリ</h2>
+
+      <h3>Dapper とは</h3>
+      <p>
+        Dapper は .NET のマイクロ ORM。Entity Framework のようなフル ORM とは違い、SQL は自分で書く。
+        Dapper がやってくれるのは「クエリ結果を C# のクラスに自動マッピングする」ことと「パラメータのバインド」。
+      </p>
+      <p>
+        SQL を自分でコントロールしたいが、結果の変換は自動でやってほしい――そんな需要にちょうどいい。Stack Overflow が開発元で、パフォーマンスの高さに定評がある。
+      </p>
+      <CodeBlock code={dapperSample} language="csharp" />
+      <p>
+        <code>db.Query&lt;ItemEntity&gt;(sql)</code> で、クエリの結果が <code>ItemEntity</code> クラスのプロパティに自動的にマッピングされる。
+        パラメータは匿名オブジェクト（<code>new &#123; Name = request.Name &#125;</code>）で渡し、SQL 内の <code>@Name</code> に対応づけられる。
+      </p>
+      <p>
+        結果を受け取る Entity クラスは別途定義する。
+      </p>
+      <CodeBlock code={entityCs} language="csharp" />
+
+      <h3>Python の sqlite3 標準ライブラリ</h3>
+      <p>
+        Python 版では外部パッケージの ORM を入れず、<code>sqlite3</code> 標準ライブラリを直接使った。
+        Python には SQLAlchemy という有名な ORM があるが、Dapper と同じく SQL を直接書くスタイルで移行したかったので不要と判断した。
+      </p>
+      <CodeBlock code={sqlite3Sample} language="python" />
+      <p>
+        ポイントは <code>conn.row_factory = sqlite3.Row</code> の行。
+        これを設定しないと、クエリ結果はタプル（<code>(1, "りんご")</code>）で返ってくるためカラム名がわからない。
+        <code>sqlite3.Row</code> を指定すると辞書のようにカラム名でアクセスできるようになる。
+      </p>
+      <CodeBlock code={rowFactoryPy} language="python" />
+
+      <h3>クエリ関数の比較</h3>
+      <p>
+        クエリ関数を並べてみる。書き味はかなり近い。
+      </p>
+      <CodeBlock code={queriesPy} language="python" />
+      <p>
+        Dapper も sqlite3 も「SQL を自分で書く」スタイルなので、移植はほぼ機械的だった。違いは 2 点。
+      </p>
+      <ul>
+        <li>パラメータのバインドが <code>new &#123; Name = param.Name &#125;</code>（名前付き）から <code>(name,)</code>（位置指定のタプル）に変わる</li>
+        <li>結果のマッピングが Entity クラスへの自動変換（Dapper）から <code>sqlite3.Row</code>（辞書風アクセス）になる</li>
+      </ul>
+      <p>
+        <code>sqlite3.Row</code> は Entity クラスのように事前にプロパティを定義する必要がない。
+        その分だけファイルが減るが、型安全性は落ちる。<code>row["Naem"]</code> のようなタイポがあっても実行時まで気づけない。
+        自分用ツールなら許容範囲だが、チーム開発だと Entity クラスのような型定義があるほうが安全。
+      </p>
+
+      <h3>DB 接続管理の違い</h3>
+      <p>
+        .NET 版では接続文字列を <code>DatabaseConfig</code> クラスに持たせ、DI で各 Service に渡す。接続のオープン・クローズは <code>using</code> ステートメントで管理する。
+      </p>
+      <CodeBlock code={dbConfigCs} language="csharp" />
+      <p>
+        Python 版では <code>get_connection()</code> 関数と <code>contextlib.closing</code> で同じことをやっている。
+      </p>
+      <p>
+        C# の <code>using var db = new SqliteConnection(...)</code> と Python の <code>with closing(get_connection()) as conn:</code> は構文が違うだけで意図は同じ。「スコープを抜けたらリソースを閉じる」という確実なクリーンアップを保証する仕組み。
+      </p>
+      <p>
+        Python 版では <code>PRAGMA journal_mode=WAL</code> を設定している。SQLite の WAL（Write-Ahead Logging）モードで、複数プロセスが同時に DB を読み書きする場合の競合を緩和する設定。
+      </p>
+
+      <h2 id="template">テンプレート: Razor → Jinja2</h2>
+      <p>
+        サーバー側で HTML を生成するテンプレートエンジン。.NET では Razor、FastAPI では Jinja2 を使う。
+      </p>
+
+      <h3>Razor（.NET）</h3>
+      <p>
+        Razor は C# の式をテンプレート内に埋め込むエンジン。<code>@</code> から始まる記法で C# のコードを HTML の中に書ける。
+        <code>@model</code> で ViewModel の型を宣言し、<code>@foreach</code> で繰り返す。
+      </p>
+      <CodeBlock code={razorSample} language="html" />
+      <p>
+        共通レイアウトは <code>_Layout.cshtml</code> に書き、各ページの内容を <code>@RenderBody()</code> で差し込む。
+      </p>
+      <CodeBlock code={layoutCshtml} language="html" />
+
+      <h3>Jinja2（FastAPI）</h3>
+      <p>
+        Jinja2 は Python のテンプレートエンジン。Flask でも標準的に使われていて、Python のテンプレートエンジンとしては最もメジャーな存在。FastAPI でも <code>Jinja2Templates</code> クラスを通じて利用できる。
+      </p>
+      <p>
+        Razor の <code>@</code> が Jinja2 では 2 種類の記法に分かれる。
+      </p>
+      <ul>
+        <li><code>&#123;&#123; 変数名 &#125;&#125;</code> … 変数の値を出力する（Razor の <code>@item.Name</code> に相当）</li>
+        <li><code>&#123;% 制御構文 %&#125;</code> … if / for / block などの制御文（Razor の <code>@foreach</code> / <code>@if</code> に相当）</li>
+      </ul>
+      <CodeBlock code={jinja2Sample} language="html" />
+      <p>
+        共通レイアウトは <code>base.html</code> に書き、各ページは <code>&#123;% extends "base.html" %&#125;</code> で継承する。Razor の <code>@RenderBody()</code> に相当するのが <code>&#123;% block content %&#125;</code>。
+      </p>
+      <CodeBlock code={baseHtml} language="html" />
+
+      <h3>パーシャルテンプレート（HTMX との連携）</h3>
+      <p>
+        HTMX を導入したことで「パーシャルテンプレート」という概念が加わった。ページ全体ではなく、画面の一部分だけを表す HTML 断片のテンプレートのこと。
+      </p>
+      <CodeBlock code={jinja2Partial} language="html" />
+      <p>
+        フォーム送信時に <code>hx-post</code> でサーバーにリクエストを送ると、サーバーはこのパーシャルテンプレートだけをレンダリングして返す。
+        HTMX が受け取った HTML 断片で <code>hx-target</code> の要素を差し替えるので、ページ全体を再読み込みする必要がない。
+      </p>
+      <p>
+        .NET 版では Razor にもパーシャル（Partial View）の仕組みはあったが、活用していなかった。
+        フォーム送信 → ページ全体をリダイレクト → 再読み込みという古典的な流れで実装していたので、操作のたびに画面がちらついていた。
+        HTMX のパーシャルに変えてからは、画面の更新が滑らかになって使い勝手が明らかに良くなった。
+      </p>
+
+      <h3>テンプレートインスタンスの共有</h3>
+      <p>
+        .NET では <code>return View(model)</code> と書けば Razor エンジンが暗黙に動くが、FastAPI では <code>Jinja2Templates</code> のインスタンスを自分で作る必要がある。全ルーターで同じインスタンスを使い回すために、別モジュールに切り出した。
+      </p>
+      <CodeBlock code={templatingPy} language="python" />
+      <p>
+        各ルーターのファイルで <code>from app.templating import templates</code> と書けば、同じ <code>Jinja2Templates</code> インスタンスを共有できる。
+        .NET のように DI コンテナで管理するのではなく、Python のモジュールシステムそのものがシングルトンの役割を果たしている。
+      </p>
+
+      <h2 id="config">設定管理: appsettings.json → 環境変数</h2>
+      <p>
+        .NET は <code>appsettings.json</code> を中心とした設定管理の仕組みが組み込まれている。<code>appsettings.json</code>（共通）と <code>appsettings.Development.json</code>（開発環境用）のように、環境別のファイルを用意すると自動でマージしてくれる。
+      </p>
+      <CodeBlock code={appsettingsJson} language="json" />
+      <p>
+        コード内では <code>Configuration.GetConnectionString("Default")</code> のように、キー名を指定して値を取得する。
+        環境（Development / Production）は <code>ASPNETCORE_ENVIRONMENT</code> 環境変数で切り替わり、対応する JSON ファイルが自動的に読み込まれる。
+      </p>
+      <p>
+        FastAPI（Python）側には、こういった組み込みの設定管理機構はない。<code>os.environ.get()</code> で環境変数から読むのが一般的な方法。
+      </p>
+      <CodeBlock code={configPy} language="python" />
+      <p>
+        Pydantic の <code>BaseSettings</code> を使えば、<code>.env</code> ファイルからの読み込みと型バリデーションを自動化できるが、今回は自分用なのでシンプルに <code>os.environ</code> で済ませた。デフォルト値をコード内に書いておけば、環境変数を設定しなくてもそのまま動く。
+      </p>
+      <p>
+        .NET の「環境ごとに JSON ファイルを分ける」仕組みは整理されていて便利だが、ローカル専用のアプリで環境が 1 つしかないなら環境変数のほうが素直。設定ファイルがないぶん管理するファイルが減る。
+      </p>
+
+      <h2 id="runtime">実行環境とデプロイ</h2>
+
+      <h3>開発時の起動</h3>
+      <p>
+        .NET では <code>dotnet run</code> でアプリを起動する。コンパイル → ビルド → Kestrel サーバー起動が一連で実行される。ファイル変更時の自動リロードは <code>dotnet watch run</code> で対応。
+      </p>
+      <p>
+        FastAPI は ASGI アプリケーションなので、Uvicorn のような ASGI サーバーを使って起動する。
+      </p>
+      <CodeBlock code={uvicornCmd} language="bash" />
+      <p>
+        <code>app.main:app</code> の意味は「<code>app</code> パッケージの <code>main</code> モジュールにある <code>app</code> という変数」。
+        .NET の <code>dotnet run</code> がプロジェクトファイルからエントリポイントを自動解決するのに比べると明示的だが、「何を起動しているか」がコマンドを見るだけでわかるのはよい。
+      </p>
+      <p>
+        <code>--reload</code> を付けるとファイル変更時に自動リロードしてくれる。.NET の <code>dotnet watch run</code> と同じ役割だが、Python はコンパイル不要なので再起動が速い。ファイルを保存した瞬間にはもう反映されている。
+      </p>
+
+      <h3>本番環境の常駐化（launchd）</h3>
+      <p>
+        macOS で 24 時間動かすために launchd を使っている。.NET 版でも同じく launchd で <code>dotnet MyApp.dll</code> を常駐させていたので、起動コマンドを書き換えるだけで移行できた。
+      </p>
+      <CodeBlock code={plistSample} language="xml" />
+      <p>
+        <code>RunAtLoad</code> で OS 起動時に自動開始、<code>KeepAlive</code> でプロセスが落ちたら自動再起動。
+        .NET 版では <code>dotnet /path/to/MyApp.dll</code> だったところを <code>.venv/bin/uvicorn app.main:app</code> に書き換えた。
+        仮想環境（<code>.venv</code>）内の uvicorn をフルパスで指定するのがポイントで、launchd はログインシェルの PATH を引き継がないのでフルパスでないと見つからない。
+      </p>
+
+      <h2 id="testing">テスト</h2>
+      <p>
+        .NET では <code>xUnit</code> や <code>NUnit</code> でテストを書くのが一般的。テストメソッドに <code>[Fact]</code> や <code>[Theory]</code> 属性を付けて実行する。
+      </p>
+      <p>
+        FastAPI には <code>TestClient</code> というテスト用のクライアントが用意されている。サーバーを実際に起動しなくてもリクエストを投げられるので、テストの書き方がシンプル。
+      </p>
+      <CodeBlock code={testSample} language="python" />
+      <p>
+        <code>pytest</code> で実行する。
+        .NET のように属性を付ける必要がなく、<code>test_</code> で始まる関数を書くだけで自動収集される。
+        <code>TestClient</code> は内部で ASGI アプリを直接呼び出すので、テスト用にポートを開ける必要もない。
+      </p>
+      <p>
+        .NET のテストでは <code>WebApplicationFactory</code> を使ってテスト用サーバーを立てるのが一般的だが、セットアップのコードがそこそこ長くなる。FastAPI の <code>TestClient</code> は 2 行で使い始められるので、テストを書くハードルが低い。
+      </p>
+
+      <h2 id="packages">パッケージ管理</h2>
+      <p>
+        本番用に必要なパッケージはこの 4 つだけ。
+      </p>
+      <CodeBlock code={requirementsTxt} language="text" />
+      <ul>
+        <li><code>fastapi</code> … Web フレームワーク本体</li>
+        <li><code>uvicorn[standard]</code> … ASGI サーバー。<code>[standard]</code> で HTTP パーサーや WebSocket 対応が付く</li>
+        <li><code>jinja2</code> … テンプレートエンジン。FastAPI に同梱されていないので別途インストールが必要</li>
+        <li><code>python-multipart</code> … フォームデータの解析用。これがないと <code>Form()</code> が使えない</li>
+      </ul>
+      <p>
+        開発用は pytest や mypy などを追加する。
+      </p>
+      <CodeBlock code={requirementsDevTxt} language="text" />
+      <p>
+        .NET 版の <code>.csproj</code> には <code>Microsoft.Data.Sqlite</code> と <code>Dapper</code> の NuGet パッケージがあったが、
+        Python 版では SQLite が標準ライブラリに入っているので外部パッケージは不要。依存パッケージが少ないほど、バージョン更新やセキュリティパッチの追従が楽になる。
+      </p>
+
+      <h2 id="mapping-table">対応関係のまとめ</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>.NET (ASP.NET Core MVC)</th>
+            <th>Python (FastAPI)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Controller クラス</td><td>Router（APIRouter）</td></tr>
+          <tr><td>[Route] / [HttpPost] 属性</td><td>@router.get() / @router.post() デコレータ</td></tr>
+          <tr><td>Service 層</td><td>なし（ルーターから直接呼ぶ）</td></tr>
+          <tr><td>ViewModel クラス</td><td>テンプレートに辞書で渡す</td></tr>
+          <tr><td>View (.cshtml / Razor)</td><td>Jinja2 テンプレート (.html)</td></tr>
+          <tr><td>_Layout.cshtml + @RenderBody()</td><td>base.html + &#123;% block %&#125;</td></tr>
+          <tr><td>Dapper + Microsoft.Data.Sqlite</td><td>sqlite3 標準ライブラリ</td></tr>
+          <tr><td>Entity クラス（プロパティアクセス）</td><td>sqlite3.Row（辞書風アクセス）</td></tr>
+          <tr><td>DTO クラス（モデルバインド）</td><td>Form() 引数</td></tr>
+          <tr><td>appsettings.json（環境別）</td><td>os.environ（環境変数）</td></tr>
+          <tr><td>dotnet run / Kestrel（内蔵サーバー）</td><td>uvicorn（外部 ASGI サーバー）</td></tr>
+          <tr><td>using var db = new SqliteConnection(...)</td><td>with closing(get_connection())</td></tr>
+          <tr><td>NuGet (.csproj)</td><td>pip (requirements.txt)</td></tr>
+          <tr><td>DI コンテナ</td><td>モジュールの import</td></tr>
+          <tr><td>AJAX（jQuery / fetch）</td><td>HTMX（HTML 属性のみ）</td></tr>
+          <tr><td>launchd（dotnet 起動）</td><td>launchd（uvicorn 起動）</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="retrospective">書き換えてみて</h2>
+      <p>
+        全体としてコード量は半分くらいになった。
+        .NET 版にあった Service 層・ViewModel・Entity・DTO クラスの大半がなくなったのが大きい。
+        Python のほうが書くときは楽だが、型情報が減る分だけ「あのカラム名なんだっけ」と DB を確認する頻度が増えた気はする。
+      </p>
+      <p>
+        Dapper → sqlite3 の移行が思ったよりスムーズだったのは発見だった。
+        どちらも「SQL を自分で書く」スタイルなので、クエリ部分はほぼコピペで移植できた。
+        仮に .NET 版で Entity Framework のようなフル ORM を使っていたら、テーブル定義やマイグレーションの仕組みごと作り直す必要があったはずで、こうはいかなかったと思う。
+      </p>
+      <p>
+        FastAPI の開発体験で一番よかったのは Swagger UI が勝手に生えてくるところ。
+        <code>/docs</code> にアクセスするだけで API の一覧と試し打ちができる。
+        .NET でも Swagger は使えるが、NuGet パッケージ（Swashbuckle）の追加と設定が必要で、FastAPI のように何もしなくても出てくる手軽さはない。
+      </p>
+      <p>
+        HTMX の導入は副次的な効果が大きかった。
+        .NET 版のときはフォーム送信のたびにページ全体がリロードされていたが、HTMX で部分更新にしたことで操作感がかなり良くなった。
+        JavaScript を書かずに HTML の属性だけで実現できるのも、保守の手間が増えなくて助かる。
+      </p>
+      <p>
+        DB ファイルをそのまま引き継げたのも助かった。テーブル定義が変わらないので、.NET 版で溜めたデータがそのまま使える。
+        フレームワーク間の移行でデータ移行が不要だったのは地味だが大きい。SQLite はファイル 1 つで完結するので、こういうときの身軽さが際立つ。
+      </p>
+    </article>
+
+    <ArticleFooterNav currentHref="/tried/dotnet-to-fastapi/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .toc {
+    background: rgba(102, 126, 234, 0.04);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .toc h2 {
+    font-size: 1.1rem;
+    margin: 0 0 0.75rem;
+    border-bottom: none !important;
+    padding-bottom: 0;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding-left: 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  .toc li {
+    margin-bottom: 0.3rem;
+  }
+
+  .toc a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 1.25rem;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+  }
+
+  th, td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  th {
+    background: rgba(102, 126, 234, 0.08);
+    font-weight: 600;
+  }
+
+  tr:nth-child(even) td {
+    background: rgba(0, 0, 0, 0.02);
+  }
+</style>
