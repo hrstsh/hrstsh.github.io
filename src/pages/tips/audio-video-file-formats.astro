@@ -1,0 +1,684 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const currentTags = ['dev'];
+
+const title = '音声・動画のファイル形式比較まとめ - hrの備忘録';
+const description = 'MP3・AAC・Opus の音声形式、H.264・VP9・AV1 の動画コーデック、HLS(.m3u8)・DASH のストリーミング配信まで。各形式の違いと、YouTube・Netflix・X・Spotify など主要サービスがどれを採用しているかを一覧で比較した。';
+const path = '/tips/audio-video-file-formats';
+const faqItems = [
+  { question: 'MP3 と AAC はどちらを使えばいい？', answer: '新しく音声を用意するなら AAC のほうがおすすめ。同じビットレートなら AAC のほうが音質がよく、YouTube や Apple Music など主要サービスも AAC を採用している。ただし MP3 のファイルをわざわざ変換する必要はない。' },
+  { question: 'Opus はなぜ Discord や WebRTC で標準になっている？', answer: 'Opus は低ビットレートでも音質が良く、遅延が小さい。音声通話のように「軽くてリアルタイム」が求められる用途に向いている。ライセンス料が不要なオープン形式である点もブラウザ標準に採用された理由の一つ。' },
+  { question: '.m3u8 ファイルとは何？', answer: 'HLS（HTTP Live Streaming）で使われるプレイリストファイル。動画本体ではなく、分割された動画セグメント（.ts ファイル）の URL と再生順を記述したテキストファイル。X（Twitter）の動画配信などで使われている。' },
+  { question: 'AV1 はもう使える段階？', answer: 'YouTube や Netflix が一部のコンテンツで採用しており、Chrome・Firefox・Edge・Safari 17 以降のブラウザが対応済み。ただしエンコードに時間がかかるため、個人で使うにはまだハードルがある。視聴側は問題ない。' },
+];
+const jsonLd = [
+  tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tips'),
+  faqPage(faqItems, path),
+];
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">&larr; Tips一覧</a>
+      <h1>音声・動画のファイル形式比較まとめ</h1>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        動画をダウンロードしたら .mp4 のときもあれば .webm のときもある。X のタイムラインで動画を再生中に開発者ツールで通信を覗くと、.m3u8 というファイルが読み込まれていた。音声も MP3 だけかと思いきや Opus という形式が出てきたりする。名前は見かけるのにそれぞれ何が違うのかよく分かっていなかったので、主要な形式を一通り調べてまとめた。
+      </p>
+
+      <nav class="toc" aria-label="目次">
+        <p class="toc-title">目次</p>
+        <ol>
+          <li><a href="#container-codec">コンテナとコーデックは別の話</a></li>
+          <li><a href="#audio">音声フォーマット</a></li>
+          <li><a href="#video-codec">動画コーデック</a></li>
+          <li><a href="#video-container">動画コンテナ</a></li>
+          <li><a href="#streaming">ストリーミング配信の仕組み</a></li>
+          <li><a href="#services">主要サービスの採用フォーマット</a></li>
+          <li><a href="#recommendation">用途別の選び方</a></li>
+          <li><a href="#conversion">ファイル形式の変換</a></li>
+          <li><a href="#faq">よくある質問</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="container-codec">コンテナとコーデックは別の話</h2>
+      <p>
+        ファイル形式の話で混乱しやすいのが「コンテナ」と「コーデック」の区別。この 2 つは役割が違う。
+      </p>
+      <ul>
+        <li><strong>コーデック</strong> = データの圧縮・展開方式。H.264 や VP9 は映像の圧縮ルール、AAC や Opus は音声の圧縮ルール</li>
+        <li><strong>コンテナ</strong> = コーデックで圧縮されたデータを格納する箱。.mp4 や .webm がこれにあたる</li>
+      </ul>
+      <p>
+        たとえば .mp4 という拡張子の動画でも、中身の映像が H.264 のこともあれば H.265 のこともある。逆に同じ H.264 の映像を .mp4 に入れることも .mkv に入れることもできる。「.mp4 なのに再生できない」は、コンテナは対応しているがコーデックに対応していない、というパターンが多い。
+      </p>
+      <p>
+        動画ではこの区別がはっきりしているが、音声は少し事情が違う。MP3 や FLAC はコーデック名がそのままファイル形式・拡張子になっていて、コンテナとコーデックが一体化している。一方で AAC は .m4a（MP4 コンテナ）に入れるのが一般的だし、Opus は .ogg（Ogg コンテナ）に入れることが多い。音声は動画ほどコンテナとコーデックを分けて考える場面が少ないため、この記事では「音声フォーマット」としてまとめて扱っている。
+      </p>
+
+      <h2 id="audio">音声フォーマット</h2>
+
+      <h3>MP3</h3>
+      <p>
+        1993 年に登場した非可逆圧縮の音声形式。あらゆるデバイスとブラウザで再生でき、互換性では他の追随を許さない。2017 年に特許が切れてライセンス料も不要になった。ただし同じビットレートでの音質は AAC や Opus に劣るため、新規で採用する理由は減っている。
+      </p>
+
+      <h3>AAC</h3>
+      <p>
+        MPEG-4 規格の一部として策定された非可逆圧縮形式で、MP3 の後継にあたる。同じビットレートなら MP3 より音質がよい。YouTube の音声トラック、Apple Music（256kbps）、LINE の音声メッセージなどで広く使われている。ファイルの拡張子は .m4a や .aac。ブラウザ対応も問題ない。
+      </p>
+
+      <h3>Opus</h3>
+      <p>
+        2012 年に IETF が標準化したオープンな非可逆圧縮形式（RFC 6716）。Skype の音声技術 SILK と低遅延コーデック CELT をベースにしている。低ビットレートでの音質が抜群によく、遅延も小さいため音声通話との相性がいい。Discord の通話やブラウザの WebRTC で標準コーデックとして採用されている。拡張子は .opus や .ogg。
+      </p>
+      <p>
+        音楽用途でも 128kbps の Opus が 320kbps の MP3 に匹敵するという評価がある。音質・圧縮率・ライセンスの三拍子が揃っていて、新しいプロジェクトで音声形式を選ぶなら有力な候補。
+      </p>
+
+      <h3>FLAC</h3>
+      <p>
+        可逆圧縮（ロスレス）の音声形式。圧縮しても元のデータを完全に復元できるので、音質の劣化がない。ファイルサイズは WAV の 50〜60% 程度になる。Amazon Music HD や Tidal の高音質プランで採用されている。音源のアーカイブや編集素材の保存に向いている。
+      </p>
+
+      <h3>WAV</h3>
+      <p>
+        無圧縮の PCM データをそのまま格納する形式。CD 音質（16bit / 44.1kHz）で約 1,411kbps になり、ファイルサイズが大きい。圧縮による劣化がないため音楽制作や録音の現場で使われるが、配信やストリーミングには向かない。
+      </p>
+
+      <h3>Ogg Vorbis</h3>
+      <p>
+        Xiph.org が開発したオープンな非可逆圧縮形式。Spotify のデスクトップ・モバイルアプリはこの形式を採用している（Premium で 320kbps）。品質は良いが、後発の Opus が同じ Xiph.org 系でほぼ上位互換になっており、新規採用は減っている。
+      </p>
+
+      <h3>音声フォーマット比較表</h3>
+      <div class="table-wrapper">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>形式</th>
+              <th>圧縮方式</th>
+              <th>典型ビットレート</th>
+              <th>ライセンス</th>
+              <th>ブラウザ対応</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>MP3</td>
+              <td>非可逆</td>
+              <td>128〜320 kbps</td>
+              <td>無料（特許切れ）</td>
+              <td>IE 含むすべて</td>
+            </tr>
+            <tr>
+              <td>AAC</td>
+              <td>非可逆</td>
+              <td>128〜256 kbps</td>
+              <td>ライセンスあり</td>
+              <td>IE 含むすべて</td>
+            </tr>
+            <tr>
+              <td>Opus</td>
+              <td>非可逆</td>
+              <td>64〜256 kbps</td>
+              <td>無料（オープン）</td>
+              <td>Chrome・Firefox・Edge・Safari</td>
+            </tr>
+            <tr>
+              <td>FLAC</td>
+              <td>可逆</td>
+              <td>800〜1,400 kbps</td>
+              <td>無料（オープン）</td>
+              <td>Chrome・Firefox・Edge・Safari</td>
+            </tr>
+            <tr>
+              <td>WAV</td>
+              <td>無圧縮</td>
+              <td>1,411 kbps（CD 音質）</td>
+              <td>無料</td>
+              <td>IE 含むすべて</td>
+            </tr>
+            <tr>
+              <td>Ogg Vorbis</td>
+              <td>非可逆</td>
+              <td>96〜320 kbps</td>
+              <td>無料（オープン）</td>
+              <td>Chrome・Firefox・Edge・Safari</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="video-codec">動画コーデック</h2>
+
+      <h3>H.264（AVC）</h3>
+      <p>
+        2003 年に標準化された動画コーデック。現時点でもっとも広く使われている。スマートフォンからブラウザ、ゲーム機まで、ハードウェアデコードに対応していないデバイスを探すほうが難しい。無料のインターネット動画であればライセンス料がかからないこともあり、Web 動画のデフォルトの選択肢になっている。
+      </p>
+
+      <h3>H.265（HEVC）</h3>
+      <p>
+        H.264 の後継コーデック。同じ画質なら H.264 の約半分のビットレートで済む。4K・8K の高解像度コンテンツに向いている。ただしライセンスの仕組みが複雑で、MPEG LA と Access Advance という 2 つのパテントプールに加えて独立した特許保有者もいるため、利用コストが読みにくい。ブラウザ対応も Safari 以外は限定的で、Web 配信ではあまり普及していない。Apple のエコシステム（FaceTime、iPhone の録画）では標準的に使われている。
+      </p>
+
+      <h3>VP9</h3>
+      <p>
+        Google が開発したオープン・ロイヤリティフリーのコーデック。YouTube の動画配信で主力として使われている。H.264 に比べて 30〜50% ほどビットレートを削減できる。Chrome・Firefox・Edge で対応しており、ハードウェアデコードも近年のデバイスなら広く対応済み。Safari は長らく非対応だったが、最近のバージョンで対応が進んでいる。
+      </p>
+
+      <h3>AV1</h3>
+      <p>
+        Alliance for Open Media（Google・Mozilla・Netflix・Amazon などが参加）が策定した次世代のオープンコーデック。VP9 からさらに 30% 程度、H.264 からは約 50% のビットレート削減が見込める。YouTube や Netflix が一部コンテンツで採用を進めている。
+      </p>
+      <p>
+        課題はエンコード速度。H.264 の 10〜100 倍ほど時間がかかるため、大量の動画をエンコードするには計算リソースが必要になる。再生側のハードウェアデコード対応は新しめのチップ（Apple M3 以降、Intel 第 12 世代以降、最近の Snapdragon など）から広がっている。ブラウザは Chrome・Firefox・Edge・Safari 17 以降が対応済み。
+      </p>
+
+      <h3>動画コーデック比較表</h3>
+      <div class="table-wrapper">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>コーデック</th>
+              <th>圧縮効率（対 H.264）</th>
+              <th>ライセンス</th>
+              <th>HW デコード</th>
+              <th>ブラウザ対応</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>H.264</td>
+              <td>基準</td>
+              <td>条件付き無料</td>
+              <td>ほぼ全デバイス</td>
+              <td>IE 含むすべて</td>
+            </tr>
+            <tr>
+              <td>H.265</td>
+              <td>約 2 倍</td>
+              <td>複雑（有料）</td>
+              <td>広く対応</td>
+              <td>Safari 中心</td>
+            </tr>
+            <tr>
+              <td>VP9</td>
+              <td>約 1.5 倍</td>
+              <td>無料（オープン）</td>
+              <td>近年のデバイス</td>
+              <td>Chrome / Firefox / Edge</td>
+            </tr>
+            <tr>
+              <td>AV1</td>
+              <td>約 2 倍</td>
+              <td>無料（オープン）</td>
+              <td>新しいチップ</td>
+              <td>Chrome・Firefox・Edge・Safari 17+</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="video-container">動画コンテナ</h2>
+
+      <h3>MP4（.mp4）</h3>
+      <p>
+        もっとも普及しているコンテナ。映像は H.264 か H.265、音声は AAC という組み合わせが定番。ブラウザ・スマートフォン・メディアプレーヤーを問わず再生できる。「とりあえず MP4 にしておけば困らない」というくらい汎用性が高い。
+      </p>
+
+      <h3>WebM（.webm）</h3>
+      <p>
+        Google が Web 向けに策定したオープンなコンテナ。中身は Matroska（MKV）のサブセット。映像は VP8・VP9・AV1、音声は Vorbis・Opus を格納する。YouTube が内部的に使っている形式でもある。Safari が長らく非対応だった影響で、MP4 ほどどこでも使えるわけではない。
+      </p>
+
+      <h3>MKV（.mkv）</h3>
+      <p>
+        Matroska。映像・音声・字幕を複数トラック持てる柔軟なコンテナ。コーデックの制約がほぼなく、H.264 でも H.265 でも AV1 でも何でも入る。映画のリッピングや動画ファイルの保存によく使われるが、ブラウザはネイティブ対応していないためそのまま Web 配信には使えない。
+      </p>
+
+      <h3>TS（.ts）</h3>
+      <p>
+        MPEG Transport Stream。もともとは放送用に設計されたコンテナで、各セグメントが独立して再生できるようになっている。HLS のストリーミング配信で動画を細かく分割する単位として現役で使われている。直接目にする機会は少ないが、後述する .m3u8 の裏側で動いている形式。
+      </p>
+
+      <h2 id="streaming">ストリーミング配信の仕組み</h2>
+      <p>
+        YouTube や X で動画を再生するとき、1 つの巨大な動画ファイルを丸ごとダウンロードしているわけではない。動画を短いセグメントに分割し、再生しながら順次取得する「アダプティブストリーミング」が主流になっている。回線速度に応じて画質を自動で切り替える仕組みもこの方式で実現されている。代表的なプロトコルが 2 つある。
+      </p>
+
+      <h3>HLS（.m3u8）</h3>
+      <p>
+        Apple が開発した HTTP Live Streaming。プレイリストファイル（.m3u8）に動画セグメント（.ts や .fmp4）の URL と順序が書かれていて、プレーヤーはこのリストに従ってセグメントを取得・再生する。
+      </p>
+      <p>
+        X（Twitter）の動画配信はこの HLS を使っている。開発者ツールのネットワークタブを見ると .m3u8 ファイルが読み込まれているのを確認できる。iOS が HLS をネイティブ対応していることもあり、Apple 以外のサービスでも広く採用されている。
+      </p>
+      <p>
+        .m3u8 ファイルの中身はこんなテキスト。
+      </p>
+      <pre><code class="language-text">#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
+360p.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1400000,RESOLUTION=1280x720
+720p.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1920x1080
+1080p.m3u8</code></pre>
+      <p>
+        これはマスタープレイリストと呼ばれるもので、画質ごとのプレイリストへのリンクが並んでいる。プレーヤーは回線速度を見て適切な画質を選び、その先のプレイリストからセグメントを順に取得する。
+      </p>
+      <p>
+        各画質のプレイリストの中身はこうなっている。
+      </p>
+      <pre><code class="language-text">#EXTM3U
+#EXT-X-TARGETDURATION:10
+#EXTINF:10.0,
+segment_000.ts
+#EXTINF:10.0,
+segment_001.ts
+#EXTINF:10.0,
+segment_002.ts
+#EXT-X-ENDLIST</code></pre>
+      <p>
+        10 秒ごとに分割された .ts ファイルが順番にリストされている。プレーヤーはこれを先読みしながら再生する。
+      </p>
+
+      <h3>MPEG-DASH（.mpd）</h3>
+      <p>
+        ISO が標準化したストリーミングプロトコル。仕組みは HLS と似ていて、マニフェストファイル（.mpd）にセグメント情報が書かれている。HLS より柔軟な設定ができ、YouTube や Netflix の配信基盤として使われている。ただし iOS の Safari がネイティブ対応していないため、Apple デバイスでは JavaScript（Media Source Extensions）経由で処理する必要がある。
+      </p>
+
+      <h3>プログレッシブダウンロードとの違い</h3>
+      <p>
+        HTML の <code>&lt;video&gt;</code> タグに .mp4 ファイルを直接指定する方法はプログレッシブダウンロードと呼ばれる。ファイルの先頭から順にダウンロードしながら再生する。単純で扱いやすいが、回線に応じた画質の切り替えはできない。個人サイトに短い動画を置く程度ならこれで十分だが、大量のユーザーに配信するサービスではアダプティブストリーミングが必要になる。
+      </p>
+
+      <h2 id="services">主要サービスの採用フォーマット</h2>
+      <p>
+        各サービスがどの形式を使っているかを一覧にした。
+      </p>
+      <div class="table-wrapper">
+        <table class="service-table">
+          <thead>
+            <tr>
+              <th>サービス</th>
+              <th>映像コーデック</th>
+              <th>音声コーデック</th>
+              <th>配信方式</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>YouTube</td>
+              <td>VP9 / AV1 / H.264</td>
+              <td>Opus / AAC</td>
+              <td>DASH</td>
+              <td>VP9 が主力。人気動画は AV1 に移行中</td>
+            </tr>
+            <tr>
+              <td>Netflix</td>
+              <td>H.264 / H.265 / AV1</td>
+              <td>AAC / Dolby Digital</td>
+              <td>DASH</td>
+              <td>4K は H.265、対応デバイスで AV1</td>
+            </tr>
+            <tr>
+              <td>X（Twitter）</td>
+              <td>H.264</td>
+              <td>AAC</td>
+              <td>HLS（.m3u8）</td>
+              <td>アップロード時に H.264 に変換される</td>
+            </tr>
+            <tr>
+              <td>TikTok</td>
+              <td>H.264 / H.265</td>
+              <td>AAC</td>
+              <td>HLS / プログレッシブ</td>
+              <td>新しいデバイス向けに H.265 を配信</td>
+            </tr>
+            <tr>
+              <td>Instagram</td>
+              <td>H.264</td>
+              <td>AAC</td>
+              <td>HLS / プログレッシブ</td>
+              <td>リールは HLS で配信</td>
+            </tr>
+            <tr>
+              <td>Spotify</td>
+              <td>—</td>
+              <td>Ogg Vorbis / AAC</td>
+              <td>プログレッシブ</td>
+              <td>アプリは Vorbis、Web は AAC</td>
+            </tr>
+            <tr>
+              <td>Apple Music</td>
+              <td>—</td>
+              <td>AAC / ALAC / Dolby Atmos</td>
+              <td>HLS</td>
+              <td>ロスレスは ALAC（Apple 独自の可逆圧縮）</td>
+            </tr>
+            <tr>
+              <td>Discord</td>
+              <td>H.264</td>
+              <td>Opus</td>
+              <td>WebRTC</td>
+              <td>音声通話は Opus で低遅延を実現</td>
+            </tr>
+            <tr>
+              <td>LINE</td>
+              <td>H.264</td>
+              <td>AAC</td>
+              <td>プログレッシブ</td>
+              <td>ボイスメッセージも AAC</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        こうして並べると、映像は H.264 がベースラインで VP9・AV1 に移行中、音声は AAC と Opus の二強という構図が見えてくる。ストリーミングは Google 系が DASH、Apple 系と X が HLS。
+      </p>
+
+      <h2 id="recommendation">用途別の選び方</h2>
+      <p>
+        迷ったときの目安をまとめた。
+      </p>
+      <div class="table-wrapper">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>やりたいこと</th>
+              <th>おすすめ構成</th>
+              <th>理由</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Web に音声を埋め込む</td>
+              <td>Opus（フォールバックに AAC）</td>
+              <td>軽くて高音質。古いブラウザ対応が要るなら AAC を併記</td>
+            </tr>
+            <tr>
+              <td>Web に動画を埋め込む</td>
+              <td>H.264 + AAC（MP4）</td>
+              <td>全ブラウザ・全デバイスで再生できる最も安全な構成</td>
+            </tr>
+            <tr>
+              <td>動画をストリーミング配信する</td>
+              <td>H.264 + AAC で HLS</td>
+              <td>iOS 含め対応範囲が広い。CDN との相性もよい</td>
+            </tr>
+            <tr>
+              <td>高画質で容量を抑えたい</td>
+              <td>AV1 + Opus（WebM）</td>
+              <td>圧縮率は最高だがエンコード時間とデバイス対応を要確認</td>
+            </tr>
+            <tr>
+              <td>音声を劣化なく保存したい</td>
+              <td>FLAC</td>
+              <td>可逆圧縮で WAV の半分程度のサイズに収まる</td>
+            </tr>
+            <tr>
+              <td>動画ファイルをローカル保存</td>
+              <td>MKV</td>
+              <td>コーデックの制約がなく複数トラックを保持できる</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="conversion">ファイル形式の変換</h2>
+      <p>
+        「MP3 を AAC に変換したら音質は上がるのか」「FLAC を MP3 にしたい」など、形式を変換したい場面は多い。ただし変換の方向によっては意味がなかったり、むしろ悪化する。
+      </p>
+
+      <h3>変換の方向と結果</h3>
+      <div class="table-wrapper">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>変換の方向</th>
+              <th>例</th>
+              <th>結果</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>非可逆 → 非可逆</td>
+              <td>MP3 → AAC</td>
+              <td>劣化が重なるだけ。やらないほうがいい</td>
+            </tr>
+            <tr>
+              <td>非可逆 → 可逆</td>
+              <td>MP3 → FLAC</td>
+              <td>ファイルが大きくなるだけで音質は戻らない</td>
+            </tr>
+            <tr>
+              <td>可逆 → 非可逆</td>
+              <td>WAV → MP3、FLAC → AAC</td>
+              <td>正しい方向。元データから圧縮するので品質を制御できる</td>
+            </tr>
+            <tr>
+              <td>可逆 → 可逆</td>
+              <td>WAV ↔ FLAC</td>
+              <td>劣化なし。サイズ調整や互換性のために自由にできる</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        非可逆圧縮は名前のとおり不可逆な処理で、一度捨てた情報は取り戻せない。MP3 の 128kbps を AAC の 256kbps に変換しても、128kbps 時点で失われた情報が復元されるわけではない。AAC のエンコード処理がさらにかかって劣化が重なるだけ。「高音質な形式に変換すれば音質が上がる」というのはよくある誤解。
+      </p>
+      <p>
+        音質を維持したまま形式を変えたいなら、元の無圧縮・可逆データ（WAV や FLAC）から変換するのが原則。手元に可逆データがない場合は、今の形式のまま使うのが一番マシな選択になる。
+      </p>
+
+      <h3>動画も同じ考え方</h3>
+      <p>
+        動画のコーデック変換（トランスコード）も同じで、H.264 の動画を VP9 に変換すると、一度デコードした映像を VP9 で再圧縮するため画質が落ちる。
+      </p>
+      <p>
+        ただし動画にはコンテナの変更だけで済むケースがある。たとえば H.264 + AAC の MKV ファイルを MP4 に変えるとき、コーデックはそのままでコンテナだけ入れ替える「リマックス」ができる。再エンコードしないので劣化しないし、処理も一瞬で終わる。
+      </p>
+
+      <h3>変換ツール</h3>
+      <p>
+        音声・動画の変換には FFmpeg がほぼ万能。コマンドラインツールだが、対応フォーマットの広さと変換品質では他のツールを大きく上回る。GUI がほしければ HandBrake（動画向け）や fre:ac（音声向け）がある。どちらも内部で FFmpeg を使っている。
+      </p>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tips/youtube-playback-speed/">YouTube動画の再生速度を自由に変更する方法（Chrome）</a></li>
+        <li><a href="/tips/twitter-media-url-extractor/">X(Twitter)の画像URLを一括取得する方法</a></li>
+      </ul>
+
+      <h2 id="faq">よくある質問</h2>
+      <dl class="faq-list">
+        <dt>MP3 と AAC はどちらを使えばいい？</dt>
+        <dd>新しく音声を用意するなら AAC のほうがおすすめ。同じビットレートなら AAC のほうが音質がよく、YouTube や Apple Music など主要サービスも AAC を採用している。ただし MP3 のファイルをわざわざ変換する必要はない。</dd>
+        <dt>Opus はなぜ Discord や WebRTC で標準になっている？</dt>
+        <dd>Opus は低ビットレートでも音質が良く、遅延が小さい。音声通話のように「軽くてリアルタイム」が求められる用途に向いている。ライセンス料が不要なオープン形式である点もブラウザ標準に採用された理由の一つ。</dd>
+        <dt>.m3u8 ファイルとは何？</dt>
+        <dd>HLS（HTTP Live Streaming）で使われるプレイリストファイル。動画本体ではなく、分割された動画セグメント（.ts ファイル）の URL と再生順を記述したテキストファイル。X（Twitter）の動画配信などで使われている。</dd>
+        <dt>AV1 はもう使える段階？</dt>
+        <dd>YouTube や Netflix が一部のコンテンツで採用しており、Chrome・Firefox・Edge・Safari 17 以降のブラウザが対応済み。ただしエンコードに時間がかかるため、個人で使うにはまだハードルがある。視聴側は問題ない。</dd>
+      </dl>
+    </article>
+
+    <ArticleFooterNav currentHref="/tips/audio-video-file-formats/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: #444;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body code {
+    background: rgba(30, 64, 175, 0.06);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .toc {
+    background: #f9f9fb;
+    border: 1px solid #e5e5ea;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+  }
+
+  .toc ol {
+    margin-bottom: 0;
+    padding-left: 1.5rem;
+  }
+
+  .toc li {
+    margin-bottom: 0.25rem;
+  }
+
+  .toc a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .toc a:hover {
+    text-decoration: underline;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .info-table,
+  .service-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 600px;
+  }
+
+  .info-table th,
+  .info-table td,
+  .service-table th,
+  .service-table td {
+    border: 1px solid #ddd;
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+  }
+
+  .info-table th,
+  .service-table th {
+    background: #f5f3ff;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .info-table td:first-child,
+  .service-table td:first-child {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .service-table {
+    min-width: 750px;
+  }
+
+  .service-table td:last-child {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: #444;
+    line-height: 1.6;
+  }
+</style>
