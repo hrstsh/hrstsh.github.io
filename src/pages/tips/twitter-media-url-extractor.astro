@@ -4,8 +4,8 @@ import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
-const title = 'X(Twitter)の画像URLを一括取得する方法（メディア欄から一覧コピー） - hrの備忘録';
-const description = 'X(Twitter) の画像URL（pbs.twimg.com）をメディア欄から一括取得する方法。ブックマークレットでワンクリックコピー、オリジナル画質での取得、wget / Python での一括ダウンロードまで解説。';
+const title = 'X(Twitter)の画像を一括保存する方法（メディア欄からまとめてダウンロード） - hrの備忘録';
+const description = 'X(Twitter) のメディア欄に表示される画像を、オリジナル画質でまとめて保存する方法。ブックマークレットでワンクリック取得、wget や Python での一括ダウンロード手順まで解説。';
 const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-media-url-extractor', toIsoDate('2026.02'), 'tips');
 
 const basicScript = `// 現在表示されている画像URLを取得
@@ -139,15 +139,15 @@ const currentTags = ['twitter', 'bookmarklet'];
 <ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
-      <h1>X(Twitter)の画像URLを一括取得する方法（メディア欄から一覧コピー）</h1>
+      <h1>X(Twitter)の画像を一括保存する方法</h1>
       <p class="article-date">2026.02</p>
     </header>
 
     <article class="article-body">
       <p>
-        X(Twitter) のメディアタブに並ぶ画像のURL（<code>pbs.twimg.com</code>）を、まとめて取り出す方法。
-        ブックマークレットならワンクリックでコピーでき、開発者ツールのコンソールから実行する手もある。
-        どちらも <code>&name=orig</code> 付きのオリジナル画質URLで取得できる。
+        X(Twitter) のメディアタブに並ぶ画像を、オリジナル画質でまとめて保存する方法。
+        ブックマークレットで画像URLをワンクリック取得し、wget や Python で一括ダウンロードできる。
+        すべて <code>&name=orig</code> 付きのオリジナル画質で保存される。
       </p>
 
       <h2>メディアタブとは</h2>
