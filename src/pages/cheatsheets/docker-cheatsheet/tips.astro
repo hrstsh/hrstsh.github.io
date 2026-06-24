@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="トラブルシューティング・Tips - hrの備忘録" description="Docker のよくあるトラブルと解決方法、実務で役立つ Tips を解説。">
+<Layout title="トラブルシューティング・Tips - hrの備忘録" description="Docker のよくあるトラブルと解決方法、実務で役立つ Tips を解説。" noindex={true}>
   <Navigation currentPage="/cheatsheets/docker-cheatsheet/tips" />
   <main>
     <h1>トラブルシューティング・Tips</h1>
@@ -289,6 +289,17 @@ docker diff コンテナ名
 
 # イメージの履歴を確認
 docker history イメージ名</code></pre>
+    </section>
+
+    <section>
+      <h2>トラブル対応で覚えておくとよいこと</h2>
+      <ul>
+        <li><strong>コンテナが起動しない場合はまずログから</strong>: <code>docker logs コンテナ名</code> でエラーを確認するのが最初の一手。それで分からなければ <code>docker inspect</code> で設定値を確認する</li>
+        <li><strong>ディスク使用量が膨らんだら prune 系コマンド</strong>: <code>docker system prune</code> で未使用リソースをまとめて削除できる。<code>-a</code> を付けると使用中でないイメージも消えるので注意が必要</li>
+        <li><strong>volume の中身を確認するには一時コンテナを使う</strong>: ボリュームを直接 OS から覗けないため、<code>docker run --rm -v ボリューム名:/data alpine ls /data</code> のように一時コンテナをマウントして確認する</li>
+        <li><strong>docker stats でリソース使用量をリアルタイム確認</strong>: CPU・メモリ・ネットワーク IO が一覧で見えるため、どのコンテナが重いかすぐに分かる。<code>--no-stream</code> で一回だけ表示することも可能</li>
+      </ul>
+      <p>デバッグの基本フローは「ログ確認 → inspect で設定確認 → exec でコンテナ内に入る」の順。exec は起動中のコンテナにしか使えないため、起動直後にクラッシュするケースでは <code>entrypoint</code> を書き換えてシェルだけ起動させる方法が有効。</p>
     </section>
 
     <footer class="page-footer">

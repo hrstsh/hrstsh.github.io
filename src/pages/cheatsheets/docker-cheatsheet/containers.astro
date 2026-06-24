@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="コンテナ操作 - hrの備忘録" description="Docker のコンテナ操作、exec、ログ、ポートマッピングなどコンテナ管理コマンドを解説。">
+<Layout title="コンテナ操作 - hrの備忘録" description="Docker のコンテナ操作、exec、ログ、ポートマッピングなどコンテナ管理コマンドを解説。" noindex={true}>
   <Navigation currentPage="/cheatsheets/docker-cheatsheet/containers" />
   <main>
     <h1>コンテナ操作</h1>
@@ -241,6 +241,17 @@ docker run -d \
   -v mongo-data:/data/db \
   -p 27017:27017 \
   mongo:7</code></pre>
+    </section>
+
+    <section>
+      <h2>コンテナ操作で覚えておきたいこと</h2>
+      <ul>
+        <li><strong>exec vs attach</strong>: コンテナ内に入るときは基本 <code>docker exec -it コンテナ名 bash</code> を使う。<code>docker attach</code> はコンテナのメインプロセスの標準入出力に直接接続するので、<code>Ctrl+C</code> するとコンテナが停止してしまう</li>
+        <li><strong>ログが溜まる問題</strong>: <code>--log-opt max-size=10m --log-opt max-file=3</code> でログローテーションを設定できる。長期間動かすコンテナには入れておくと安心</li>
+        <li><strong>コンテナ名は一意</strong>: <code>--name</code> で指定した名前が既に存在すると起動に失敗する。前回の実行が残っていると詰まりやすい。<code>docker rm コンテナ名</code> で削除してから再実行する</li>
+        <li><strong>再起動ポリシーの選択</strong>: 本番環境で常駐させるなら <code>--restart=unless-stopped</code> が使いやすい。<code>always</code> は Docker デーモン自体の起動時にも再起動するので、手動で止めても次回の再起動時に復活する</li>
+      </ul>
+      <p>問題が起きたときのデバッグフロー: まず <code>docker logs コンテナ名</code> でログを確認 → <code>docker inspect コンテナ名</code> で設定を確認 → <code>docker exec -it コンテナ名 sh</code> でコンテナ内に入って調べる、という順序が効率的。</p>
     </section>
 
     <footer class="page-footer">

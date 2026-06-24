@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="SQL基本コマンド集 - 結合・サブクエリ編 - hrの備忘録" description="SQL の JOIN、サブクエリ、集合演算などテーブル結合とサブクエリを解説。">
+<Layout title="SQL基本コマンド集 - 結合・サブクエリ編 - hrの備忘録" description="SQL の JOIN、サブクエリ、集合演算などテーブル結合とサブクエリを解説。" noindex={true}>
   <main>
     <header class="hero">
       <h1>SQL基本コマンド集</h1>
@@ -254,6 +254,36 @@ SELECT u.email
 FROM users u
 LEFT JOIN customers c ON u.email = c.email
 WHERE c.email IS NULL;</code></pre>
+      </div>
+    </section>
+
+    <section id="join-selection">
+      <h2>JOIN の選び方と注意点</h2>
+      <p>用途ごとにどの JOIN を使うかの判断基準をまとめた。</p>
+      <ul>
+        <li><strong>INNER JOIN</strong>: 両テーブルに存在するデータだけ欲しいとき。片方に NULL があると行が消えるので注意</li>
+        <li><strong>LEFT JOIN</strong>: 左テーブルのデータは必ず残したいとき（右側に対応するデータがなければ NULL で補完）。「存在しないものを含めて一覧を出す」場面でよく使う</li>
+        <li><strong>FULL OUTER JOIN</strong>: 両テーブルの全件を網羅したいとき。MySQL では非対応なので <code>UNION</code> で代替する必要がある</li>
+      </ul>
+      <h3>JOIN でよくある間違い</h3>
+      <ul>
+        <li><strong>ON 条件を忘れると CROSS JOIN になる</strong>: <code>FROM A JOIN B</code> と書いて <code>ON</code> を付け忘れると、全行の組み合わせ（直積）が返ってくる。大きなテーブルでやると即座にメモリを食い尽くす</li>
+        <li><strong>LEFT JOIN のあとで RIGHT テーブルを WHERE で絞ると INNER JOIN になる</strong>: <code>LEFT JOIN B ON ... WHERE B.id IS NOT NULL</code> のように書くと、NULL が除外されて実質 INNER JOIN になる。意図的でなければバグになる</li>
+        <li><strong>結合条件の型が異なると遅い</strong>: <code>INT</code> と <code>VARCHAR</code> のカラムで JOIN すると、型変換が発生してインデックスが効かなくなる。JOIN するカラムの型は揃えておく</li>
+      </ul>
+      <div class="code-block">
+        <pre><code>-- 「注文がないユーザー」を見つけるパターン（LEFT JOIN + IS NULL）
+SELECT u.id, u.name
+FROM users u
+LEFT JOIN orders o ON u.id = o.user_id
+WHERE o.id IS NULL;
+
+-- 上と同じことを NOT EXISTS で書く（大規模テーブルではこちらが速いことがある）
+SELECT id, name
+FROM users u
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o WHERE o.user_id = u.id
+);</code></pre>
       </div>
     </section>
 

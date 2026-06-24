@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="Docker Compose - hrの備忘録" description="Docker Compose の使い方、docker-compose.yml の基本、up/down/ps などのコマンドを解説。">
+<Layout title="Docker Compose - hrの備忘録" description="Docker Compose の使い方、docker-compose.yml の基本、up/down/ps などのコマンドを解説。" noindex={true}>
   <Navigation currentPage="/cheatsheets/docker-cheatsheet/compose" />
   <main>
     <h1>Docker Compose</h1>
@@ -251,6 +251,30 @@ docker compose up -d web
 docker compose down
 docker network prune
 docker compose up -d</code></pre>
+    </section>
+
+    <section>
+      <h2>Composeを使うときのコツ</h2>
+      <ul>
+        <li><strong><code>docker compose up</code> と <code>docker compose up --build</code> の違い</strong>: <code>up</code> だけだとDockerfileを変更してもイメージが再ビルドされない。コードを変えたら <code>--build</code> を付けるか、<code>docker compose build</code> を先に実行する</li>
+        <li><strong>ボリュームが残る</strong>: <code>docker compose down</code> はコンテナとネットワークを削除するが、ボリュームは残る。DB のデータを完全に初期化したいときは <code>docker compose down -v</code> で消す</li>
+        <li><strong>.env ファイルで環境ごとに切り替え</strong>: <code>compose.yaml</code> と同じディレクトリに <code>.env</code> を置くと、<code>${VARIABLE}</code> が自動で読み込まれる。開発・本番で違う設定を注入するのに使いやすい</li>
+        <li><strong>depends_on は起動順序の保証だけ</strong>: <code>depends_on</code> は依存コンテナが「起動した」ことを待つだけで、「サービスが使える状態になった」ことは保証しない。DBが完全に起動する前にアプリが接続しに行って失敗するパターンはよく起きる。ヘルスチェックと組み合わせるか、アプリ側で再接続ロジックを入れる</li>
+      </ul>
+      <pre><code class="language-yaml"># depends_on にヘルスチェックを組み合わせる例
+services:
+  db:
+    image: postgres:15
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy   # healthy になるまで待つ</code></pre>
     </section>
 
     <footer class="page-footer">

@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/sql-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="SQL基本コマンド集 - データ操作編 - hrの備忘録" description="SQL の INSERT、UPDATE、DELETE、トランザクションなどデータ操作を解説。">
+<Layout title="SQL基本コマンド集 - データ操作編 - hrの備忘録" description="SQL の INSERT、UPDATE、DELETE、トランザクションなどデータ操作を解説。" noindex={true}>
   <main>
     <header class="hero">
       <h1>SQL基本コマンド集</h1>
@@ -303,6 +303,34 @@ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
           <li><strong>Durability（永続性）</strong>: コミット後はデータが永続化される</li>
         </ul>
       </div>
+    </section>
+
+    <section id="safe-update">
+      <h2>データ変更前に確認する習慣</h2>
+      <p>UPDATE や DELETE を実行する前に、まず SELECT で対象行を確認するのが安全。同じ WHERE 条件を使って件数と内容を目で見てから、変更に切り替える。</p>
+      <div class="code-block">
+        <pre><code>-- 変更前に対象を SELECT で確認
+SELECT id, name, email
+FROM users
+WHERE last_login &lt; '2023-01-01';
+
+-- 内容を確認したら DELETE に切り替える
+DELETE FROM users
+WHERE last_login &lt; '2023-01-01';
+
+-- UPDATE も同様に SELECT で確認してから
+SELECT id, price FROM products WHERE category_id = 5;
+
+UPDATE products
+SET price = price * 1.1
+WHERE category_id = 5;</code></pre>
+      </div>
+      <h3>やってしまいがちなミス</h3>
+      <ul>
+        <li><strong>WHERE なしの DELETE / UPDATE</strong>: <code>DELETE FROM users</code> は全件削除。<code>UPDATE orders SET status = 'done'</code> は全件更新。WHERE を書き忘れると取り返しがつかない。大事な操作の前にはトランザクションを張るか、バックアップを取る</li>
+        <li><strong>INSERT で主キー重複エラー</strong>: 同じ ID を持つレコードを挿入しようとするとエラーになる。既存レコードを上書きしたい場合は <code>INSERT ... ON CONFLICT DO UPDATE</code>（PostgreSQL）や <code>INSERT ... ON DUPLICATE KEY UPDATE</code>（MySQL）を使う</li>
+        <li><strong>TRUNCATE は WHERE が使えない</strong>: <code>TRUNCATE TABLE</code> は全件削除かつロールバックできないDBもある（MySQL は可能）。部分削除したいなら <code>DELETE FROM ... WHERE ...</code> を使う</li>
+      </ul>
     </section>
 
     <Navigation currentPage="manipulation" />

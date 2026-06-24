@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro';
 import Navigation from '../../../components/docker-cheatsheet/Navigation.astro';
 ---
 
-<Layout title="基本操作 - hrの備忘録" description="Docker の基本操作、イメージの取得、コンテナの起動・停止など初歩的なコマンドを解説。">
+<Layout title="基本操作 - hrの備忘録" description="Docker の基本操作、イメージの取得、コンテナの起動・停止など初歩的なコマンドを解説。" noindex={true}>
   <Navigation currentPage="/cheatsheets/docker-cheatsheet/basics" />
   <main>
     <h1>基本操作</h1>
@@ -175,6 +175,33 @@ docker run -it --rm \
   -w /app \
   node:18 \
   npm install</code></pre>
+    </section>
+
+    <section>
+      <h2>初めて使うときに詰まりやすいポイント</h2>
+      <ul>
+        <li><strong>コンテナが起動してすぐ終了する</strong>: フォアグラウンドで動くプロセスがないと終了する。<code>-it</code> でシェルを入れるか、バックグラウンドサービスとして起動する必要がある</li>
+        <li><strong>ポートを開けても繋がらない</strong>: <code>-p ホスト側:コンテナ側</code> の順序を逆に書くミスが多い。<code>-p 8080:80</code> ならブラウザから <code>localhost:8080</code> でアクセスする</li>
+        <li><strong>コンテナを消してもデータが消えない方法がわからない</strong>: <code>-v</code> でボリュームをマウントしてデータをホスト側に置くか、名前付きボリュームを使う</li>
+        <li><strong>古いコンテナが積み上がる</strong>: <code>--rm</code> を付けずに試行錯誤すると停止コンテナが溜まる。<code>docker container prune</code> で一掃できる</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>よく使う一行パターン</h2>
+      <p>実際の作業でよく使うコマンドの組み合わせをまとめた。</p>
+      <pre><code class="language-bash"># 試し打ち用にコンテナに入って、終了したら自動削除
+docker run -it --rm ubuntu bash
+
+# ホストの現在ディレクトリをコンテナの /app にマウントして起動
+docker run -it --rm -v $(pwd):/app -w /app node:20 bash
+
+# 実行中の全コンテナを停止
+docker stop $(docker ps -q)
+
+# 停止中コンテナ・未使用イメージ・ネットワークをまとめて削除
+docker system prune</code></pre>
+      <p><code>docker system prune</code> は容量が逼迫してきたときに便利。ビルドキャッシュも消したいときは <code>-a</code> を付ける。</p>
     </section>
 
     <footer class="page-footer">
