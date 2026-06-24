@@ -73,7 +73,7 @@ ALLOWED_USER_IDS = [int(uid.strip()) for uid in _raw_ids.split(",") if uid.strip
 const currentTags = ['macos', 'automation'];
 ---
 
-<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags} noindex={true}>
     <header class="article-header">
       <a href="/tried/" class="back-link">← やってみた一覧</a>
       <h1>外出先から自宅の Mac を操作する Telegram Bot を作ってみた</h1>
