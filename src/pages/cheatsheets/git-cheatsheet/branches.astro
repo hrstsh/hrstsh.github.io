@@ -589,6 +589,22 @@ git push origin feature-login --force-with-lease</code></pre>
       </section>
     </article>
 
+    <section id="branch-practical-notes">
+      <h2>ブランチ運用で知っておくと役立つこと</h2>
+      <h3>merge vs rebase の使い分け</h3>
+      <p>どちらを使うかはプロジェクトの方針によるが、自分の判断基準を整理しておく。</p>
+      <ul>
+        <li><strong>merge</strong>: マージコミットが残るのでいつ統合したかが履歴に残る。共有ブランチ（main など）に取り込むときは merge が安全。コンフリクト解消の記録も残せる</li>
+        <li><strong>rebase</strong>: 履歴が一本に整理されてログが読みやすくなる。自分のローカルブランチを main に追従させるときに便利。ただし既にプッシュ済みのブランチで rebase すると他の人の履歴と食い違うので、共有済みのコミットには使わない</li>
+      </ul>
+      <h3>ブランチ削除でよくある失敗</h3>
+      <ul>
+        <li><strong>マージ済みかを確認してから消す</strong>: <code>git branch -d</code>（小文字）はマージされていないブランチは削除を拒否するので安全。<code>-D</code>（大文字）は強制削除なので、誤操作に注意</li>
+        <li><strong>リモートブランチと手元のブランチは別々に管理する</strong>: <code>git push origin --delete ブランチ名</code> で消さないとリモートは残り続ける。PR マージ後は GitHub/GitLab 側のブランチ自動削除設定を入れておくと楽</li>
+        <li><strong>stash を忘れて checkout すると変更が消えることがある</strong>: 未コミットの変更があってブランチを切り替えようとすると警告が出るが、強制（<code>-f</code>）すると変更が消える。切り替え前に <code>git stash</code> か <code>git commit</code> しておく</li>
+      </ul>
+    </section>
+
     <Navigation currentPage="branches" />
 
     <footer class="page-footer">

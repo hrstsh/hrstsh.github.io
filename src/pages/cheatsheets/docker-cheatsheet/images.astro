@@ -202,6 +202,23 @@ docker system df
 docker system df -v</code></pre>
     </section>
 
+    <section>
+      <h2>イメージ管理で知っておくと便利なこと</h2>
+      <ul>
+        <li><strong>タグは必ず明示する</strong>: <code>latest</code> のままにすると、しばらく後に <code>pull</code> したときに別バージョンが来て動かなくなることがある。CI/CD で使うなら <code>nginx:1.25.3</code> のようにパッチバージョンまで固定するのが安心</li>
+        <li><strong>alpine 版は軽量だが注意が必要</strong>: <code>node:20-alpine</code> のような alpine ベースのイメージはサイズが小さい反面、<code>glibc</code> の代わりに <code>musl libc</code> を使っているため、glibc 依存のバイナリが動かないことがある。デバッグ用には <code>node:20-slim</code> が妥協点になりやすい</li>
+        <li><strong>Dockerfileの COPY と ADD</strong>: 基本的に <code>COPY</code> を使う。<code>ADD</code> はURLからダウンロードやtarの自動展開ができるが、挙動が予測しにくい。tar展開が必要な場合だけ <code>ADD</code> を検討する</li>
+        <li><strong>ビルドキャッシュを活かす順序</strong>: 変更頻度の低いものを上に書く。<code>package.json</code> のコピーと <code>npm install</code> を先に行い、アプリのソースコードを後からコピーすると、依存関係が変わらない限りインストール済みのキャッシュが再利用される</li>
+      </ul>
+      <pre><code class="language-dockerfile"># キャッシュを活かした Dockerfile の書き順
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./   # 先に依存関係の定義だけコピー
+RUN npm ci              # この層はpackage.jsonが変わらない限りキャッシュされる
+COPY . .                # アプリコードは最後にコピー
+CMD ["node", "index.js"]</code></pre>
+    </section>
+
     <footer class="page-footer">
       <a href="/cheatsheets/docker-cheatsheet/">目次に戻る</a>
     </footer>

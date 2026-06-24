@@ -420,6 +420,32 @@ git stash clear  # 不要なものを削除
       </section>
     </article>
 
+    <section id="remote-practical-notes">
+      <h2>リモート操作でよくある失敗と対処</h2>
+      <ul>
+        <li>
+          <strong>push できずに rejected される</strong>: リモートに自分がまだ取り込んでいない変更がある場合に起きる。<code>git pull --rebase</code> でリモートの変更を取り込んでから push する。<code>--rebase</code> を付けるとマージコミットが不要で履歴が綺麗になる
+        </li>
+        <li>
+          <strong>force push は原則禁止</strong>: <code>git push --force</code> は他の人のコミットを消す可能性がある。どうしても必要なら <code>--force-with-lease</code> を使う。これはリモートが自分の把握している状態と変わっている場合は失敗してくれるので、意図しない上書きを防げる
+        </li>
+        <li>
+          <strong>fetch と pull の違い</strong>: <code>git fetch</code> はリモートの変更をダウンロードするだけで、手元のブランチは変えない。<code>git pull</code> は fetch + merge（または rebase）まで自動でやる。「まず確認してから取り込む」なら fetch を使い、<code>git diff origin/main</code> で差分を確認してから merge する
+        </li>
+        <li>
+          <strong>stash は退避用の一時置き場</strong>: 長期間 stash に置いておくとどんな変更だったか忘れる。重要な途中作業は WIP コミット（<code>git commit -m "WIP: ○○の途中"</code>）として残す方が安全
+        </li>
+      </ul>
+      <div class="command-block">
+        <h4>force push が必要になった場合の安全な手順</h4>
+        <pre><code># --force-with-lease を使う（リモートが変わっていれば失敗する）
+git push origin feature-branch --force-with-lease
+
+# force push が成功したらチームに周知する
+# 他のメンバーは git fetch + git reset --hard origin/feature-branch で追従できる</code></pre>
+      </div>
+    </section>
+
     <Navigation currentPage="remote" />
 
     <footer class="page-footer">
