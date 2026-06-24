@@ -11,7 +11,7 @@ const items = cheatsheets.map((c) => ({ name: c.name, url: c.url }));
 const jsonLd = itemList('チートシート', 'Git・Docker・SQL のコマンドリファレンス集。基礎から応用まで、実務でよく使うコマンドをカテゴリ別に整理しています。', 'https://hrstsh.com/cheatsheets', items);
 ---
 
-<Layout title="チートシート - hrの備忘録" description="Git・Docker・SQL のコマンドリファレンス集。基礎から応用まで、実務でよく使うコマンドをカテゴリ別に整理しています。" jsonLd={jsonLd}>
+<Layout title="チートシート - hrの備忘録" description="Git・Docker・SQL のコマンドリファレンス集。基礎から応用まで、実務でよく使うコマンドをカテゴリ別に整理しています。" noindex={true} jsonLd={jsonLd}>
   <main>
     <header class="page-header">
       <h1>チートシート</h1>
