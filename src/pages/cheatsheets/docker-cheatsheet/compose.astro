@@ -258,7 +258,7 @@ docker compose up -d</code></pre>
       <ul>
         <li><strong><code>docker compose up</code> と <code>docker compose up --build</code> の違い</strong>: <code>up</code> だけだとDockerfileを変更してもイメージが再ビルドされない。コードを変えたら <code>--build</code> を付けるか、<code>docker compose build</code> を先に実行する</li>
         <li><strong>ボリュームが残る</strong>: <code>docker compose down</code> はコンテナとネットワークを削除するが、ボリュームは残る。DB のデータを完全に初期化したいときは <code>docker compose down -v</code> で消す</li>
-        <li><strong>.env ファイルで環境ごとに切り替え</strong>: <code>compose.yaml</code> と同じディレクトリに <code>.env</code> を置くと、<code>${VARIABLE}</code> が自動で読み込まれる。開発・本番で違う設定を注入するのに使いやすい</li>
+        <li><strong>.env ファイルで環境ごとに切り替え</strong>: <code>compose.yaml</code> と同じディレクトリに <code>.env</code> を置くと、<code>{'${VARIABLE}'}</code> が自動で読み込まれる。開発・本番で違う設定を注入するのに使いやすい</li>
         <li><strong>depends_on は起動順序の保証だけ</strong>: <code>depends_on</code> は依存コンテナが「起動した」ことを待つだけで、「サービスが使える状態になった」ことは保証しない。DBが完全に起動する前にアプリが接続しに行って失敗するパターンはよく起きる。ヘルスチェックと組み合わせるか、アプリ側で再接続ロジックを入れる</li>
       </ul>
       <pre><code class="language-yaml"># depends_on にヘルスチェックを組み合わせる例
