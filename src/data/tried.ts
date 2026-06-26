@@ -11,6 +11,13 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'Amazon の購入履歴を Gemini API で分類して可視化してみた',
+    href: '/tried/amazon-order-history/',
+    desc: 'Amazon の「データをリクエストする」で注文履歴 CSV を取得し、Gemini API で商品を自動分類、matplotlib で 10 年分の支出傾向をグラフ化した記録。',
+    date: '2026.06',
+    tags: ['python', 'dev'],
+  },
+  {
     title: '.NET の Web アプリを Python (FastAPI) で書き換えてみた',
     href: '/tried/dotnet-to-fastapi/',
     desc: 'ASP.NET Core MVC で動いていた Web アプリを FastAPI に書き換えた記録。Controller と Router、Razor と Jinja2、Dapper と sqlite3 など両者の対応関係を整理。',
