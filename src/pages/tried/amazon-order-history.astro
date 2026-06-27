@@ -1,0 +1,314 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'Amazon の購入履歴を Gemini API で分類して可視化してみた - hrの備忘録';
+const description = 'Amazon の「データをリクエストする」機能で注文履歴 CSV を取得し、Gemini API で商品を 11 カテゴリに自動分類。matplotlib で 10 年分の支出傾向を可視化した記録。';
+const path = '/tried/amazon-order-history';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.06'), 'tried');
+
+const currentTags = ['python', 'dev'];
+
+const removeColumns = `PERSONAL_COLUMNS = {
+    "Billing Address",
+    "Shipping Address",
+    "Gift Message",
+    "Gift Recipient Contact",
+    "Gift Sender Name",
+    "Item Serial Number",
+}
+
+# 該当カラムを除外して新しい CSV に書き出す
+fieldnames = [col for col in reader.fieldnames if col not in PERSONAL_COLUMNS]
+rows = [
+    {k: v for k, v in row.items() if k not in PERSONAL_COLUMNS}
+    for row in reader
+]`;
+
+const classifyScript = `import csv, json, os, time
+from dotenv import load_dotenv
+from google import genai
+from google.genai.types import GenerateContentConfig
+
+load_dotenv()
+
+CATEGORIES = [
+    "食品・飲料", "日用品・消耗品", "キッチン用品",
+    "ガジェット・電子機器", "本・雑誌", "Blu-ray・映像作品",
+    "ファッション・衣類", "家具・収納", "フィットネス用品",
+    "雑貨・インテリア", "その他",
+]
+
+SYSTEM_PROMPT = f"""あなたはAmazonの購入商品をカテゴリに分類するアシスタントです。
+カテゴリ一覧から最も適切なものを1つ選んでください。
+
+カテゴリ一覧:
+{chr(10).join(f"- {c}" for c in CATEGORIES)}
+
+「日用品・消耗品」には美容・スキンケア・ヘアケア・掃除用品なども含みます。
+「Blu-ray・映像作品」はBlu-ray/DVD/映像ソフト単体の商品に使います。
+「ガジェット・電子機器」はBlu-ray/DVDプレーヤーなどの再生機器を含みますが、映像ソフト自体は含みません。
+
+入力: 商品名のJSONオブジェクト（インデックス → 商品名）
+出力: 各インデックスとカテゴリのJSONオブジェクト
+
+例:
+入力: {"0": "アイリスオーヤマ 無洗米 5kg", "1": "クワトロボタニコ 洗顔料"}
+出力: {"0": "食品・飲料", "1": "日用品・消耗品"}
+"""
+
+def classify_batch(client, batch):
+    response = client.models.generate_content(
+        model="gemini-3.1-flash-lite",
+        config=GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            response_mime_type="application/json",
+        ),
+        contents=json.dumps(batch, ensure_ascii=False),
+    )
+    return json.loads(response.text)
+
+def classify_all(input_path, output_path):
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    with open(input_path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+        fieldnames = list(reader.fieldnames) + ["Category"]
+
+    results = {}
+    for start in range(0, len(rows), 20):
+        batch = {str(i): row["Product Name"]
+                 for i, row in enumerate(rows[start:start + 20], start=start)}
+        classified = classify_batch(client, batch)
+        results.update({int(k): v for k, v in classified.items()})
+        time.sleep(5)
+
+    for i, row in enumerate(rows):
+        row["Category"] = results.get(i, "その他")
+
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)`;
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>Amazon の購入履歴を Gemini API で分類して可視化してみた</h1>
+      <p class="article-meta">Amazon の注文データを Python + Gemini API で分類・集計し、10 年分の支出傾向をグラフ化</p>
+      <p class="article-date">2026.06</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        家計簿はつけているが、最近はクレカや PayPay での支払いが増えて、何にどれくらいの割合でお金を使っているのかよくわからなくなっていた。ふと、よく使っている Amazon なら購入履歴をデータとして取得できるのでは？と思い、試しに集計してみることにした。
+      </p>
+
+      <h2>データを入手する</h2>
+      <p>
+        Amazon では、申請することで自分のすべての購買履歴を CSV でダウンロードできる。「アカウントサービス」→「データをリクエストする」から注文履歴を選んでリクエストを送信する。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/screenshot_data-request.png" alt="Amazonの「データをリクエストする」画面。注文履歴を選択してリクエストを送信できる" loading="lazy" />
+      </figure>
+      <p>
+        リクエストを行うと処理中になる。画面には 1 ヶ月程度と書いてあったが、自分の場合は数日でメールにダウンロードの案内が届いた。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/screenshot_data-request-result.png" alt="データ開示リクエストの確認画面。リクエストが受け付けられた旨が表示されている" loading="lazy" />
+      </figure>
+      <p>
+        ダウンロードした ZIP を展開すると <code>Order History.csv</code> というファイルが含まれていて、これが今までの全注文履歴だった。1 行 1 商品ずつで、注文日・商品名・金額・配送先など 27 カラムの CSV 形式でまとめられていた。自分の場合は 2016 年から約 10 年分のデータが入っていた。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/screenshot_data-download.png" alt="データダウンロード画面。Your Orders.zip（49MB）がダウンロード可能になっている" loading="lazy" />
+      </figure>
+
+      <h2>個人情報を除去する</h2>
+      <p>
+        CSV には請求先住所や配送先住所、ギフト関連の情報が含まれている。後続の分類作業では AI にデータを読み込ませるため、個人情報を含むカラムをあらかじめ除去しておく。
+      </p>
+      <CodeBlock code={removeColumns} language="python" />
+
+      <h2>Gemini API で商品を分類する</h2>
+      <p>
+        注文履歴には商品のカテゴリについての情報はなかったため、自分で仕分ける必要があった。10 年分のデータを手作業で仕分けるのはアホなので、Gemini に分類してもらった。この頃はちょうど Gemini 3.1 flash lite が無料枠でも 1 日に 500 リクエストほどできたため、これを利用した。
+      </p>
+      <p>
+        まず最初の数十件を Claude Code に読ませて、どういうカテゴリを作るかを検討した。最終的に以下の 11 種類になった。
+      </p>
+      <ul>
+        <li>食品・飲料</li>
+        <li>日用品・消耗品（美容・スキンケア含む）</li>
+        <li>キッチン用品</li>
+        <li>ガジェット・電子機器</li>
+        <li>本・雑誌</li>
+        <li>Blu-ray・映像作品</li>
+        <li>ファッション・衣類</li>
+        <li>家具・収納</li>
+        <li>フィットネス用品</li>
+        <li>雑貨・インテリア</li>
+        <li>その他</li>
+      </ul>
+      <p>
+        スクリプトは以下のとおり。商品名を 20 件まとめた JSON をシステムプロンプトとともに送り、カテゴリ名を JSON で返してもらう。<code>response_mime_type="application/json"</code> を指定することで出力が確実に JSON 形式で返ってくるので <code>json.loads()</code> で直接受け取れる。境界が曖昧なカテゴリの判断基準はシステムプロンプトに明示しておいた。
+      </p>
+      <CodeBlock code={classifyScript} language="python" />
+      <p>
+        分類結果を確認するといくつか誤分類があった。Blu-ray 作品が「ガジェット」や「本・雑誌」に混ざっていたり、フィットネスバイクが「家具・収納」に入っていたり。大半は正確だったが、ズレていた数件は手動で直した。
+      </p>
+
+      <h2>カテゴリ別に集計してみた</h2>
+      <p>
+        カテゴリ分類できたので、とりあえず年別・カテゴリ別で集計してみた。
+      </p>
+
+      <h3>年別の支出推移</h3>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/01_yearly_spending.png" alt="年別Amazon支出の棒グラフ。2016年の1.4万円から2025年の53万円まで推移している" loading="lazy" />
+      </figure>
+      <p>
+        2018 年からぐいっと上がっているのは一人暮らしを始めたから。2024 年ごろからまた上がっているのは、この辺りから食料品や日用品も Amazon の定期購入で買うようになったためだと思う。2025 年は高くて驚いたが、Switch 2 や Blu-ray ボックスなど高めのものをちょこちょこ買っていた。
+      </p>
+
+      <h3>カテゴリ別の内訳</h3>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/04_category_comparison.png" alt="カテゴリ別の支出金額と購入件数の比較。ガジェットが金額トップ87.9万円、食品が件数トップ333件" loading="lazy" />
+      </figure>
+      <p>
+        カテゴリ別の支出はガジェット・電子機器が最も大きかった。件数はそれほどでもないが、やはり 1 つ 1 つが高い。食品・飲料と日用品の件数が大半を占めていて、用途がわかりやすい。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/07_yearly_by_category.png" alt="年別カテゴリ別支出推移の折れ線グラフ。上位6カテゴリの推移を表示" loading="lazy" />
+      </figure>
+      <p>
+        カテゴリ別の推移を見ると、食品・日用品が 2024 年から増えていて先ほどの記憶通りだった。こう見ると同じくらいの支出額でも、2019 年と 2023 年とでは使い方がまったく違うのがわかる。
+      </p>
+
+      <h2>目的別にも分類する</h2>
+      <p>
+        カテゴリ別で「何を買ったか」の傾向は見えたが、「何のために買ったか」という切り口でも眺めてみたくなった。同じ仕組みで 5 つの目的に再分類した。
+      </p>
+      <ul>
+        <li><strong>生活必需品</strong>: 食品・消耗品・衛生用品。ないと生活が回らないもの</li>
+        <li><strong>趣味・推し活・エンタメ</strong>: Blu-ray・ゲーム・グッズ・漫画など</li>
+        <li><strong>住環境・デスク環境</strong>: 家具・家電・PC 周辺機器。なくても生活はできるが快適になるもの</li>
+        <li><strong>教養・自己投資</strong>: フィットネス器具・ビジネス書・スポーツ用品など</li>
+        <li><strong>嗜好品</strong>: なくても困らないが満足のために買う食品・飲料など</li>
+      </ul>
+
+      <h3>目的別の内訳</h3>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/05_purpose_spending.png" alt="目的別支出内訳の横棒グラフ。生活必需品89.2万円、住環境88.5万円、趣味61.6万円" loading="lazy" />
+      </figure>
+      <p>
+        生活必需品（89.2 万円）と住環境・デスク環境（88.5 万円）がほぼ同額でトップ。趣味・推し活は 61.6 万円だった。体感ではもっと趣味に使っている印象だったが、ライブのチケットや配信サービスなど Amazon 外の出費が多く、Amazon 単体では抑えられていた。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/amazon-order-history/08_yearly_by_purpose.png" alt="年別目的別支出推移の折れ線グラフ。5つの目的カテゴリの推移を表示" loading="lazy" />
+      </figure>
+      <p>
+        2026 年から「趣味・推し活・エンタメ」がほぼゼロになっている。確かに今年くらいから趣味にお金を使う機会がなくなっていたかも。これは地味に全く意識していなかったので気づきだった。
+      </p>
+
+      <h2>やってみて</h2>
+      <p>
+        Amazon の注文履歴データにはカテゴリの情報がなかったが、AI を使って商品名からカテゴリ分けを行い、それを用いて集計ができた。10 年分なので手動でやったら大変だろうが、AI で簡単に解析できる時代なので、こういった個人データを使った分析のハードルがだいぶ下がっていると感じた。
+      </p>
+    </article>
+
+    <ArticleFooterNav currentHref="/tried/amazon-order-history/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .article-body p {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.4rem;
+    line-height: 1.7;
+  }
+
+  .article-body code {
+    background: rgba(102, 126, 234, 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-image {
+    margin: 1.5rem 0;
+  }
+
+  .article-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, #e2e8f0);
+  }
+
+  .article-image figcaption {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+</style>
