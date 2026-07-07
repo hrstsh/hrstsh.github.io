@@ -202,7 +202,7 @@ const currentTags = ['twitter'];
 
     convertedText = text;
     output.textContent = text;
-    output.style.color = '#333';
+    output.style.color = 'var(--color-text)';
     output.style.fontStyle = 'normal';
     copyBtn.disabled = false;
     tweetBtn.disabled = false;
@@ -221,7 +221,7 @@ const currentTags = ['twitter'];
     try {
       await navigator.clipboard.writeText(convertedText);
       copyStatus.textContent = '✅ クリップボードにコピーしました！';
-      copyStatus.style.color = '#28a745';
+      copyStatus.style.color = 'var(--color-success)';
       setTimeout(() => {
         copyStatus.textContent = '';
       }, 3000);
@@ -252,10 +252,6 @@ const currentTags = ['twitter'];
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body {
@@ -278,7 +274,7 @@ const currentTags = ['twitter'];
   }
 
   .article-body code {
-    background: rgba(30, 64, 175, 0.08);
+    background: var(--color-code-bg);
     color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
@@ -306,7 +302,7 @@ const currentTags = ['twitter'];
     font-size: 1.2rem !important;
     margin-top: 0 !important;
     margin-bottom: 1rem !important;
-    color: #555 !important;
+    color: var(--color-text-muted) !important;
     border: none !important;
     padding-bottom: 0 !important;
   }
@@ -334,7 +330,7 @@ const currentTags = ['twitter'];
     width: 100%;
     min-height: 120px;
     padding: 1rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 0.95rem;
     font-family: inherit;
@@ -350,12 +346,12 @@ const currentTags = ['twitter'];
     min-height: 100px;
     padding: 1rem;
     background: var(--color-bg-card);
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     margin-bottom: 1rem;
     overflow-y: auto;
     max-height: 300px;
-    color: #999;
+    color: var(--color-text-muted);
     font-style: italic;
     white-space: pre-wrap;
     word-break: break-all;
@@ -363,8 +359,8 @@ const currentTags = ['twitter'];
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -395,7 +391,7 @@ const currentTags = ['twitter'];
   }
 
   .tweet-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+    background: var(--color-fill-neutral);
   }
 
   .tweet-btn:hover:not(:disabled) {
@@ -404,9 +400,9 @@ const currentTags = ['twitter'];
 
   .secondary-btn {
     padding: 0.5rem 1rem;
-    background: #e9ecef;
-    color: #495057;
-    border: 2px solid #dee2e6;
+    background: var(--color-border-strong);
+    color: var(--color-text-muted);
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 0.95rem;
     font-weight: 500;
@@ -416,13 +412,13 @@ const currentTags = ['twitter'];
   }
 
   .secondary-btn:hover {
-    background: #dee2e6;
-    border-color: #adb5bd;
+    background: var(--color-border-strong);
+    border-color: var(--color-text-muted);
   }
 
   .note {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
   }
 
@@ -449,7 +445,7 @@ const currentTags = ['twitter'];
     font-size: 1.1rem;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .usage-section ul,
@@ -472,13 +468,13 @@ const currentTags = ['twitter'];
     font-weight: 600;
     margin-top: 1rem;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .faq-list dd {
     margin-left: 0;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
     line-height: 1.6;
   }
 </style>

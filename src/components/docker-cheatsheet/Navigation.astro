@@ -26,8 +26,8 @@ const pages = [
 
 <style>
   .page-navigation {
-    background: #f8f9fa;
-    border-bottom: 2px solid #667eea;
+    background: var(--color-bg-subtle);
+    border-bottom: 2px solid var(--color-accent);
     margin-bottom: 2rem;
     position: sticky;
     top: 0;
@@ -47,7 +47,7 @@ const pages = [
   .nav-link {
     padding: 0.5rem 1rem;
     text-decoration: none;
-    color: #666;
+    color: var(--color-text-muted);
     border-radius: 4px;
     transition: all 0.2s;
     white-space: nowrap;
@@ -55,13 +55,13 @@ const pages = [
   }
 
   .nav-link:hover {
-    background: #667eea;
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
   }
 
   .nav-link.active {
-    background: #667eea;
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     font-weight: 600;
   }
 

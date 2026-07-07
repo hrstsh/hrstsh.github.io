@@ -124,21 +124,17 @@ CREATE TABLE products (
     text-align: center;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid var(--color-accent);
   }
 
   .hero h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   .intro {
@@ -148,24 +144,24 @@ CREATE TABLE products (
   .intro h2 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .intro p {
-    color: #444;
+    color: var(--color-text);
     margin-bottom: 1rem;
   }
 
   .note {
-    background: #fff3cd;
-    border-left: 4px solid #ffc107;
+    background: var(--color-warn-bg);
+    border-left: 4px solid var(--color-warn-border);
     padding: 1rem;
     margin: 1.5rem 0;
     border-radius: 4px;
   }
 
   .note strong {
-    color: #856404;
+    color: var(--color-warn-text);
   }
 
   .toc {
@@ -175,13 +171,13 @@ CREATE TABLE products (
   .toc h2 {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .toc-section {
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     border-radius: 8px;
   }
 
@@ -191,7 +187,7 @@ CREATE TABLE products (
   }
 
   .toc-section h3 a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -209,14 +205,14 @@ CREATE TABLE products (
   }
 
   .toc-section li a {
-    color: #444;
+    color: var(--color-text);
     text-decoration: none;
     padding: 0.25rem 0;
     display: inline-block;
   }
 
   .toc-section li a:hover {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: underline;
   }
 
@@ -227,17 +223,17 @@ CREATE TABLE products (
   .sample-data h2 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .sample-data p {
-    color: #444;
+    color: var(--color-text);
     margin-bottom: 1rem;
   }
 
   .code-block {
-    background: #f8f9fa;
-    border-left: 4px solid #667eea;
+    background: var(--color-bg-subtle);
+    border-left: 4px solid var(--color-accent);
     padding: 1.5rem;
     margin: 1.5rem 0;
     border-radius: 4px;
@@ -245,8 +241,8 @@ CREATE TABLE products (
   }
 
   .code-block pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1rem;
     border-radius: 4px;
     overflow-x: auto;
@@ -254,7 +250,7 @@ CREATE TABLE products (
   }
 
   .code-block code {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     line-height: 1.5;
   }
@@ -263,12 +259,12 @@ CREATE TABLE products (
     text-align: center;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 2px solid #667eea;
-    color: #666;
+    border-top: 2px solid var(--color-accent);
+    color: var(--color-text-muted);
   }
 
   .page-footer a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 

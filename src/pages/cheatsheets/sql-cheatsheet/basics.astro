@@ -347,21 +347,17 @@ LIMIT 100;</code></pre>
     text-align: center;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid var(--color-accent);
   }
 
   .hero h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   section {
@@ -371,19 +367,19 @@ LIMIT 100;</code></pre>
   h2 {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
-    color: #333;
-    border-bottom: 2px solid #667eea;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-accent);
     padding-bottom: 0.5rem;
   }
 
   h3 {
     font-size: 1.3rem;
     margin: 2rem 0 1rem;
-    color: #667eea;
+    color: var(--color-accent);
   }
 
   p {
-    color: #444;
+    color: var(--color-text);
     margin-bottom: 1rem;
   }
 
@@ -394,7 +390,7 @@ LIMIT 100;</code></pre>
 
   li {
     margin: 0.5rem 0;
-    color: #444;
+    color: var(--color-text);
   }
 
   .code-block {
@@ -404,29 +400,29 @@ LIMIT 100;</code></pre>
   }
 
   .code-block pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1.5rem;
     overflow-x: auto;
     margin: 0;
   }
 
   .code-block code {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     line-height: 1.6;
   }
 
   .tip {
-    background: #e7f3ff;
-    border-left: 4px solid #2196f3;
+    background: var(--color-note-bg);
+    border-left: 4px solid var(--color-note-border);
     padding: 1rem;
     margin: 1.5rem 0;
     border-radius: 4px;
   }
 
   .tip strong {
-    color: #1976d2;
+    color: var(--color-note-text);
     display: block;
     margin-bottom: 0.5rem;
   }
@@ -444,12 +440,12 @@ LIMIT 100;</code></pre>
     text-align: center;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 2px solid #667eea;
-    color: #666;
+    border-top: 2px solid var(--color-accent);
+    color: var(--color-text-muted);
   }
 
   .page-footer a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
     margin: 0 0.5rem;
   }

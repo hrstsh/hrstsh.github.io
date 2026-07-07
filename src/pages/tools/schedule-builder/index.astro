@@ -933,7 +933,7 @@ ExecStart=${cmdStr}`;
       try {
         await navigator.clipboard.writeText(target.textContent || '');
         copyStatus.textContent = 'クリップボードにコピーしました';
-        copyStatus.style.color = '#38a169';
+        copyStatus.style.color = 'var(--color-success)';
         setTimeout(() => { copyStatus.textContent = ''; }, 3000);
       } catch {
         alert('クリップボードへのコピーに失敗しました');
@@ -949,7 +949,7 @@ ExecStart=${cmdStr}`;
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
   .back-link:hover { text-decoration: underline; }
@@ -960,7 +960,7 @@ ExecStart=${cmdStr}`;
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--color-border-strong);
     padding-bottom: 0.25rem;
   }
 
@@ -969,14 +969,14 @@ ExecStart=${cmdStr}`;
   .article-body li { margin-bottom: 0.25rem; }
   .article-body ol { padding-left: 2rem; }
   .article-body code {
-    background: rgba(30, 64, 175, 0.06);
+    background: var(--color-code-bg);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
   }
 
   .tool-container {
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     padding: 2rem;
     border-radius: 8px;
     margin: 2rem 0;
@@ -992,7 +992,7 @@ ExecStart=${cmdStr}`;
     display: flex;
     gap: 0;
     margin-bottom: 1.5rem;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid var(--color-border-strong);
   }
 
   .mode-tab {
@@ -1001,17 +1001,17 @@ ExecStart=${cmdStr}`;
     border: none;
     font-size: 0.95rem;
     font-weight: 500;
-    color: #666;
+    color: var(--color-text-muted);
     cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     transition: color 0.15s, border-color 0.15s;
   }
 
-  .mode-tab:hover { color: #333; }
+  .mode-tab:hover { color: var(--color-text); }
   .mode-tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
   }
 
   /* フォーム（文章形式） */
@@ -1032,38 +1032,38 @@ ExecStart=${cmdStr}`;
   .field-inline label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-text-muted);
     margin-bottom: 0.3rem;
     letter-spacing: 0.05em;
   }
 
   .field-inline select {
     padding: 0.55rem 0.7rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 0.95rem;
-    background: white;
+    background: var(--color-bg-card);
     min-width: 110px;
   }
 
   .field-inline select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
   }
 
   .sentence-suffix {
     font-size: 1.05rem;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text);
     padding-bottom: 0.55rem;
     white-space: nowrap;
   }
 
   .field-warning {
     font-size: 0.85rem;
-    color: #92400e;
-    background: #fef3c7;
-    border: 1px solid #fcd34d;
+    color: var(--color-warn-text);
+    background: var(--color-warn-bg);
+    border: 1px solid var(--color-warn-border);
     border-radius: 6px;
     padding: 0.6rem 0.8rem;
     margin-bottom: 1rem;
@@ -1078,23 +1078,23 @@ ExecStart=${cmdStr}`;
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-text-muted);
     margin-bottom: 0.4rem;
   }
 
   .text-input {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 0.95rem;
-    background: white;
-    font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    background: var(--color-bg-card);
+    font-family: var(--font-mono);
   }
 
   .text-input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
   }
 
   .convert-inputs {
@@ -1108,14 +1108,14 @@ ExecStart=${cmdStr}`;
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-text-muted);
     margin-bottom: 0.4rem;
   }
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -1126,7 +1126,7 @@ ExecStart=${cmdStr}`;
 
   .primary-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
   }
 
   .primary-btn:active { transform: translateY(0); }
@@ -1135,11 +1135,11 @@ ExecStart=${cmdStr}`;
   .schedule-summary {
     font-size: 1.15rem;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text);
     padding: 0.8rem 1rem;
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 6px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--color-accent);
     margin-bottom: 1.5rem;
   }
 
@@ -1148,7 +1148,7 @@ ExecStart=${cmdStr}`;
     display: flex;
     gap: 0;
     margin-top: 1.5rem;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid var(--color-border-strong);
   }
 
   .output-tab {
@@ -1157,17 +1157,17 @@ ExecStart=${cmdStr}`;
     border: none;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #666;
+    color: var(--color-text-muted);
     cursor: pointer;
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
     transition: color 0.15s, border-color 0.15s;
   }
 
-  .output-tab:hover { color: #333; }
+  .output-tab:hover { color: var(--color-text); }
   .output-tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
   }
 
   .output-panel { display: none; margin-top: 1rem; }
@@ -1182,14 +1182,14 @@ ExecStart=${cmdStr}`;
 
   .output-label {
     font-size: 0.8rem;
-    color: #888;
-    font-family: 'Source Code Pro', monospace;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
   }
 
   .copy-btn {
     padding: 0.35rem 0.75rem;
-    background: #667eea;
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: 4px;
     font-size: 0.8rem;
@@ -1197,17 +1197,17 @@ ExecStart=${cmdStr}`;
     transition: background 0.15s;
   }
 
-  .copy-btn:hover { background: #5a67d8; }
+  .copy-btn:hover { background: var(--color-accent-fill-hover); }
 
   .output-code {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1rem 1.25rem;
     border-radius: 8px;
     overflow-x: auto;
     font-size: 0.85rem;
     line-height: 1.5;
-    font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    font-family: var(--font-mono);
     white-space: pre;
     margin: 0;
   }
@@ -1216,7 +1216,7 @@ ExecStart=${cmdStr}`;
   .annotation {
     margin-top: 0.75rem;
     padding: 0.75rem 1rem;
-    background: #f0f4ff;
+    background: var(--color-bg-subtle);
     border-radius: 6px;
     font-size: 0.85rem;
   }
@@ -1228,7 +1228,7 @@ ExecStart=${cmdStr}`;
 
   .annotation-key {
     font-weight: 600;
-    color: #4a5568;
+    color: var(--color-text-muted);
     margin-right: 0.5rem;
   }
 
@@ -1237,17 +1237,17 @@ ExecStart=${cmdStr}`;
   }
 
   .annotation-value {
-    color: #555;
+    color: var(--color-text-muted);
   }
 
   .annotation-pre {
     background: none;
-    color: #4a5568;
+    color: var(--color-text-muted);
     padding: 0;
     margin: 0;
     font-size: 0.85rem;
     line-height: 1.4;
-    font-family: 'Source Code Pro', 'Consolas', 'Monaco', monospace;
+    font-family: var(--font-mono);
     white-space: pre;
     border-radius: 0;
   }
@@ -1255,18 +1255,18 @@ ExecStart=${cmdStr}`;
   .annotation-hint {
     margin-top: 0.5rem;
     font-size: 0.85rem;
-    color: #b45309;
+    color: var(--color-warn-text);
     padding: 0.4rem 0.6rem;
-    background: #fef3c7;
+    background: var(--color-warn-bg);
     border-radius: 4px;
   }
 
   .output-note {
     font-size: 0.85rem;
-    color: #b45309;
+    color: var(--color-warn-text);
     margin-top: 0.5rem;
     padding: 0.4rem 0.6rem;
-    background: #fef3c7;
+    background: var(--color-warn-bg);
     border-radius: 4px;
   }
 
@@ -1280,15 +1280,15 @@ ExecStart=${cmdStr}`;
   .setup-guide {
     margin-top: 1rem;
     padding: 1rem;
-    background: white;
+    background: var(--color-bg-card);
     border-radius: 6px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-border-strong);
   }
 
   .setup-guide h3 {
     font-size: 0.9rem !important;
     font-weight: 600;
-    color: #555;
+    color: var(--color-text-muted);
     margin: 0 0 0.5rem !important;
     border: none !important;
     padding: 0 !important;
@@ -1298,7 +1298,7 @@ ExecStart=${cmdStr}`;
     margin: 0;
     padding-left: 1.5rem;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--color-text-muted);
     line-height: 1.7;
   }
 
@@ -1316,13 +1316,13 @@ ExecStart=${cmdStr}`;
 
   .service-example summary {
     font-size: 0.85rem;
-    color: #667eea;
+    color: var(--color-accent);
     cursor: pointer;
     font-weight: 500;
   }
 
   .service-example summary:hover {
-    color: #5a67d8;
+    color: var(--color-accent-strong);
   }
 
   .service-example .output-code {
@@ -1338,10 +1338,10 @@ ExecStart=${cmdStr}`;
   }
 
   .next-runs li {
-    font-family: 'Source Code Pro', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     padding: 0.2rem 0;
-    color: #444;
+    color: var(--color-text);
   }
 
   .usage-section { margin-top: 2rem; }

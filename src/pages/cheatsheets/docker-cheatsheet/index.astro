@@ -105,31 +105,27 @@ import Layout from '../../../layouts/Layout.astro';
     text-align: center;
     margin-bottom: 3rem;
     padding-bottom: 2rem;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid var(--color-accent);
   }
 
   h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
   }
 
   .meta {
     font-size: 0.9rem;
-    color: #888;
+    color: var(--color-text-muted);
   }
 
   .intro {
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     padding: 1.5rem;
     border-radius: 8px;
     margin-bottom: 2rem;
@@ -154,7 +150,7 @@ import Layout from '../../../layouts/Layout.astro';
     text-align: center;
     font-size: 1.8rem;
     margin-bottom: 2rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .category-grid {
@@ -165,8 +161,8 @@ import Layout from '../../../layouts/Layout.astro';
   }
 
   .category-card {
-    background: #fff;
-    border: 2px solid #e0e0e0;
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-border-strong);
     border-radius: 8px;
     padding: 1.5rem;
     text-decoration: none;
@@ -177,15 +173,15 @@ import Layout from '../../../layouts/Layout.astro';
   }
 
   .category-card:hover {
-    border-color: #667eea;
+    border-color: var(--color-accent);
     transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.15);
   }
 
   .category-card h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #667eea;
+    color: var(--color-accent);
     font-size: 1.3rem;
   }
 
@@ -198,18 +194,18 @@ import Layout from '../../../layouts/Layout.astro';
 
   .category-card ul li {
     padding: 0.4rem 0;
-    color: #555;
+    color: var(--color-text-muted);
     font-size: 0.95rem;
   }
 
   .category-card ul li:before {
     content: "▹ ";
-    color: #667eea;
+    color: var(--color-accent);
     font-weight: bold;
   }
 
   .read-more {
-    color: #667eea;
+    color: var(--color-accent);
     font-weight: 600;
     font-size: 0.95rem;
     margin-top: auto;
@@ -219,12 +215,12 @@ import Layout from '../../../layouts/Layout.astro';
     text-align: center;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 2px solid #667eea;
-    color: #666;
+    border-top: 2px solid var(--color-accent);
+    color: var(--color-text-muted);
   }
 
   .page-footer a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 

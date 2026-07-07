@@ -149,10 +149,6 @@ const currentTags = ['macos', 'automation'];
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body h2 {
@@ -197,7 +193,7 @@ const currentTags = ['macos', 'automation'];
   }
 
   .article-body code {
-    background: rgba(102, 126, 234, 0.08);
+    background: rgba(var(--accent-rgb), 0.08);
     color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
@@ -207,8 +203,8 @@ const currentTags = ['macos', 'automation'];
   pre {
     overflow-x: auto;
     padding: 1rem 1.25rem;
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     border-radius: var(--radius-md);
     font-size: 0.9rem;
     margin-bottom: 1rem;

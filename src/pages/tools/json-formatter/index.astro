@@ -193,7 +193,7 @@ const currentTags = ['dev'];
       const parsed = JSON.parse(json);
       formattedJson = JSON.stringify(parsed, null, getIndent());
       output.textContent = formattedJson;
-      output.style.color = '#333';
+      output.style.color = 'var(--color-text)';
       output.style.fontStyle = 'normal';
       copyBtn.disabled = false;
       copyStatus.textContent = '';
@@ -203,7 +203,7 @@ const currentTags = ['dev'];
       const lineInfo = extractLineInfo(json, error);
       const detail = lineInfo ? `（${lineInfo}）` : '';
       output.textContent = `エラー: ${error.message}`;
-      output.style.color = '#e53e3e';
+      output.style.color = 'var(--color-danger)';
       copyBtn.disabled = true;
       formattedJson = '';
       showValidation(false, `❌ 無効なJSON: ${error.message}${detail}`);
@@ -222,7 +222,7 @@ const currentTags = ['dev'];
       const parsed = JSON.parse(json);
       formattedJson = JSON.stringify(parsed);
       output.textContent = formattedJson;
-      output.style.color = '#333';
+      output.style.color = 'var(--color-text)';
       output.style.fontStyle = 'normal';
       copyBtn.disabled = false;
       copyStatus.textContent = '';
@@ -232,7 +232,7 @@ const currentTags = ['dev'];
       const lineInfo = extractLineInfo(json, error);
       const detail = lineInfo ? `（${lineInfo}）` : '';
       output.textContent = `エラー: ${error.message}`;
-      output.style.color = '#e53e3e';
+      output.style.color = 'var(--color-danger)';
       copyBtn.disabled = true;
       formattedJson = '';
       showValidation(false, `❌ 無効なJSON: ${error.message}${detail}`);
@@ -246,7 +246,7 @@ const currentTags = ['dev'];
     try {
       await navigator.clipboard.writeText(formattedJson);
       copyStatus.textContent = '✅ クリップボードにコピーしました！';
-      copyStatus.style.color = '#38a169';
+      copyStatus.style.color = 'var(--color-success)';
       setTimeout(() => {
         copyStatus.textContent = '';
       }, 3000);
@@ -266,7 +266,7 @@ const currentTags = ['dev'];
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -277,22 +277,18 @@ const currentTags = ['dev'];
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body {
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    color: #333;
-    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-strong);
     padding-bottom: 0.25rem;
   }
 
@@ -300,7 +296,7 @@ const currentTags = ['dev'];
   .article-body ul,
   .article-body ol {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body li {
@@ -308,7 +304,7 @@ const currentTags = ['dev'];
   }
 
   .tool-container {
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     padding: 2rem;
     border-radius: 8px;
     margin: 2rem 0;
@@ -326,7 +322,7 @@ const currentTags = ['dev'];
     font-size: 1.2rem !important;
     margin-top: 0 !important;
     margin-bottom: 1rem !important;
-    color: #555 !important;
+    color: var(--color-text-muted) !important;
     border: none !important;
     padding-bottom: 0 !important;
   }
@@ -339,37 +335,37 @@ const currentTags = ['dev'];
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #333;
+    color: var(--color-text);
   }
 
   .input-group select {
     width: 100%;
     max-width: 280px;
     padding: 0.75rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 1rem;
   }
 
   .input-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
   }
 
   textarea {
     width: 100%;
     min-height: 180px;
     padding: 1rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 0.95rem;
-    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    font-family: var(--font-mono);
     box-sizing: border-box;
   }
 
   textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
   }
 
   .btn-group {
@@ -381,23 +377,23 @@ const currentTags = ['dev'];
   .preview-box {
     min-height: 120px;
     padding: 1rem;
-    background: white;
-    border: 2px solid #ddd;
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     margin-bottom: 1rem;
     overflow-y: auto;
     max-height: 400px;
-    color: #999;
+    color: var(--color-text-muted);
     font-style: italic;
-    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    font-family: var(--font-mono);
     white-space: pre-wrap;
     word-break: break-all;
   }
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -407,12 +403,12 @@ const currentTags = ['dev'];
   }
 
   .primary-btn.secondary {
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    background: var(--color-fill-neutral);
   }
 
   .primary-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
   }
 
   .primary-btn.secondary:hover:not(:disabled) {
@@ -433,23 +429,23 @@ const currentTags = ['dev'];
     border-radius: 6px;
     font-size: 0.95rem;
     font-weight: 500;
-    background: #f7fafc;
-    border: 2px solid #ddd;
-    color: #999;
+    background: var(--color-bg-subtle);
+    border: 2px solid var(--color-border-strong);
+    color: var(--color-text-muted);
     font-style: italic;
   }
 
   .validation-result.valid {
-    background: #f0fff4;
-    border-color: #38a169;
-    color: #38a169;
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+    color: var(--color-success);
     font-style: normal;
   }
 
   .validation-result.invalid {
-    background: #fff5f5;
-    border-color: #e53e3e;
-    color: #e53e3e;
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
     font-style: normal;
   }
 
@@ -465,7 +461,7 @@ const currentTags = ['dev'];
   .usage-section h2 {
     font-size: 1.3rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .usage-section ul,
@@ -487,13 +483,13 @@ const currentTags = ['dev'];
     font-weight: 600;
     margin-top: 1rem;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .faq-list dd {
     margin-left: 0;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
     line-height: 1.6;
   }
 </style>

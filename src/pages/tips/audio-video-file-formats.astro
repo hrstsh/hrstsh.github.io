@@ -523,7 +523,7 @@ segment_002.ts
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -534,18 +534,14 @@ segment_002.ts
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    color: #333;
-    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-strong);
     padding-bottom: 0.25rem;
   }
 
@@ -553,12 +549,12 @@ segment_002.ts
     font-size: 1.2rem;
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body p, .article-body ul, .article-body ol {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body li {
@@ -566,7 +562,7 @@ segment_002.ts
   }
 
   .article-body code {
-    background: rgba(30, 64, 175, 0.06);
+    background: var(--color-code-bg);
     color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
@@ -574,8 +570,8 @@ segment_002.ts
   }
 
   .toc {
-    background: #f9f9fb;
-    border: 1px solid #e5e5ea;
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-bg-subtle);
     border-radius: 8px;
     padding: 1rem 1.5rem;
     margin: 1.5rem 0;
@@ -584,7 +580,7 @@ segment_002.ts
   .toc-title {
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .toc ol {
@@ -597,7 +593,7 @@ segment_002.ts
   }
 
   .toc a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -622,15 +618,15 @@ segment_002.ts
   .info-table td,
   .service-table th,
   .service-table td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border-strong);
     padding: 0.5rem 0.6rem;
     text-align: left;
   }
 
   .info-table th,
   .service-table th {
-    background: #f5f3ff;
-    color: #333;
+    background: var(--color-bg-subtle);
+    color: var(--color-text);
     font-weight: 600;
     font-size: 0.8rem;
     white-space: nowrap;
@@ -648,12 +644,12 @@ segment_002.ts
 
   .service-table td:last-child {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1rem 1.25rem;
     border-radius: 8px;
     overflow-x: auto;
@@ -672,13 +668,13 @@ segment_002.ts
     font-weight: 600;
     margin-top: 1rem;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .faq-list dd {
     margin-left: 0;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
     line-height: 1.6;
   }
 </style>

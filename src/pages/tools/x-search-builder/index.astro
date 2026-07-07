@@ -283,7 +283,7 @@ const currentTags = ['twitter'];
     const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
     if (preview) {
       preview.textContent = query || 'クエリがここに表示されます';
-      preview.style.color = query ? '#333' : '#999';
+      preview.style.color = query ? 'var(--color-text)' : 'var(--color-text-muted)';
       preview.style.fontStyle = query ? 'normal' : 'italic';
     }
     if (copyBtn) copyBtn.disabled = !query;
@@ -520,7 +520,7 @@ const currentTags = ['twitter'];
         const status = document.getElementById('copyStatus');
         if (status) {
           status.textContent = '✅ クリップボードにコピーしました！';
-          status.style.color = '#28a745';
+          status.style.color = 'var(--color-success)';
           setTimeout(() => { status.textContent = ''; }, 3000);
         }
       } catch (_err) {
@@ -590,10 +590,6 @@ const currentTags = ['twitter'];
     font-size: 2rem;
     margin-bottom: 0.5rem;
     white-space: nowrap;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   @media (max-width: 430px) {
@@ -690,8 +686,8 @@ const currentTags = ['twitter'];
     height: 1.35rem;
     padding: 0;
     border: none;
-    background: #888;
-    color: white;
+    background: var(--color-text-muted);
+    color: var(--color-on-accent);
     border-radius: 50%;
     font-size: 0.85rem;
     font-weight: 700;
@@ -703,7 +699,7 @@ const currentTags = ['twitter'];
   }
 
   .info-btn:hover {
-    background: #666;
+    background: var(--color-text-muted);
   }
 
   .info-tooltip {
@@ -739,25 +735,25 @@ const currentTags = ['twitter'];
   }
 
   .add-btn:hover {
-    background: rgba(102, 126, 234, 0.08);
+    background: rgba(var(--accent-rgb), 0.08);
   }
 
   .add-exclude-btn {
-    border-color: #888;
-    color: #666;
+    border-color: var(--color-text-muted);
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
   }
 
   .add-exclude-btn:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--color-bg-subtle);
   }
 
   .exclude-section {
-    background: #f5f5f5;
+    background: var(--color-bg-subtle);
     padding: 1rem;
     border-radius: var(--radius-sm);
     margin-bottom: 0.5rem;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-border-strong);
   }
 
   .exclude-inputs :global(.exclude-row) {
@@ -775,44 +771,44 @@ const currentTags = ['twitter'];
     flex: 1;
     min-width: 0;
     padding: 0.6rem 0.75rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: var(--radius-sm);
     font-size: 1rem;
   }
 
   .exclude-inputs :global(.exclude-input:focus) {
     outline: none;
-    border-color: #888;
+    border-color: var(--color-text-muted);
   }
 
   .exclude-inputs :global(.exclude-del-btn) {
     padding: 0.4rem 0.6rem;
-    background: #e0e0e0;
+    background: var(--color-border-strong);
     border: none;
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
     cursor: pointer;
-    color: #555;
+    color: var(--color-text-muted);
     flex-shrink: 0;
   }
 
   .exclude-inputs :global(.exclude-del-btn:hover) {
-    background: #d0d0d0;
+    background: var(--color-border-strong);
   }
 
   .keyword-inputs :global(.del-btn) {
     padding: 0.4rem 0.6rem;
-    background: #f0f0f0;
+    background: var(--color-bg-subtle);
     border: none;
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
     cursor: pointer;
-    color: #666;
+    color: var(--color-text-muted);
     flex-shrink: 0;
   }
 
   .keyword-inputs :global(.del-btn:hover) {
-    background: #e0e0e0;
+    background: var(--color-border-strong);
   }
 
   input[type="text"],
@@ -867,7 +863,7 @@ const currentTags = ['twitter'];
 
   .collapsible summary {
     padding: 0.6rem 0.75rem;
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     cursor: pointer;
     font-weight: 500;
     list-style: none;
@@ -886,17 +882,17 @@ const currentTags = ['twitter'];
     flex-shrink: 0;
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
-    color: #666;
+    color: var(--color-text-muted);
     background: transparent;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border-strong);
     border-radius: 4px;
     cursor: pointer;
   }
 
   .clear-btn:hover {
-    color: #333;
-    background: #eee;
-    border-color: #999;
+    color: var(--color-text);
+    background: var(--color-bg-subtle);
+    border-color: var(--color-text-muted);
   }
 
   .collapsible summary::-webkit-details-marker {
@@ -941,22 +937,22 @@ const currentTags = ['twitter'];
   .preview-section .preview-box {
     min-height: 3rem;
     padding: 0.75rem 1rem;
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     border: 2px solid var(--color-border);
     border-radius: var(--radius-sm);
     margin-bottom: 0.75rem;
-    font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     white-space: pre-wrap;
     word-break: break-all;
-    color: #999;
+    color: var(--color-text-muted);
     font-style: italic;
   }
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     font-size: 1rem;
@@ -967,7 +963,7 @@ const currentTags = ['twitter'];
 
   .primary-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
   }
 
   .primary-btn:disabled {
@@ -986,7 +982,7 @@ const currentTags = ['twitter'];
     padding: 1rem 1.5rem;
     border-radius: var(--radius-md);
     border: 2px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(var(--accent-rgb), 0.3);
     z-index: 100;
     transition: opacity 0.25s ease, transform 0.2s, box-shadow 0.2s;
   }
@@ -1008,13 +1004,13 @@ const currentTags = ['twitter'];
 
     .floating-btn:hover:not(:disabled) {
       transform: translateX(-50%) translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(var(--accent-rgb), 0.4);
     }
   }
 
   @media (max-width: 600px) {
     .floating-btn:hover:not(:disabled) {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(var(--accent-rgb), 0.4);
     }
   }
 

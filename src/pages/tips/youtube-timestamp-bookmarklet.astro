@@ -204,7 +204,7 @@ const currentTags = ['youtube', 'bookmarklet'];
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -215,18 +215,14 @@ const currentTags = ['youtube', 'bookmarklet'];
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    color: #333;
-    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-strong);
     padding-bottom: 0.25rem;
   }
 
@@ -234,12 +230,12 @@ const currentTags = ['youtube', 'bookmarklet'];
     font-size: 1.2rem;
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body p, .article-body ul, .article-body ol {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body li {
@@ -257,7 +253,7 @@ const currentTags = ['youtube', 'bookmarklet'];
 
   .article-figure img {
     max-width: 100%;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-border-strong);
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
@@ -265,11 +261,11 @@ const currentTags = ['youtube', 'bookmarklet'];
   .article-figure figcaption {
     margin-top: 0.5rem;
     font-size: 0.85rem;
-    color: #888;
+    color: var(--color-text-muted);
   }
 
   .article-body code {
-    background: rgba(30, 64, 175, 0.06);
+    background: var(--color-code-bg);
     color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
@@ -277,8 +273,8 @@ const currentTags = ['youtube', 'bookmarklet'];
   }
 
   pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1rem 1.25rem;
     border-radius: 8px;
     overflow-x: auto;
@@ -301,12 +297,12 @@ const currentTags = ['youtube', 'bookmarklet'];
     font-weight: 600;
     margin-top: 1rem;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: var(--color-text);
   }
   .faq-list dd {
     margin-left: 0;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
     line-height: 1.6;
   }
 </style>
