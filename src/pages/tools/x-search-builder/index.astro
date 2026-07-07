@@ -151,7 +151,10 @@ const currentTags = ['twitter'];
         </section>
       </div>
 
-      <button type="button" id="searchBtn" class="floating-btn primary-btn">X で検索を開く</button>
+      <button type="button" id="searchBtn" class="floating-btn primary-btn">
+        <svg class="x-logo" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.451-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z"/></svg>
+        <span>で検索を開く</span>
+      </button>
 
       <section class="usage-section">
         <h2>注意事項</h2>
@@ -973,18 +976,36 @@ const currentTags = ['twitter'];
 
   .floating-btn {
     position: fixed;
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
-    width: auto;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 1rem 1.5rem;
-    border-radius: var(--radius-md);
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(var(--accent-rgb), 0.3);
+    bottom: 1.25rem;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    width: fit-content;
+    max-width: calc(100% - 2rem);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+    padding: 0.85rem 1.9rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--color-accent-fill) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.22),
+      0 2px 8px rgba(var(--accent-rgb), 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
     z-index: 100;
-    transition: opacity 0.25s ease, transform 0.2s, box-shadow 0.2s;
+    transition: opacity 0.25s ease, transform 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+
+  .floating-btn .x-logo {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
   }
 
   .floating-btn.floating-btn-hidden {
@@ -992,26 +1013,13 @@ const currentTags = ['twitter'];
     pointer-events: none;
   }
 
-  @media (min-width: 601px) {
-    .floating-btn {
-      left: 50%;
-      transform: translateX(-50%);
-      right: auto;
-      width: 600px;
-      max-width: calc(100% - 2rem);
-      bottom: 1rem;
-    }
-
-    .floating-btn:hover:not(:disabled) {
-      transform: translateX(-50%) translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(var(--accent-rgb), 0.4);
-    }
-  }
-
-  @media (max-width: 600px) {
-    .floating-btn:hover:not(:disabled) {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(var(--accent-rgb), 0.4);
-    }
+  .floating-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: var(--color-accent-fill-hover);
+    box-shadow:
+      0 14px 36px rgba(0, 0, 0, 0.26),
+      0 4px 12px rgba(var(--accent-rgb), 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
 
   .status-message {
