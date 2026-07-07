@@ -555,10 +555,6 @@ const currentTags = ['dev'];
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body {
@@ -581,7 +577,7 @@ const currentTags = ['dev'];
   }
 
   .article-body code {
-    background: rgba(30, 64, 175, 0.08);
+    background: var(--color-code-bg);
     color: var(--color-code);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
@@ -609,7 +605,7 @@ const currentTags = ['dev'];
     font-size: 1.2rem !important;
     margin-top: 0 !important;
     margin-bottom: 1rem !important;
-    color: #555 !important;
+    color: var(--color-text-muted) !important;
     border: none !important;
     padding-bottom: 0 !important;
   }
@@ -629,7 +625,7 @@ const currentTags = ['dev'];
 
   .note {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--color-text-muted);
     margin-bottom: 1rem;
   }
 
@@ -637,14 +633,14 @@ const currentTags = ['dev'];
     font-size: 1.1rem;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .add-section {
     padding: 1rem;
-    background: rgba(102, 126, 234, 0.06);
+    background: rgba(var(--accent-rgb), 0.06);
     border-radius: var(--radius-sm);
-    border: 1px solid rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
   }
 
   .add-form {
@@ -679,8 +675,8 @@ const currentTags = ['dev'];
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -705,9 +701,9 @@ const currentTags = ['dev'];
 
   .secondary-btn {
     padding: 0.5rem 1rem;
-    background: #e9ecef;
-    color: #495057;
-    border: 2px solid #dee2e6;
+    background: var(--color-border-strong);
+    color: var(--color-text-muted);
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 0.95rem;
     font-weight: 500;
@@ -717,8 +713,8 @@ const currentTags = ['dev'];
   }
 
   .secondary-btn:hover {
-    background: #dee2e6;
-    border-color: #adb5bd;
+    background: var(--color-border-strong);
+    border-color: var(--color-text-muted);
   }
 
   .usage-section {
@@ -739,7 +735,7 @@ const currentTags = ['dev'];
     font-size: 1.1rem;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .usage-section ul,
@@ -779,13 +775,13 @@ const currentTags = ['dev'];
     font-weight: 600;
     margin-top: 1rem;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .faq-list dd {
     margin-left: 0;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
     line-height: 1.6;
   }
 </style>

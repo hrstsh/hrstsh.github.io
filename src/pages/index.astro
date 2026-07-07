@@ -110,7 +110,7 @@ const sheets = [
   }
 
   .tagline {
-    font-family: 'Source Code Pro', ui-monospace, 'SFMono-Regular', monospace;
+    font-family: var(--font-mono);
     font-size: 0.85rem;
     color: var(--color-text-muted);
     margin: 0.4rem 0 0;
@@ -138,7 +138,7 @@ const sheets = [
   }
 
   .section-label {
-    font-family: 'Source Code Pro', ui-monospace, 'SFMono-Regular', monospace;
+    font-family: var(--font-mono);
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -177,7 +177,7 @@ const sheets = [
   }
 
   .post-row:hover {
-    background: rgba(102, 126, 234, 0.04);
+    background: rgba(var(--accent-rgb), 0.04);
   }
 
   .post-main {
@@ -207,7 +207,7 @@ const sheets = [
 
   .post-date {
     flex-shrink: 0;
-    font-family: 'Source Code Pro', ui-monospace, 'SFMono-Regular', monospace;
+    font-family: var(--font-mono);
     font-size: 0.8rem;
     color: var(--color-text-muted);
     opacity: 0.85;
@@ -243,7 +243,7 @@ const sheets = [
   .pill:hover {
     color: var(--color-primary);
     border-color: var(--color-primary);
-    background: rgba(102, 126, 234, 0.04);
+    background: rgba(var(--accent-rgb), 0.04);
   }
 
   .pill:active {

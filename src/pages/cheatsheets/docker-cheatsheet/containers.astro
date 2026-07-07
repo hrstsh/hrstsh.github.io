@@ -271,18 +271,14 @@ docker run -d \
   h1 {
     font-size: 2.5rem;
     margin-bottom: 2rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   h2 {
     font-size: 1.8rem;
     margin-top: 2.5rem;
     margin-bottom: 1rem;
-    color: #333;
-    border-bottom: 2px solid #667eea;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-accent);
     padding-bottom: 0.5rem;
   }
 
@@ -292,12 +288,12 @@ docker run -d \
 
   p {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1.5rem;
     border-radius: 8px;
     overflow-x: auto;
@@ -306,12 +302,12 @@ docker run -d \
   }
 
   code {
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
   }
 
   p code {
-    background: rgba(30, 64, 175, 0.06);
+    background: var(--color-code-bg);
     color: var(--color-code);
     padding: 0.2rem 0.4rem;
     border-radius: 3px;
@@ -322,11 +318,11 @@ docker run -d \
     text-align: center;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 2px solid #667eea;
+    border-top: 2px solid var(--color-accent);
   }
 
   .page-footer a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
     font-size: 1.1rem;
   }

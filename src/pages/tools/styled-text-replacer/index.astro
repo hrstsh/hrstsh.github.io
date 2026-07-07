@@ -298,7 +298,7 @@ const currentTags = ['dev'];
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -309,28 +309,24 @@ const currentTags = ['dev'];
   h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .article-body {
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body h2 {
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    color: #333;
-    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-strong);
     padding-bottom: 0.25rem;
   }
 
   .article-body p, .article-body ul, .article-body ol {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .article-body li {
@@ -338,7 +334,7 @@ const currentTags = ['dev'];
   }
 
   .tool-container {
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     padding: 2rem;
     border-radius: 8px;
     margin: 2rem 0;
@@ -356,7 +352,7 @@ const currentTags = ['dev'];
     font-size: 1.2rem !important;
     margin-top: 0 !important;
     margin-bottom: 1rem !important;
-    color: #555 !important;
+    color: var(--color-text-muted) !important;
     border: none !important;
     padding-bottom: 0 !important;
   }
@@ -364,13 +360,13 @@ const currentTags = ['dev'];
   .preview-box {
     min-height: 120px;
     padding: 1rem;
-    background: white;
-    border: 2px solid #ddd;
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     margin-bottom: 1rem;
     overflow-y: auto;
     max-height: 300px;
-    color: #999;
+    color: var(--color-text-muted);
     font-style: italic;
   }
 
@@ -382,13 +378,13 @@ const currentTags = ['dev'];
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
-    color: #333;
+    color: var(--color-text);
   }
 
   .input-group input[type="text"] {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #ddd;
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     font-size: 1rem;
     box-sizing: border-box;
@@ -396,7 +392,7 @@ const currentTags = ['dev'];
 
   .input-group input[type="text"]:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--color-accent);
   }
 
   .checkbox-group {
@@ -408,7 +404,7 @@ const currentTags = ['dev'];
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    color: #333;
+    color: var(--color-text);
   }
 
   .checkbox-group input[type="checkbox"] {
@@ -419,8 +415,8 @@ const currentTags = ['dev'];
 
   .primary-btn {
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -431,7 +427,7 @@ const currentTags = ['dev'];
 
   .primary-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
   }
 
   .primary-btn:active:not(:disabled) {
@@ -445,7 +441,7 @@ const currentTags = ['dev'];
 
   .note {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--color-text-muted);
     margin-top: 0.5rem;
   }
 
@@ -461,7 +457,7 @@ const currentTags = ['dev'];
   .usage-section h2 {
     font-size: 1.3rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .usage-section ol, .usage-section ul {
@@ -482,13 +478,13 @@ const currentTags = ['dev'];
     font-weight: 600;
     margin-top: 1rem;
     margin-bottom: 0.25rem;
-    color: #333;
+    color: var(--color-text);
   }
 
   .faq-list dd {
     margin-left: 0;
     margin-bottom: 0.5rem;
-    color: #444;
+    color: var(--color-text);
     line-height: 1.6;
   }
 </style>

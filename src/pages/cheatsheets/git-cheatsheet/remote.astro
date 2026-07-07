@@ -466,27 +466,23 @@ git push origin feature-branch --force-with-lease
     text-align: center;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid var(--color-accent);
   }
 
   h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .subtitle {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--color-text-muted);
   }
 
   article section {
     margin-bottom: 3rem;
     padding-bottom: 2rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-bg-subtle);
   }
 
   article section:last-of-type {
@@ -496,7 +492,7 @@ git push origin feature-branch --force-with-lease
   h2 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--color-text);
     padding-top: 1rem;
   }
 
@@ -504,8 +500,8 @@ git push origin feature-branch --force-with-lease
     font-size: 1.4rem;
     margin-top: 2rem;
     margin-bottom: 1rem;
-    color: #444;
-    border-bottom: 2px solid #f0f0f0;
+    color: var(--color-text);
+    border-bottom: 2px solid var(--color-bg-subtle);
     padding-bottom: 0.5rem;
   }
 
@@ -513,17 +509,17 @@ git push origin feature-branch --force-with-lease
     font-size: 1.1rem;
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
-    color: #555;
+    color: var(--color-text-muted);
   }
 
   p {
     margin-bottom: 1rem;
-    color: #444;
+    color: var(--color-text);
   }
 
   .command-block {
-    background: #f8f9fa;
-    border-left: 4px solid #667eea;
+    background: var(--color-bg-subtle);
+    border-left: 4px solid var(--color-accent);
     padding: 1.5rem;
     margin: 1.5rem 0;
     border-radius: 4px;
@@ -532,12 +528,12 @@ git push origin feature-branch --force-with-lease
   .command-block h4 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #667eea;
+    color: var(--color-accent);
   }
 
   pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1rem;
     border-radius: 4px;
     overflow-x: auto;
@@ -545,30 +541,30 @@ git push origin feature-branch --force-with-lease
   }
 
   code {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     line-height: 1.5;
   }
 
   .note {
-    background: #fff3cd;
-    border-left: 4px solid #ffc107;
+    background: var(--color-warn-bg);
+    border-left: 4px solid var(--color-warn-border);
     padding: 0.75rem 1rem;
     margin: 1rem 0;
     font-style: italic;
-    color: #856404;
+    color: var(--color-warn-text);
   }
 
   .page-footer {
     text-align: center;
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 2px solid #667eea;
-    color: #666;
+    border-top: 2px solid var(--color-accent);
+    color: var(--color-text-muted);
   }
 
   .page-footer a {
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
 

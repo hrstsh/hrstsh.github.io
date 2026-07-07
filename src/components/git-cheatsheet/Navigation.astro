@@ -54,7 +54,7 @@ const nextPage = currentIndex < pages.length - 1 ? pages[currentIndex + 1] : nul
   .page-navigation {
     margin: 2rem 0;
     padding: 1.5rem;
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     border-radius: 8px;
   }
 
@@ -69,18 +69,18 @@ const nextPage = currentIndex < pages.length - 1 ? pages[currentIndex + 1] : nul
     display: flex;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: #fff;
-    border: 2px solid #e0e0e0;
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-border-strong);
     border-radius: 6px;
     text-decoration: none;
-    color: #333;
+    color: var(--color-text);
     transition: all 0.2s ease;
   }
 
   .nav-button:hover {
-    border-color: #667eea;
+    border-color: var(--color-accent);
     transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.15);
   }
 
   .nav-button.prev {
@@ -95,20 +95,20 @@ const nextPage = currentIndex < pages.length - 1 ? pages[currentIndex + 1] : nul
   .nav-button.index {
     justify-self: center;
     padding: 0.75rem 1.5rem;
-    background: #667eea;
-    color: #fff;
-    border-color: #667eea;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border-color: var(--color-accent);
     font-weight: 600;
   }
 
   .nav-button.index:hover {
-    background: #5568d3;
-    border-color: #5568d3;
+    background: var(--color-accent-strong);
+    border-color: var(--color-accent-strong);
   }
 
   .nav-arrow {
     font-size: 1.2rem;
-    color: #667eea;
+    color: var(--color-accent);
     margin: 0 0.5rem;
   }
 
@@ -120,7 +120,7 @@ const nextPage = currentIndex < pages.length - 1 ? pages[currentIndex + 1] : nul
 
   .nav-direction {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -128,7 +128,7 @@ const nextPage = currentIndex < pages.length - 1 ? pages[currentIndex + 1] : nul
   .nav-title {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text);
   }
 
   .nav-button-placeholder {

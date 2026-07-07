@@ -262,7 +262,7 @@ https://example.com/very/&#x200B;long/&#x200B;path/&#x200B;to/&#x200B;resource</
     display: inline-block;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: #667eea;
+    color: var(--color-accent);
     text-decoration: none;
   }
   .back-link:hover { text-decoration: underline; }
@@ -271,7 +271,7 @@ https://example.com/very/&#x200B;long/&#x200B;path/&#x200B;to/&#x200B;resource</
     font-size: 1.5rem;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--color-border-strong);
     padding-bottom: 0.25rem;
   }
   .article-body h3 { font-size: 1.2rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
@@ -279,14 +279,14 @@ https://example.com/very/&#x200B;long/&#x200B;path/&#x200B;to/&#x200B;resource</
   .article-body li { margin-bottom: 0.25rem; }
   .article-body ol { padding-left: 2rem; }
   .article-body code {
-    background: rgba(30, 64, 175, 0.06);
+    background: var(--color-code-bg);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.9em;
   }
   pre {
-    background: #2d2d2d;
-    color: #f8f8f2;
+    background: var(--color-codeblock-bg);
+    color: var(--color-codeblock-text);
     padding: 1rem 1.25rem;
     border-radius: 8px;
     overflow-x: auto;
@@ -302,19 +302,19 @@ https://example.com/very/&#x200B;long/&#x200B;path/&#x200B;to/&#x200B;resource</
     font-size: 0.9rem;
   }
   .char-table th, .char-table td {
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-border-strong);
     padding: 0.5rem 0.75rem;
     text-align: left;
   }
   .char-table th {
-    background: #f5f5f5;
+    background: var(--color-bg-subtle);
     font-weight: 600;
   }
   .char-table td code {
     font-size: 0.85em;
   }
   .toc {
-    background: #f8f9fa;
+    background: var(--color-bg-subtle);
     padding: 1.25rem 1.5rem;
     border-radius: 8px;
     margin-bottom: 2rem;
@@ -333,15 +333,15 @@ https://example.com/very/&#x200B;long/&#x200B;path/&#x200B;to/&#x200B;resource</
     font-size: 0.9rem;
     margin-bottom: 0.3rem;
   }
-  .toc a { color: #667eea; text-decoration: none; }
+  .toc a { color: var(--color-accent); text-decoration: none; }
   .toc a:hover { text-decoration: underline; }
   .page-footer {
     margin-top: 2.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--color-border-strong);
     font-size: 0.95rem;
   }
-  .page-footer a { color: #667eea; text-decoration: none; }
+  .page-footer a { color: var(--color-accent); text-decoration: none; }
   .page-footer a:hover { text-decoration: underline; }
   .page-footer a + a { margin-left: 0.5rem; }
   .faq-list dt { font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; }
