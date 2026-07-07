@@ -215,13 +215,13 @@ AND B.num = A.num</code></pre>
         formattedSql = applyJoinStyle(formattedSql);
       }
       output.textContent = formattedSql;
-      output.style.color = '#333';
+      output.style.color = 'var(--color-text)';
       output.style.fontStyle = 'normal';
       copyBtn.disabled = false;
       copyStatus.textContent = '';
     } catch (err) {
       output.textContent = `エラー: ${(err as Error).message}`;
-      output.style.color = '#dc3545';
+      output.style.color = 'var(--color-danger)';
       copyBtn.disabled = true;
     }
   });
@@ -232,7 +232,7 @@ AND B.num = A.num</code></pre>
     try {
       await navigator.clipboard.writeText(formattedSql);
       copyStatus.textContent = '✅ クリップボードにコピーしました！';
-      copyStatus.style.color = '#28a745';
+      copyStatus.style.color = 'var(--color-success)';
       setTimeout(() => {
         copyStatus.textContent = '';
       }, 3000);

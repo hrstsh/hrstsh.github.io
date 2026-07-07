@@ -183,14 +183,14 @@ const currentTags = ['dev'];
           const html = await blob.text();
           loadedHtml = html;
           preview.innerHTML = html;
-          preview.style.color = '#333';
+          preview.style.color = 'var(--color-text)';
           break;
         } else if (item.types.includes('text/plain')) {
           const blob = await item.getType('text/plain');
           const text = await blob.text();
           loadedHtml = text;
           preview.textContent = text;
-          preview.style.color = '#333';
+          preview.style.color = 'var(--color-text)';
           break;
         }
       }
@@ -225,7 +225,7 @@ const currentTags = ['dev'];
 
       replacedHtml = tempDiv.innerHTML;
       result.innerHTML = replacedHtml;
-      result.style.color = '#333';
+      result.style.color = 'var(--color-text)';
       copyBtn.disabled = false;
       copyStatus.textContent = '';
     } catch (err) {
@@ -277,7 +277,7 @@ const currentTags = ['dev'];
       ]);
       
       copyStatus.textContent = '✅ クリップボードにコピーしました！';
-      copyStatus.style.color = '#28a745';
+      copyStatus.style.color = 'var(--color-success)';
       
       setTimeout(() => {
         copyStatus.textContent = '';

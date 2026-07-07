@@ -283,7 +283,7 @@ const currentTags = ['twitter'];
     const copyBtn = document.getElementById('copyBtn') as HTMLButtonElement;
     if (preview) {
       preview.textContent = query || 'クエリがここに表示されます';
-      preview.style.color = query ? '#333' : '#999';
+      preview.style.color = query ? 'var(--color-text)' : 'var(--color-text-muted)';
       preview.style.fontStyle = query ? 'normal' : 'italic';
     }
     if (copyBtn) copyBtn.disabled = !query;
@@ -520,7 +520,7 @@ const currentTags = ['twitter'];
         const status = document.getElementById('copyStatus');
         if (status) {
           status.textContent = '✅ クリップボードにコピーしました！';
-          status.style.color = '#28a745';
+          status.style.color = 'var(--color-success)';
           setTimeout(() => { status.textContent = ''; }, 3000);
         }
       } catch (_err) {

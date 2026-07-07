@@ -202,7 +202,7 @@ const currentTags = ['twitter'];
 
     convertedText = text;
     output.textContent = text;
-    output.style.color = '#333';
+    output.style.color = 'var(--color-text)';
     output.style.fontStyle = 'normal';
     copyBtn.disabled = false;
     tweetBtn.disabled = false;
@@ -221,7 +221,7 @@ const currentTags = ['twitter'];
     try {
       await navigator.clipboard.writeText(convertedText);
       copyStatus.textContent = '✅ クリップボードにコピーしました！';
-      copyStatus.style.color = '#28a745';
+      copyStatus.style.color = 'var(--color-success)';
       setTimeout(() => {
         copyStatus.textContent = '';
       }, 3000);

@@ -933,7 +933,7 @@ ExecStart=${cmdStr}`;
       try {
         await navigator.clipboard.writeText(target.textContent || '');
         copyStatus.textContent = 'クリップボードにコピーしました';
-        copyStatus.style.color = '#38a169';
+        copyStatus.style.color = 'var(--color-success)';
         setTimeout(() => { copyStatus.textContent = ''; }, 3000);
       } catch {
         alert('クリップボードへのコピーに失敗しました');
