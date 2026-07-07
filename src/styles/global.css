@@ -37,6 +37,7 @@
 
   /* 塗り面（ボタン・帯）: ダークモードでも暗い塗りを保ち、上に載る文字は常に明るい */
   --color-accent-fill: #44618b;
+  --color-accent-fill-hover: #35507a;
   --color-fill-neutral: #4a5568;
   --color-on-accent: #fdfdfc;
 
@@ -96,6 +97,7 @@
 
     /* 塗り面はダークでも暗い塗り + 明るい文字を維持 */
     --color-accent-fill: #3f5d8c;
+    --color-accent-fill-hover: #4a6b9e;
     --color-fill-neutral: #3a3f4a;
     --color-on-accent: #edf1f7;
 
