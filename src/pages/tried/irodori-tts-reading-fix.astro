@@ -1,0 +1,253 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'Irodori-TTS の読み間違いをユーザー辞書と前処理で対策してみた - hrの備忘録';
+const description =
+  '日本語音声合成 Irodori-TTS を通知読み上げに使うと漢字の誤読が目立つ。ひらがなに開きすぎるとアクセントが崩れる失敗を経て、LLM での整形・TSV ユーザー辞書・絵文字サニタイズの3層で対策した記録。辞書の置換順や ZWJ 絵文字の罠など実装の詳細も。';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tried/irodori-tts-reading-fix', toIsoDate('2026.07'), 'tried');
+
+const pipeline = `[フィード・ログのテキスト]
+        ↓
+[LLM 整形]     口調変換のついでに読み上げ用の表記へ直す
+        ↓
+[ユーザー辞書] dictionary.tsv で頻出誤読語を確実に置換
+        ↓
+[サニタイズ]   許可リスト外の絵文字を除去
+        ↓
+[Irodori-TTS]  音声合成 → 再生`;
+
+const promptBefore = `- 誤読しやすい漢字・難読語・固有名詞はひらがなに開く
+  （例: 所謂→いわゆる、云々→うんぬん、直に→じかに）
+- 数値・単位・記号は読み下す
+  （例: 3.5倍→さんてんごばい、50%→ごじゅっパーセント、v2→ブイツー）`;
+
+const promptAfter = `- 基本は普通の漢字かな交じり文のまま。漢字の方が単語として認識され
+  アクセントが自然になるので、通常の語彙の漢字は開かない
+  （例: 技術的負債、確認、状況 はそのまま）
+- ひらがなに開くのは、明らかに誤読されそうな難読語・当て字・古風な表現だけ
+  （例: 所謂→いわゆる、強ち→あながち）。迷ったら漢字のまま残す
+- 数値は基本そのまま。記号・バージョン表記など誤読しそうな部分だけ読み下す
+  （例: 50%→50パーセント、v2.3→ブイ2.3）`;
+
+const dictionaryExample = `# 表記	読み
+Irodori	いろどり
+launchd	ローンチディー
+日本橋	にほんばし`;
+
+const dictionaryCode = `def _apply_dictionary(text: str) -> str:
+    """ユーザー辞書（表記<TAB>読み）で頻出誤読語を置換する。"""
+    for surface, reading in _load_dictionary():
+        text = text.replace(surface, reading)
+    return text
+
+def _load_dictionary(path: Path = DICTIONARY_PATH) -> list[tuple[str, str]]:
+    entries = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("\\t", 1)
+        if len(parts) != 2:
+            continue
+        entries.append((parts[0].strip(), parts[1].strip()))
+    # 長い表記を先に置換して部分一致の誤置換を防ぐ
+    entries.sort(key=lambda e: len(e[0]), reverse=True)
+    return entries`;
+
+const emojiPattern = `# ZWJ 合成・VS16 付きを壊さないよう、長いシーケンスから先にマッチさせる
+_ALLOWED_EMOJI_PATTERN = re.compile(
+    "|".join(sorted((re.escape(x) for x in ALLOWED_EMOJIS), key=len, reverse=True))
+)`;
+
+const emojiStash = `saved: list[str] = []
+
+def _stash(m: re.Match[str]) -> str:
+    saved.append(m.group(0))
+    return chr(_PLACEHOLDER_BASE + len(saved) - 1)
+
+text = _ALLOWED_EMOJI_PATTERN.sub(_stash, text)  # 許可絵文字を私用領域へ退避
+text = _GENERIC_EMOJI_PATTERN.sub("", text)      # 絵文字レンジをまとめて除去
+for i, emoji in enumerate(saved):                # 退避した絵文字を復元
+    text = text.replace(chr(_PLACEHOLDER_BASE + i), emoji)`;
+
+const currentTags = ['macos', 'automation', 'python'];
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>Irodori-TTS の読み間違いをユーザー辞書と前処理で対策してみた</h1>
+      <p class="article-meta">フィード読み上げの TTS を Irodori-TTS に切り替えたら漢字の誤読が目立ったので、LLM 整形とユーザー辞書の前処理で対策した</p>
+      <p class="article-date">2026.07</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        作業ログや通知の読み上げに使う TTS を Irodori-TTS に切り替えたところ、声の自然さは段違いに良くなった一方で、漢字の読み間違いが目立つようになった。ユーザー辞書と前処理を組み合わせて誤読を潰していったので、その試行錯誤を記録しておく。
+      </p>
+
+      <h2>前提</h2>
+      <p>
+        以前 <a href="/tried/voice-feed-tts/">VOICEVOX + Kokoro のローカル TTS 基盤</a>を作り、bot のログや通知の読み上げに使ってきた。Irodori-TTS はローカルで動く日本語特化の音声合成モデルで、参照音声やテキスト指示で声を作れるうえ、絵文字で感情表現を指定できるのが特徴。声の表現力は VOICEVOX より一段上に感じる。
+      </p>
+      <p>
+        ただし公式も認めているとおり、同規模の TTS と比べて漢字の読みが弱く、対応言語は日本語のみ。実際に運用に入れてみると、次のような読み間違いが日常的に起きた。
+      </p>
+      <ul>
+        <li>難読語・当て字（「所謂」「強ち」あたりは安定しない）</li>
+        <li>固有名詞（サービス名や地名。モデル名の「Irodori」自体もそのままでは怪しい）</li>
+        <li>英単語（日本語専用なので <code>launchd</code> や <code>API</code> などは読めない）</li>
+        <li>記号・バージョン表記（<code>v2.3</code>、<code>50%</code> など）</li>
+      </ul>
+      <p>
+        対策としてまず思いつくのは、読ませる前に難読漢字をひらがなへ変換しておくこと。最初はそのとおりにやったのだが、これが新しい問題を生んだ。
+      </p>
+
+      <h2>対策の全体像</h2>
+      <p>
+        最終的に、TTS へ渡す前の前処理を 3 層に分けた。
+      </p>
+      <CodeBlock code={pipeline} language="text" />
+      <p>
+        もともと読み上げテキストは Gemini で口調をやわらかく変換してから合成していたので、1 層目はそのプロンプトに読み上げ用ルールを足す形にした。2 層目・3 層目は Python の前処理として TTS 直前に挟んでいる。
+      </p>
+
+      <h2>失敗: ひらがなに開きすぎるとアクセントが崩れる</h2>
+      <p>
+        まず Gemini のプロンプトに、こんなルールを追加した。
+      </p>
+      <CodeBlock code={promptBefore} language="text" />
+      <p>
+        誤読自体は減った。ところが今度は、読み上げ全体のイントネーションが平板で不自然になった。原因を探ると、Gemini が難読語だけでなく通常の語彙までひらがなに開いていて、TTS がそれを単語として認識できなくなっていた。漢字かな交じりの表記は、TTS にとって単語の切れ目とアクセントを推定する手がかりになっている。ひらがなの連続になった「ぎじゅつてきふさい」は「技術的負債」として読んでもらえない。
+      </p>
+      <p>
+        数値の読み下しも同様で、「さんてんごばい」のような表記はかえって不自然な間を生むことがあった。ひらがなにすれば安全というわけではなく、開きすぎれば別の壊れ方をする。これがこの件でいちばんの学びだった。ルールは次のように直した。
+      </p>
+      <CodeBlock code={promptAfter} language="text" />
+      <p>
+        ポイントは「迷ったら漢字のまま残す」を明記したこと。LLM は指示の例に引っ張られて過剰に一般化しがちなので、デフォルト側（何もしない側）をはっきり書いておくと暴走しにくくなる。
+      </p>
+
+      <h2>ユーザー辞書で固有名詞を確実に置換する</h2>
+      <p>
+        プロンプトの調整だけでは、固有名詞が毎回同じようには直らない。LLM の出力は確率的なので、10 回中 8 回直っても残りの 2 回は素通りする。頻出する誤読語には、決定的に置換する仕組みが別に必要だった。
+      </p>
+      <p>
+        そこで、タブ区切りの辞書ファイルを 1 枚置いて、TTS 直前に単純置換する層を足した。
+      </p>
+      <CodeBlock code={dictionaryExample} language="text" />
+      <p>
+        実装は 30 行ほど。工夫したのは置換順で、表記の長いエントリから先に置換する。たとえば「日本橋」と「日本」を両方登録しても、先に「日本橋」が置換されるので「にほんばし」が「にほん橋」になるような部分一致の誤爆が起きない。
+      </p>
+      <CodeBlock code={dictionaryCode} language="python" />
+      <p>
+        辞書は実行のたびに読み込むので、誤読を見つけたら 1 行足すだけで次の読み上げから反映される。常駐サーバーの再起動が要らないのは、運用してみると効く。あとひとつ気を付けるのは、読みの側に難読漢字を書かないこと。置換結果はそのまま TTS に渡るので、読みはひらがな・カタカナで書く。
+      </p>
+      <p>
+        適用タイミングは LLM 整形の後・TTS 直前にした。ここに置くと、LLM を通さない生テキスト入力の経路でも辞書が効く。
+      </p>
+
+      <h2>絵文字の感情指定を壊さずに除去する</h2>
+      <p>
+        Irodori-TTS には、テキスト中の絵文字を感情・演技の指示として解釈する機能がある。😊 で楽しげに、⏸️ で間を置く、といった具合で、これ自体は面白い特徴だと思う。ただし裏を返すと、フィードに元から混ざっている絵文字が意図しない演技指定になる。しかも解釈できる絵文字は許可リストで決まっていて、リスト外の絵文字はエラーの原因になる。
+      </p>
+      <p>
+        そこで 3 層目として、許可リスト外の絵文字を除去するサニタイズを入れた。単純に Unicode の絵文字レンジを正規表現で削除すればよさそうに見えるが、ここに罠があった。許可リストには ZWJ（ゼロ幅接合子）で合成された 😮‍💨 や、異体字セレクタ付きの ⏸️ が含まれる。😮‍💨 は「😮 + ZWJ + 💨」の 3 コードポイントで 1 つの絵文字なので、レンジ削除にかけると ZWJ だけ消えて 😮💨 という別の 2 絵文字に化ける。
+      </p>
+      <p>
+        対策は 2 段構え。まず許可絵文字のパターンを長いシーケンス優先でマッチさせる。
+      </p>
+      <CodeBlock code={emojiPattern} language="python" />
+      <p>
+        そのうえで、許可絵文字をいったん Unicode 私用領域のプレースホルダに退避し、絵文字レンジをまとめて削除してから復元する。
+      </p>
+      <CodeBlock code={emojiStash} language="python" />
+      <p>
+        ZWJ や異体字セレクタは画面に見えない文字なので、この手のバグは目視デバッグがほぼできない。見えない文字の挙動については<a href="/tips/zero-width-characters/">ゼロ幅文字の解説記事</a>にまとめている。
+      </p>
+
+      <h2>やってみて</h2>
+      <p>
+        3 層それぞれの役割は「LLM は傾向として整える」「辞書は確実に潰す」「サニタイズは壊れる入力を防ぐ」に落ち着いた。読み間違いを完全にゼロにする方法はたぶんなくて、見つけたら辞書に 1 行足すという運用の軽さのほうが大事だと思っている。
+      </p>
+      <p>
+        TTS の読み対策はエンジンを替えるたびに発生する仕事だが、エンジン本体ではなく手前の前処理として持っておけば、次にモデルを乗り換えるときも辞書とサニタイズはそのまま使い回せる。VOICEVOX のようにユーザー辞書 API を持つエンジンばかりではないので、この構成は案外つぶしが効きそうだ。
+      </p>
+    </article>
+
+    <ArticleFooterNav currentHref="/tried/irodori-tts-reading-fix/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(var(--accent-rgb), 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+</style>
