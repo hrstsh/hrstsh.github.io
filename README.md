@@ -17,21 +17,7 @@ https://hrstsh.com/
 ├── / ...................... Home (トップページ)
 │   https://hrstsh.com/
 │   (やってみた=src/data/tried.ts、Tips=src/data/tips.ts を新しい順に直リンク表示。
-│    ツール・チートシートは下部に小さく配置)
-│
-├── /cheatsheets/ .......... チートシート (コマンド集)
-│   https://hrstsh.com/cheatsheets
-│   ├── /git-cheatsheet .... Gitコマンドチートシート
-│   │   https://hrstsh.com/cheatsheets/git-cheatsheet
-│   │   (basics, branches, remote, advanced, tips)
-│   │
-│   ├── /docker-cheatsheet . Dockerコマンドチートシート
-│   │   https://hrstsh.com/cheatsheets/docker-cheatsheet
-│   │   (basics, images, containers, compose, tips)
-│   │
-│   └── /sql-cheatsheet .... SQL基本コマンド集
-│       https://hrstsh.com/cheatsheets/sql-cheatsheet
-│       (basics, joins, manipulation, advanced)
+│    ツールは下部に小さく配置)
 │
 ├── /tools/ ................ ツール (ブラウザ上で動作)
 │   https://hrstsh.com/tools
@@ -179,14 +165,8 @@ You can also trigger deployment manually:
 │   │   ├── index.astro     # Home page
 │   │   ├── tried/          # やってみた (tried / hand-written reports)
 │   │   ├── tips/           # Tips (tips & tricks)
-│   │   └── tools/          # Tools (cheatsheets)
-│   │       ├── git-cheatsheet/   # Git (index, basics, branches, remote, advanced, tips)
-│   │       ├── docker-cheatsheet/# Docker (index, basics, images, containers, compose, tips)
-│   │       └── sql-cheatsheet/   # SQL (index, basics, joins, manipulation, advanced)
-│   ├── components/        # Per-tool navigation etc.
-│   │   ├── git-cheatsheet/
-│   │   ├── docker-cheatsheet/
-│   │   └── sql-cheatsheet/
+│   │   └── tools/          # Tools (browser-based utilities)
+│   ├── components/        # Shared components (SidePanel, CodeBlock, etc.)
 │   └── styles/
 │       └── global.css      # Global styles
 ├── public/                 # Static assets (favicon, robots.txt, etc.)

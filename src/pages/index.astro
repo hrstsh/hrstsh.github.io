@@ -6,17 +6,12 @@ import { toolEntries } from '../data/tools';
 import { webSite, organization } from '../utils/jsonLd';
 
 const siteName = 'hrの備忘録';
-const siteDesc = '開発と日常の作業メモ。やってみたこと・Tips・ブラウザで動くツールやチートシートをまとめています。';
+const siteDesc = '開発と日常の作業メモ。やってみたこと・Tips・ブラウザで動くツールをまとめています。';
 const jsonLd = [webSite(siteName, siteDesc), organization(siteName)];
 
 const tips = tipPosts.slice(0, 6);
 
 const tools = toolEntries.map(t => ({ name: t.shortName, href: t.href }));
-const sheets = [
-  { name: 'Git', href: '/cheatsheets/git-cheatsheet/' },
-  { name: 'Docker', href: '/cheatsheets/docker-cheatsheet/' },
-  { name: 'SQL', href: '/cheatsheets/sql-cheatsheet/' },
-];
 ---
 
 <ArticleLayout title={siteName} description={siteDesc} jsonLd={jsonLd} currentTags={[]}>
@@ -77,17 +72,6 @@ const sheets = [
         <div class="pill-row">
           {tools.map((t) => (
             <a class="pill" href={t.href}>{t.name}</a>
-          ))}
-        </div>
-      </div>
-      <div class="utility-group">
-        <div class="section-head">
-          <span class="section-label">チートシート</span>
-          <a class="section-more" href="/cheatsheets/">一覧 →</a>
-        </div>
-        <div class="pill-row">
-          {sheets.map((s) => (
-            <a class="pill" href={s.href}>{s.name}</a>
           ))}
         </div>
       </div>
