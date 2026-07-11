@@ -64,16 +64,14 @@ const tools = toolEntries.map(t => ({ name: t.shortName, href: t.href }));
     </section>
 
     <section class="utility">
-      <div class="utility-group">
-        <div class="section-head">
-          <span class="section-label">ツール</span>
-          <a class="section-more" href="/tools/">一覧 →</a>
-        </div>
-        <div class="pill-row">
-          {tools.map((t) => (
-            <a class="pill" href={t.href}>{t.name}</a>
-          ))}
-        </div>
+      <div class="section-head">
+        <span class="section-label">ツール</span>
+        <a class="section-more" href="/tools/">一覧 →</a>
+      </div>
+      <div class="pill-row">
+        {tools.map((t) => (
+          <a class="pill" href={t.href}>{t.name}</a>
+        ))}
       </div>
     </section>
 </ArticleLayout>
@@ -201,8 +199,6 @@ const tools = toolEntries.map(t => ({ name: t.shortName, href: t.href }));
   .utility {
     margin-top: 3.25rem;
     padding-top: 0.5rem;
-    display: grid;
-    gap: 1.75rem;
   }
 
   .pill-row {
@@ -300,13 +296,6 @@ const tools = toolEntries.map(t => ({ name: t.shortName, href: t.href }));
 
     .pill-row {
       margin-top: 0.5rem;
-    }
-  }
-
-  @media (min-width: 600px) {
-    .utility {
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
     }
   }
 </style>
