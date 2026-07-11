@@ -254,7 +254,7 @@ const currentTags = ['twitter'];
   function buildQuery(data: ReturnType<typeof getFormData>): string {
     const parts: string[] = [];
     if (data.keywords.length > 0) {
-      parts.push(data.keywords.map((k) => `"""${k}"""`).join(' AND '));
+      parts.push(data.keywords.map((k) => `"${k}"`).join(' AND '));
     }
     if (data.from) parts.push(`from:${data.from.replace(/^@/, '')}`);
     if (data.to) parts.push(`to:${data.to.replace(/^@/, '')}`);
