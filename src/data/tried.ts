@@ -11,6 +11,13 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'Irodori-TTS の読み間違いをユーザー辞書と前処理で対策してみた',
+    href: '/tried/irodori-tts-reading-fix/',
+    desc: 'Irodori-TTS の漢字誤読を LLM 整形・TSV ユーザー辞書・絵文字サニタイズの3層で対策した記録。ひらがなに開きすぎるとアクセントが崩れる失敗談も。',
+    date: '2026.07',
+    tags: ['macos', 'automation', 'python'],
+  },
+  {
     title: 'Amazon の購入履歴を Gemini API で分類して可視化してみた',
     href: '/tried/amazon-order-history/',
     desc: 'Amazon の「データをリクエストする」で注文履歴 CSV を取得し、Gemini API で商品を自動分類、matplotlib で 10 年分の支出傾向をグラフ化した記録。',
