@@ -25,6 +25,9 @@ CLAUDE.md
 *.swo
 *~
 
+# 個人用の作業ログ（公開リポジトリに含めない）
+WORKLOG.md
+
 # OS
 .DS_Store
 Thumbs.db
