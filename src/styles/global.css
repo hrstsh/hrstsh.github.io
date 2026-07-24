@@ -149,13 +149,16 @@ h3,
 h4 {
   font-feature-settings: 'palt';
   letter-spacing: 0.01em;
-  /* 日本語見出しを文節単位で改行（Chrome 119+。非対応ブラウザは従来動作） */
+  /* 単語・複合語の途中で改行しないことを優先(auto-phrase)。
+     行の埋まり方が不均等になることがあるが、「内部」「オブジェクト」
+     のような複合語が途中で割れるよりはましという判断 */
   word-break: auto-phrase;
+  overflow-wrap: break-word;
 }
 
 .post-title {
   word-break: auto-phrase;
-  text-wrap: balance;
+  overflow-wrap: break-word;
 }
 
 h2 {

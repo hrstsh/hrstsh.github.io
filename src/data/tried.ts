@@ -11,6 +11,13 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'YouTubeのコメントからタイムスタンプを抽出するChrome拡張機能を作ってみた',
+    href: '/tried/youtube-timestamp-extension/',
+    desc: 'YouTube動画のコメント欄からタイムスタンプを一覧抽出し、クリックでその時刻にジャンプできるChrome拡張機能を作った記録。SPA遷移の検知やチャプター情報取得の試行錯誤も。',
+    date: '2026.07',
+    tags: ['youtube', 'chrome-extension'],
+  },
+  {
     title: 'Irodori-TTS の読み間違いをユーザー辞書と前処理で対策してみた',
     href: '/tried/irodori-tts-reading-fix/',
     desc: 'Irodori-TTS の漢字誤読を LLM 整形・TSV ユーザー辞書・絵文字サニタイズの3層で対策した記録。ひらがなに開きすぎるとアクセントが崩れる失敗談も。',
