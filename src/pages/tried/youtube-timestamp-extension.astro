@@ -1,0 +1,229 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate } from '../../utils/jsonLd';
+
+const title = 'YouTubeのコメントからタイムスタンプを抽出するChrome拡張機能を作ってみた - hrの備忘録';
+const description =
+  'YouTube動画のコメント欄に埋もれたタイムスタンプを一覧表示し、クリックでその時刻にジャンプできるChrome拡張機能を作った記録。SPA遷移の検知、コメント欄の遅延読み込みへの追従、DOMに出ないチャプター情報の取得までの実装点をまとめた。';
+const path = '/tried/youtube-timestamp-extension';
+const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.07'), 'tried');
+
+const currentTags = ['youtube', 'chrome-extension'];
+
+const navigateSnippet = `// YouTubeはSPAなので、content_scriptsはページ遷移のたびには再実行されない。
+// YouTube自身が発火するこのイベントが、遷移検知として一番確実だった
+function onNavigate() {
+  if (location.pathname !== '/watch') {
+    stopObserver();
+    return;
+  }
+  startObserver();
+  scheduleRender();
+}
+
+window.addEventListener('yt-navigate-finish', onNavigate);
+onNavigate(); // 初回ロード分`;
+
+const observerSnippet = `let debounceTimer = null;
+
+function scheduleRender() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(render, 500);
+}
+
+function startObserver() {
+  const target = document.querySelector('ytd-comments') || document.body;
+  const observer = new MutationObserver(scheduleRender);
+  observer.observe(target, { childList: true, subtree: true });
+}`;
+
+const buggyFix = `// 修正前：detail.response 直下にチャプターがある前提で読んでいた
+window.addEventListener('yt-navigate-finish', (e) => {
+  lastData = e?.detail?.response;
+  post();
+});
+
+// 修正後：SPA遷移時は response.response、初回フルロード時は response 直下、
+// どちらでもない場合は window.ytInitialData にフォールバック
+window.addEventListener('yt-navigate-finish', (e) => {
+  const r = e?.detail?.response;
+  lastData = r?.response?.playerOverlays ? r.response
+    : r?.playerOverlays ? r
+    : window.ytInitialData;
+  post();
+});`;
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tried/" class="back-link">← やってみた一覧</a>
+      <h1>YouTubeのコメントからタイムスタンプを抽出するChrome拡張機能を作ってみた</h1>
+      <p class="article-meta">動画を開くと自動でコメント欄のタイムスタンプを一覧表示するChrome拡張機能を作った</p>
+      <p class="article-date">2026.07</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        以前作った<a href="/tips/youtube-timestamp-bookmarklet/">YouTubeのコメントからタイムスタンプを抽出するブックマークレット</a>が、意外と重宝している。ただし動画を開くと毎回手動でクリックする必要があり、追加で読み込んだコメントは一覧に反映されない。もっと当たり前に使いたくて、Chrome拡張機能として作り直すことにした。
+      </p>
+
+      <h2>つくったもの</h2>
+      <p>
+        動画ページを開くと、右上にパネルが自動で表示される。動画に公式のチャプターが設定されていればまず上段に一覧が出て、その下にコメント欄から拾ったタイムスタンプが並ぶ。どちらの行もクリックすると、その時刻に動画がジャンプする。
+      </p>
+      <figure class="article-image">
+        <img src="/images/tried/youtube-timestamp-extension/panel.png" alt="YouTube動画ページの右上に自動表示されるタイムスタンプ抽出パネル。上段にチャプター一覧、下段にコメント由来のタイムスタンプ一覧が並ぶ" loading="lazy" />
+        <figcaption>動画ページに自動表示されるパネル</figcaption>
+      </figure>
+      <p>
+        コピーボタンで一覧をテキストとしてコピーできる。×で閉じても、次の動画に移ればまた自動で表示される。今見ている動画だけ隠したいときはツールバーのアイコンをクリックすれば手動でオン・オフできる。
+      </p>
+
+      <h2>タイムスタンプの抽出ロジックはそのまま移植した</h2>
+      <p>
+        時刻を拾う正規表現、前後1秒以内の重複をまとめる処理、ラベルが空のときに次の行から補完する処理は、<a href="/tips/youtube-timestamp-bookmarklet/">元のブックマークレット</a>のコードをほぼそのまま移植した。変わったのは実行のきっかけとデータの受け渡し方の部分だけで、コアのロジックに手を入れる必要はなかった。
+      </p>
+      <p>
+        これができたのは、抽出処理を最初から「コメント欄のDOMを受け取ってタイムスタンプの配列を返すだけの関数」として書いていたから。ブックマークレットではボタンを押した瞬間に1回呼んでいた関数を、拡張機能では <code>MutationObserver</code> のコールバックから何度も呼ぶように変えただけで、関数の中身には触れていない。実行タイミングとロジックが最初から分離されていたのが、そのまま移植できた理由になる。
+      </p>
+
+      <h2>動画を切り替えてもパネルを自動表示させる</h2>
+      <p>
+        content scriptは既定では1回のページ読み込みにつき1回しか実行されない。ところがYouTubeはSPAで、動画を切り替えても実際にはページ全体をロードし直さない。素直に実装すると「最初に開いた動画では動くが、関連動画をクリックして遷移すると反応しなくなる」という状態になる。
+      </p>
+      <p>
+        URLの変化を <code>setInterval</code> でポーリングして検知する手もある。ただし遅延が出るうえに、常時ポーリングを回し続けるのは気持ち悪い。YouTube自身が遷移完了時に発火する <code>yt-navigate-finish</code> というイベントを、そのままフックにした。
+      </p>
+      <CodeBlock code={navigateSnippet} language="javascript" />
+      <p>
+        <code>location.pathname !== '/watch'</code> のチェックを入れているのは、検索結果やチャンネルページへ遷移したときにコメント監視を止めるため。これがないと、動画ページを離れたあとも <code>MutationObserver</code> が無関係なページのDOM変化を拾い続けることになる。
+      </p>
+
+      <h2>コメントの追加読み込みにパネル表示を追従させる</h2>
+      <p>
+        コメント欄は最初から全件読み込まれているわけではなく、スクロールに応じて追加取得される。一度抽出して終わりだと、後から読み込まれた分のタイムスタンプが一覧に反映されない。<code>MutationObserver</code> でコメント欄のDOM変化を監視し、変化があれば再抽出する形にした。
+      </p>
+      <CodeBlock code={observerSnippet} language="javascript" />
+      <p>
+        監視対象は <code>document.querySelector('ytd-comments') || document.body</code> にしている。パネルを表示した時点では、コメント欄自体がまだDOMに挿入されていないことがあるためだ。いったん <code>document.body</code> 全体を監視しておけば、後からコメント欄が挿入されてきた瞬間もそのまま拾える。
+      </p>
+      <p>
+        コメントは連続して差し込まれることがあるので、変化のたびに毎回再抽出すると無駄が多い。500ms のデバウンスを挟んで、DOM変化が落ち着いたタイミングでまとめて再抽出するようにした。
+      </p>
+
+      <h2>チャプター情報はDOMではなく内部データにあった</h2>
+      <p>
+        コメント由来のタイムスタンプに加えて、動画に公式で設定されているチャプターも一覧に出したくなった。ところがチャプターパネルは自分で開くまでDOMにレンダリングされないため、コメントと同じやり方（DOMを見て抽出）が使えない。
+      </p>
+      <p>
+        調べてみると、チャプター情報はページ内部の <code>ytInitialData</code> というJS変数の中に、動画の読み込み時点からすでに入っていた。ただしcontent scriptは既定でページ本体とJSの実行環境が分離されているため、<code>window.ytInitialData</code> を直接読もうとしても <code>undefined</code> になる。<code>world: "MAIN"</code> のcontent scriptを追加し、<code>postMessage</code> で通常のcontent script側に受け渡す構成で解決したが、この部分の仕組みは<a href="/tips/chrome-extension-window-object-access/">別のTipsにまとめた</a>。
+      </p>
+      <p>
+        実装した直後は、チャプターが一覧にまったく出ないという症状にぶつかった。原因は <code>yt-navigate-finish</code> イベントの <code>detail.response</code> の構造がロードのタイミングによって違うことだった。
+      </p>
+      <CodeBlock code={buggyFix} language="javascript" />
+      <p>
+        SPA遷移時は <code>detail.response.response</code> の中にチャプターがあるのに対し、初回のフルロード時は <code>detail.response</code> の直下に入っている。片方の形しか想定していなかったので、遷移のたびに抽出結果が空になっていた。ブックマークレットのようにワンショットで完結する仕組みと違い、拡張機能はイベント経由でデータをやり取りする分、実機で構造を確認しながら潰していく必要があった。
+      </p>
+
+      <h2>やってみて</h2>
+      <p>
+        ブックマークレットから拡張機能にする作業は、抽出ロジック自体はほぼ流用できた。差分は実質「SPA遷移のフック」「MutationObserverによる追従」「MAIN worldとのメッセージング」の3点だけだった。逆に言うと、ブックマークレットが「開いたら自動で動く」体験を持てないのはこの3点が原理的に無いからで、拡張機能にする意味がどこにあるのかがはっきりした。
+      </p>
+    </article>
+
+    <ArticleFooterNav currentHref="/tried/youtube-timestamp-extension/" currentTags={currentTags} backHref="/tried/" backLabel="← やってみた一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  .article-meta {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.25rem;
+  }
+
+  .article-body p,
+  .article-body ul,
+  .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+
+  .article-body ul,
+  .article-body ol {
+    padding-left: 2rem;
+  }
+
+  .article-body li {
+    margin-bottom: 0.25rem;
+  }
+
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .article-body a:hover {
+    text-decoration: underline;
+  }
+
+  .article-body code {
+    background: rgba(var(--accent-rgb), 0.08);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .article-image {
+    margin: 1.5rem auto;
+    text-align: center;
+    max-width: 560px;
+  }
+
+  .article-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--color-border, var(--color-codeblock-text));
+  }
+
+  .article-image figcaption {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+</style>

@@ -1,0 +1,231 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
+
+const currentTags = ['chrome-extension', 'dev'];
+
+const title = 'Chrome拡張機能でページ内部のJS変数（windowオブジェクト）を取得する方法 - hrの備忘録';
+const description =
+  'content scriptは既定でページのJSと隔離されており、window上の変数に直接アクセスできない。world: "MAIN" のcontent scriptとpostMessageを組み合わせて、DOMに出ていないページ内部のデータを安全に取得する方法をまとめた。';
+const path = '/tips/chrome-extension-window-object-access';
+const faqItems = [
+  {
+    question: 'isolated world と MAIN world の違いは？',
+    answer:
+      'isolated worldは通常のcontent scriptが動く環境で、ページのDOMは共有するがJSの実行環境（グローバル変数・関数）はページ側と分離されている。MAIN worldはページ自身のJSと同じ実行環境で、ページが定義したwindow上の変数に直接アクセスできる。',
+  },
+  {
+    question: 'MAIN worldのスクリプトから chrome.storage は使える？',
+    answer:
+      '使えない。MAIN worldはページと同じ実行環境になる代わりに、ほとんどのchrome.* APIへのアクセスを失う。データはpostMessageなどでisolated world側のcontent scriptに渡し、chrome.* APIはisolated world側で呼び出す必要がある。',
+  },
+  {
+    question: 'postMessageを使うときのセキュリティ上の注意点は？',
+    answer:
+      '送信先は targetOrigin に location.origin を指定し、任意のオリジンへ送らない。受信側では event.source が window自身であること、event.data.type が想定した値であることを確認してから処理する。他のスクリプトやiframeからの偽装メッセージを拾わないようにするため。',
+  },
+  {
+    question: 'この仕組みはYouTube以外のサイトでも使える？',
+    answer:
+      '使える。SPA（Single Page Application）で、実際のデータがDOMに描画される前段階でページ内部のJS変数に保持されているサイトなら同じ手法が使える。変数名や構造はサイトごとに異なるので、DevToolsのConsoleで window を調べて探す必要がある。',
+  },
+];
+const jsonLd = [
+  tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.07'), 'tips'),
+  faqPage(faqItems, path),
+];
+
+const manifestSnippet = `{
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["injected.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ]
+}`;
+
+const mainWorldSnippet = `// injected.js（world: "MAIN" で実行される）
+// ページと同じ実行環境なので window.ytInitialData に直接触れる
+(() => {
+  function post() {
+    window.postMessage(
+      { type: 'my-ext-data', payload: window.ytInitialData },
+      location.origin
+    );
+  }
+  post();
+})();`;
+
+const isolatedWorldSnippet = `// content.js（isolated world = 通常のcontent script）
+window.addEventListener('message', (e) => {
+  // 自分自身のwindowから、想定した type のメッセージだけ受け取る
+  if (e.source !== window || !e.data || e.data.type !== 'my-ext-data') return;
+  console.log(e.data.payload); // ここで初めて chrome.* API も使える
+});`;
+
+const requestResponseSnippet = `// injected.js 側：isolated world からの再送要求にも応える
+window.addEventListener('message', (e) => {
+  if (e.source === window && e.data?.type === 'my-ext-request') post();
+});
+post(); // 初回分
+
+// content.js 側：起動したらまず再送を要求する
+window.postMessage({ type: 'my-ext-request' }, location.origin);`;
+---
+
+<ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
+    <header class="article-header">
+      <a href="/tips/" class="back-link">&larr; Tips一覧</a>
+      <h1>Chrome拡張機能でページ内部のJS変数（windowオブジェクト）を取得する方法</h1>
+      <p class="article-date">2026.07</p>
+    </header>
+
+    <article class="article-body">
+      <p>
+        Chrome拡張機能でページの情報を取りたいとき、DOMを見れば足りることが多い。ただしSPAのサイトでは、実際のデータがDOMではなくページ内部のJS変数（<code>window.xxx</code>）にしか存在しないことがある。YouTubeの <code>window.ytInitialData</code> はその代表例で、content scriptから直接参照しようとしても <code>undefined</code> が返ってくる。この現象の原因と対処法をまとめる。
+      </p>
+
+      <nav class="toc" aria-label="目次">
+        <p class="toc-title">目次</p>
+        <ol>
+          <li><a href="#isolated">content scriptは既定でページと隔離されている</a></li>
+          <li><a href="#main-world">MAIN worldでcontent scriptを動かす</a></li>
+          <li><a href="#chrome-api">MAIN worldはchrome.*が使えない</a></li>
+          <li><a href="#timing">読み込みタイミングの罠</a></li>
+          <li><a href="#faq">よくある質問</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="isolated">content scriptは既定でページと隔離されている</h2>
+      <p>
+        content scriptはページと同じDOMを参照できるが、JSの実行環境（world）はページ本体とは別になっている。これは「isolated world」と呼ばれる仕組みで、拡張機能がページのグローバル変数を汚さない、逆にページ側のスクリプトが拡張機能の内部処理を覗けない、というセキュリティ上の意図的な設計になっている。
+      </p>
+      <p>
+        そのため、ページが <code>&lt;script&gt;</code> タグの中で <code>window.ytInitialData = &#123;...&#125;</code> のように変数を定義していても、content scriptから <code>window.ytInitialData</code> を読もうとすると <code>undefined</code> になる。同じ <code>window</code> という名前でも、content script側から見えているのは拡張機能専用の別の実行環境の <code>window</code> になる。
+      </p>
+
+      <h2 id="main-world">MAIN worldでcontent scriptを動かす</h2>
+      <p>
+        Manifest V3 では、content scriptを <code>world: "MAIN"</code> 指定でページ本体と同じ実行環境に注入できる。<code>manifest.json</code> の <code>content_scripts</code> に、通常のisolated world用と、MAIN world用の2つのエントリを並べて書く。
+      </p>
+      <CodeBlock code={manifestSnippet} language="json" />
+      <p>
+        MAIN world側のスクリプト（<code>injected.js</code>）は、ページ自身が書いたスクリプトと同じ扱いになる。だから <code>window.ytInitialData</code> に普通にアクセスできる。
+      </p>
+
+      <h2 id="chrome-api">MAIN worldはchrome.*が使えない</h2>
+      <p>
+        ここで注意が必要なのは、MAIN worldはページと同じ実行環境になる代わりに、<code>chrome.runtime</code> や <code>chrome.storage</code> といった拡張機能のAPIへのアクセスをほぼ失う点。せっかく取れたデータも、そのままでは拡張機能側の処理（保存する・他のUIに渡すなど）につなげられない。
+      </p>
+      <p>
+        そこで、MAIN worldからisolated worldへデータを橋渡しする手段として <code>window.postMessage</code> を使う。両方とも同じページの <code>window</code> を経由するので、DOM経由でイベントをやり取りするのと同じ感覚で使える。
+      </p>
+      <CodeBlock code={mainWorldSnippet} language="javascript" />
+      <CodeBlock code={isolatedWorldSnippet} language="javascript" />
+      <p>
+        受信側で <code>e.source !== window</code> と <code>e.data.type</code> のチェックを入れているのは、他のiframeやページ内の別スクリプトが送ってくる無関係な message イベントを拾わないため。<code>postMessage</code> の送信先も <code>'*'</code> ではなく <code>location.origin</code> を指定し、想定外のオリジンには送らないようにしている。
+      </p>
+
+      <h2 id="timing">読み込みタイミングの罠</h2>
+      <p>
+        実際に組んでみるとハマりやすいのが読み込み順の問題。MAIN world側のスクリプトが先に実行されてデータを1回だけpostMessageしても、isolated world側のリスナーの登録がそれより後になると取りこぼす。SPAのページ遷移やスクリプトの実行順は保証されないので、「1回送って終わり」の設計は事故りやすい。
+      </p>
+      <p>
+        対処は単純で、isolated world側が起動したタイミングで「再送してほしい」というリクエストを投げ、MAIN world側はそれを受けて改めてpostMessageする形にする。
+      </p>
+      <CodeBlock code={requestResponseSnippet} language="javascript" />
+      <p>
+        これで、isolated world側のリスナー登録が多少遅れても、明示的に再送要求すれば必ず最新のデータを受け取れる。YouTubeのようにSPA遷移でページ内データが更新されるサイトでは、遷移イベントのたびに同じ流れでpostMessageし直す構成にしておくと安定する。
+      </p>
+
+      <h2>関連記事</h2>
+      <ul>
+        <li><a href="/tried/youtube-timestamp-extension/">YouTubeのコメントからタイムスタンプを抽出するChrome拡張機能を作ってみた</a>（この仕組みを使ってYouTubeのチャプター情報を取得した実例）</li>
+        <li><a href="/tips/youtube-timestamp-bookmarklet/">YouTubeのコメントからタイムスタンプを抽出するブックマークレット</a></li>
+      </ul>
+
+      <h2 id="faq">よくある質問</h2>
+      <dl class="faq-list">
+        <dt>isolated world と MAIN world の違いは？</dt>
+        <dd>isolated worldは通常のcontent scriptが動く環境で、ページのDOMは共有するがJSの実行環境（グローバル変数・関数）はページ側と分離されている。MAIN worldはページ自身のJSと同じ実行環境で、ページが定義したwindow上の変数に直接アクセスできる。</dd>
+        <dt>MAIN worldのスクリプトから chrome.storage は使える？</dt>
+        <dd>使えない。MAIN worldはページと同じ実行環境になる代わりに、ほとんどのchrome.* APIへのアクセスを失う。データはpostMessageなどでisolated world側のcontent scriptに渡し、chrome.* APIはisolated world側で呼び出す必要がある。</dd>
+        <dt>postMessageを使うときのセキュリティ上の注意点は？</dt>
+        <dd>送信先は targetOrigin に location.origin を指定し、任意のオリジンへ送らない。受信側では event.source が window自身であること、event.data.type が想定した値であることを確認してから処理する。他のスクリプトやiframeからの偽装メッセージを拾わないようにするため。</dd>
+        <dt>この仕組みはYouTube以外のサイトでも使える？</dt>
+        <dd>使える。SPA（Single Page Application）で、実際のデータがDOMに描画される前段階でページ内部のJS変数に保持されているサイトなら同じ手法が使える。変数名や構造はサイトごとに異なるので、DevToolsのConsoleで window を調べて探す必要がある。</dd>
+      </dl>
+    </article>
+
+    <ArticleFooterNav currentHref="/tips/chrome-extension-window-object-access/" currentTags={currentTags} backHref="/tips/" backLabel="← Tips一覧に戻る" />
+</ArticleLayout>
+
+<style>
+  .article-header { margin-bottom: 2rem; }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .article-body h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border-strong);
+    padding-bottom: 0.25rem;
+  }
+  .article-body p, .article-body ul, .article-body ol {
+    margin-bottom: 1rem;
+    color: var(--color-text);
+  }
+  .article-body li { margin-bottom: 0.25rem; }
+  .article-body code {
+    background: var(--color-code-bg);
+    color: var(--color-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  .toc {
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-bg-subtle);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+  .toc ol { margin-bottom: 0; padding-left: 1.5rem; }
+  .toc li { margin-bottom: 0.25rem; }
+  .toc a { color: var(--color-accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .faq-list dt {
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--color-text);
+  }
+  .faq-list dd {
+    margin-left: 0;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+</style>

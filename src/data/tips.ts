@@ -11,6 +11,7 @@ export interface TipPost {
 }
 
 export const tipPosts: TipPost[] = [
+  { title: 'Chrome拡張機能でページ内部のJS変数（windowオブジェクト）を取得する方法', href: '/tips/chrome-extension-window-object-access/', desc: 'content scriptはページのJSと隔離されていてwindow上の変数に直接アクセスできない。world: "MAIN" とpostMessageを組み合わせた取得方法をまとめた。', date: '2026.07', tags: ['chrome-extension', 'dev'] },
   { title: '音声・動画のファイル形式比較まとめ', href: '/tips/audio-video-file-formats/', desc: 'MP3・AAC・Opus・H.264・AV1 など主要なファイル形式の違いと、YouTube・Netflix・X が何を使っているかをまとめた。', date: '2026.06', tags: ['dev'] },
   { title: 'ゼロ幅文字の仕組みと検出・除去方法まとめ', href: '/tips/zero-width-characters/', desc: 'X(Twitter)のリンク化回避にも使われる「ゼロ幅文字」の正体を解説。4種類の違い、コピペでの混入経路、検出・除去方法をまとめた。', date: '2026.06', tags: ['twitter', 'dev'] },
   { title: 'コピー＆ペーストで書式がつく時とテキストだけになる時の違い', href: '/tips/clipboard-rich-plain-paste/', desc: 'クリップボードに複数形式が同時に入る仕組みと、コピー元×貼り付け先の組み合わせ別パターン、書式なしペーストの方法をまとめた。', date: '2026.06', tags: ['macos'] },
