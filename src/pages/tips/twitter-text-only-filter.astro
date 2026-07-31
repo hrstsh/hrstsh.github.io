@@ -4,8 +4,8 @@ import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate } from '../../utils/jsonLd';
 
-const title = 'X(Twitter)のタイムラインで画像・動画を非表示にする方法（テキストのみ表示） - hrの備忘録';
-const description = 'X(Twitter) のタイムラインで画像や動画を非表示にして、テキストツイートだけを表示するやり方。ブックマークレットで今すぐ試すか、ページを開くたび自動で効く Chrome 拡張で常用できる。';
+const title = 'X(Twitter)で画像を非表示にする方法（タイムラインをテキストだけにする） - hrの備忘録';
+const description = 'X(Twitter) のタイムラインで画像・動画付きのツイートを非表示にし、テキストだけを表示する方法。X の設定に該当する項目はないので、ブックマークレットか Chrome 拡張で消す。コードはコピーしてそのまま使える。';
 const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, '/tips/twitter-text-only-filter', toIsoDate('2026.02'), 'tips');
 
 const bookmarkletCode = `javascript:(function(){const id='twitter-text-only';let s=document.getElementById(id);if(s){s.remove();}else{s=document.createElement('style');s.id=id;s.textContent='div[data-testid="cellInnerDiv"]:has(article):has(div[data-testid="tweetPhoto"]),div[data-testid="cellInnerDiv"]:has(article):has(video){display:none!important;}';document.head.appendChild(s);}})();`;
@@ -90,7 +90,7 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
 <ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
-      <h1>X(Twitter)のタイムラインで画像・動画を非表示にする方法（テキストのみ表示）</h1>
+      <h1>X(Twitter)で画像を非表示にする方法（タイムラインをテキストだけにする）</h1>
       <p class="article-date">2026.02</p>
     </header>
 
@@ -187,6 +187,13 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
       </p>
 
       <h2>よくある質問</h2>
+
+      <h3>X の設定で画像を非表示にできる？</h3>
+      <p>
+        ブラウザ版の設定を一通り見たかぎり、タイムラインの画像をまとめて隠す項目はない。
+        データ利用の設定にあるのは画質や動画の自動再生の切り替えで、画像そのものを消すものではない。
+        X 側で完結しないので、表示するブラウザの側で消すことになる。
+      </p>
 
       <h3>画像だけ非表示にして、動画は残したい</h3>
       <p>
