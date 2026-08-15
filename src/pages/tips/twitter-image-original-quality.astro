@@ -8,6 +8,7 @@ const title = 'X(Twitter)の画像をオリジナル画質で保存する方法 
 const description = 'X(Twitter) の画像が画質落ちる・劣化する理由と、高画質で保存する方法。URL に :orig を付けるだけでオリジナル画質取得。ブックマークレット化の手順も紹介。';
 const path = '/tips/twitter-image-original-quality';
 const faqItems = [
+  { question: 'Xの画像を保存する方法は？', answer: '画像を右クリックして「名前を付けて画像を保存」を選べば保存できる。ただしこの方法だとXが配信時に圧縮した低画質版が保存される。画質を落とさず保存したい場合は、画像URLの末尾に :orig を追加してから保存する。' },
   { question: 'Twitterの画像を高画質で保存するには？', answer: '画像URLの末尾に :orig を追加する。例: https://pbs.twimg.com/media/xxx.jpg の場合は https://pbs.twimg.com/media/xxx.jpg:orig にアクセスして右クリックで保存する。新しい形式のURLでは ?name=orig をパラメータとして追加する。' },
   { question: 'なぜTwitterの画像は劣化するのか？', answer: 'X(Twitter)は表示速度を優先して、画像を自動的に圧縮・リサイズして配信している。右クリックで保存した画像はこの圧縮版になるため、本来の画質より劣化している。' },
   { question: ':orig とは？', answer: 'X(Twitter)の画像URLに付けるパラメータで、オリジナル画質の画像を取得するための指定。:large、:medium、:small など他のサイズ指定もあるが、:orig が最高画質。' },
@@ -137,6 +138,8 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
 
       <h2>よくある質問</h2>
       <dl class="faq-list">
+        <dt>Xの画像を保存する方法は？</dt>
+        <dd>画像を右クリックして「名前を付けて画像を保存」を選べば保存できる。ただしこの方法だとXが配信時に圧縮した低画質版が保存される。画質を落とさず保存したい場合は、画像URLの末尾に :orig を追加してから保存する。</dd>
         <dt>Twitterの画像を高画質で保存するには？</dt>
         <dd>画像URLの末尾に :orig を追加する。例: https://pbs.twimg.com/media/xxx.jpg の場合は https://pbs.twimg.com/media/xxx.jpg:orig にアクセスして右クリックで保存する。新しい形式のURLでは ?name=orig をパラメータとして追加する。</dd>
         <dt>なぜTwitterの画像は劣化するのか？</dt>
