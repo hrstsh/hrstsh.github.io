@@ -122,14 +122,15 @@ export function tipArticle(
   description: string | undefined,
   path: string,
   datePublished: string,
-  category: 'tips' | 'tried'
+  category: 'tips' | 'tried',
+  dateModified?: string
 ) {
   const url = path.startsWith('http') ? path : new URL(path, SITE).href;
   const breadcrumbs =
     category === 'tips'
       ? [{ name: 'トップ', url: '/' }, { name: 'Tips', url: '/tips' }, { name: headline, url: path }]
       : [{ name: 'トップ', url: '/' }, { name: 'やってみた', url: '/tried' }, { name: headline, url: path }];
-  return article(headline, description, url, datePublished, undefined, breadcrumbs);
+  return article(headline, description, url, datePublished, dateModified, breadcrumbs);
 }
 
 /** FAQ スキーマ（AI検索・引用向け） */
