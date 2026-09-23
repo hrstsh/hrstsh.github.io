@@ -32,7 +32,7 @@ const currentTags = ['twitter', 'bookmarklet'];
 
     <article class="article-body">
       <p>
-        X(Twitter) の画像を右クリックで保存すると、縮小された版が保存される。画像 URL の <code>name=</code> を <code>orig</code> に変えれば、投稿されたときの画質のまま保存できる。スマホなら X アプリの長押しメニューで 4K に切り替えてから保存すればいい。
+        X(Twitter) の画像を右クリックで保存すると、手元に残るのは X が縮小した版になる。画像 URL の <code>name=</code> を <code>orig</code> に変えれば、投稿されたときの画質のまま保存できる。スマホなら X アプリの長押しメニューで 4K に切り替えてから保存すればいい。
       </p>
 
       <h2>なぜ画質が落ちるのか</h2>
@@ -95,7 +95,7 @@ const currentTags = ['twitter', 'bookmarklet'];
         名前に反して <code>large</code> でも長辺は 2048px までで、この写真だと画素数は元の 3 分の 1 もない。<code>name=</code> を付けずに開くと <code>medium</code> と同じ 1200px の画像が返ってきた。
       </p>
       <p>
-        <code>4096x4096</code> と <code>orig</code> は、この画像ではファイルの中身まで完全に同じだった。ほかに <code>900x900</code>・<code>360x360</code>・<code>240x240</code> も指定できる。<code>2048x2048</code> のような一覧にないサイズを指定すると 404 になる。
+        <code>4096x4096</code> と <code>orig</code> はこの画像ではファイルの中身まで完全に同じだった。ほかに <code>900x900</code>・<code>360x360</code>・<code>240x240</code> も指定できる。<code>2048x2048</code> のような一覧にないサイズを指定すると 404 になる。
       </p>
       <p>
         元の画像が小さければ、どれを指定しても結果は変わらない。2017 年に投稿された 1024×576 の画像で試したら、<code>medium</code>・<code>large</code>・<code>orig</code> がまったく同じファイルだった。<code>orig</code> で保存し直しても画質が変わらないなら、投稿された時点でその解像度だったと考えていい。
@@ -175,7 +175,7 @@ https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
         <code>format=png</code> にすれば劣化しないように思えるけど、元が JPEG なら意味はない。<code>format=png&amp;name=large</code> は開けて 3.1MB の PNG が返ってくる。ただ中身は 2048px に縮小した画像を PNG にし直したもので、ファイルが JPEG 版（319KB）の 10 倍近くに膨らむだけだった。
       </p>
       <p>
-        しかも <code>name=orig</code> と組み合わせると、<code>png</code> でも <code>webp</code> でも 404 になる。<code>orig</code> は保存されている元のファイルを形式を変えずに返すだけらしい。同じ理屈で、PNG のまま投稿された画像は <code>format=jpg&amp;name=orig</code> では開けないはず。<code>orig</code> で 404 になったら <code>format=png</code> を試してみるといい。
+        しかも <code>name=orig</code> と組み合わせると、<code>png</code> でも <code>webp</code> でも 404 になる。形式を変えられるのは <code>large</code> などの縮小版だけで、<code>orig</code> は変えられない。同じ理屈で、PNG のまま投稿された画像は <code>format=jpg&amp;name=orig</code> では開けないはず。<code>orig</code> で 404 になったら <code>format=png</code> を試してみるといい。
       </p>
 
       <h2>注意</h2>
@@ -188,7 +188,7 @@ https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
 
       <h2>まとめて保存したいとき</h2>
       <p>
-        1 枚ずつではなく、あるアカウントの画像をまとめて保存したいなら<a href="/tips/twitter-media-url-extractor/">メディア欄から画像 URL を一括で取り出す方法</a>がある。取り出した URL はそのまま <code>name=orig</code> になっている。タイムラインを見ながら条件に合う画像を自動で元の画質で開く Chrome 拡張も<a href="/tried/twitter-image-opener/">作ってみた</a>。
+        1 枚ずつではなく、あるアカウントの画像をまとめて保存したいなら<a href="/tips/twitter-media-url-extractor/">メディア欄から画像 URL を一括で取り出す方法</a>がある。取り出した URL はそのまま <code>name=orig</code> になっている。タイムラインを見ながら条件に合う画像を元の画質で自動的に開く Chrome 拡張も<a href="/tried/twitter-image-opener/">作ってみた</a>。
       </p>
 
       <h2>よくある質問</h2>
