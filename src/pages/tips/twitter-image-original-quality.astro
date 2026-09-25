@@ -5,17 +5,21 @@ import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const title = 'X(Twitter)の画像をオリジナル画質で保存する方法 - hrの備忘録';
-const description = 'X(Twitter) の画像が画質落ちる・劣化する理由と、高画質で保存する方法。URL に :orig を付けるだけでオリジナル画質取得。ブックマークレット化の手順も紹介。';
+const description = 'X(Twitter) の画像が劣化する理由と、元の画質のまま保存する方法。URL の name=orig 指定、:orig、スマホアプリの「4Kを読み込む」、ブックマークレットを紹介。サイズ指定ごとの解像度も実測した。';
 const path = '/tips/twitter-image-original-quality';
 const faqItems = [
-  { question: 'Xの画像を保存する方法は？', answer: '画像を右クリックして「名前を付けて画像を保存」を選べば保存できる。ただしこの方法だとXが配信時に圧縮した低画質版が保存される。画質を落とさず保存したい場合は、画像URLの末尾に :orig を追加してから保存する。' },
-  { question: 'Twitterの画像を高画質で保存するには？', answer: '画像URLの末尾に :orig を追加する。例: https://pbs.twimg.com/media/xxx.jpg の場合は https://pbs.twimg.com/media/xxx.jpg:orig にアクセスして右クリックで保存する。新しい形式のURLでは ?name=orig をパラメータとして追加する。' },
-  { question: 'なぜTwitterの画像は劣化するのか？', answer: 'X(Twitter)は表示速度を優先して、画像を自動的に圧縮・リサイズして配信している。右クリックで保存した画像はこの圧縮版になるため、本来の画質より劣化している。' },
-  { question: ':orig とは？', answer: 'X(Twitter)の画像URLに付けるパラメータで、オリジナル画質の画像を取得するための指定。:large、:medium、:small など他のサイズ指定もあるが、:orig が最高画質。' },
+  { question: 'Xの画像を保存する方法は？', answer: 'PC なら画像を右クリックして「名前を付けて画像を保存」で保存できる。ただしこの方法だと X が配信している縮小版が保存される。画質を落とさず保存したい場合は、画像を新しいタブで開き、URL の name= の部分を name=orig に書き換えてから保存する。スマホは X アプリで画像を長押しし、4K で読み込んでから保存する。' },
+  { question: 'Twitterの画像を高画質で保存するには？', answer: '画像 URL の name= を orig にする。例: https://pbs.twimg.com/media/xxx?format=jpg&name=small なら https://pbs.twimg.com/media/xxx?format=jpg&name=orig を開いて保存する。format=webp になっている場合は format=jpg にも書き換える。https://pbs.twimg.com/media/xxx.jpg のような古い形式の URL なら、末尾に :orig を付ける。' },
+  { question: 'スマホ（iPhone・Android）でXの画像を高画質で保存するには？', answer: 'X アプリで画像を全画面表示して長押しする。iPhone では「4Kを読み込む」を選んで高画質版に切り替えてから保存する。Android では「4K画像を保存」を選ぶ。項目が出ない場合は、投稿された画像がもともと大きくないか、データセーバーがオンになっている。' },
+  { question: 'なぜTwitterの画像は劣化するのか？', answer: 'X(Twitter) は 1 枚の画像を複数のサイズで配信していて、タイムラインや投稿ページでは画面に合わせた縮小版を読み込んでいる。右クリックで保存すると、この縮小版が保存される。name=large でも長辺は 2048px までに縮小される。' },
+  { question: ':orig とは？', answer: 'X(Twitter) の古い形式の画像 URL に付けるサイズ指定で、投稿された元の画質の画像を取得できる。今の形式の URL では name=orig が同じ役割になる。' },
 ];
-const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
+const jsonLd = [
+  tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips', toIsoDate('2026.09')),
+  faqPage(faqItems, path),
+];
 
-const bookmarkletCode = `javascript:(function(){var u=location.href;if(u.match(/pbs\\.twimg\\.com\\/media/)){if(u.includes('?')){location.href=u.replace(/name=[^&]+/,'name=orig');}else{location.href=u.split(':')[0]+':orig';}}else{alert('Twitter/Xの画像URLで実行してください');}})();`;
+const bookmarkletCode = `javascript:(function(){var u=new URL(location.href);if(u.hostname!=='pbs.twimg.com'||u.pathname.indexOf('/media/')!==0){alert('X(Twitter)の画像を開いた状態で実行してください');return;}var m=u.pathname.match(/^(\\/media\\/[^.:]+)\\.(\\w+)/);if(m){u.pathname=m[1];u.searchParams.set('format',m[2]);}var f=u.searchParams.get('format');if(!f||f==='webp'){u.searchParams.set('format','jpg');}u.searchParams.set('name','orig');location.href=u.toString();})();`;
 const currentTags = ['twitter', 'bookmarklet'];
 ---
 
@@ -23,58 +27,120 @@ const currentTags = ['twitter', 'bookmarklet'];
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
       <h1>X(Twitter)の画像をオリジナル画質で保存する方法</h1>
-      <p class="article-date">2026.02</p>
+      <p class="article-date">2026.02（2026.09 更新）</p>
     </header>
 
     <article class="article-body">
       <p>
-        X(Twitter) の画像は通常、圧縮された状態で表示されてる。でも画像 URL に <code>:orig</code> を付けるだけで、オリジナル画質の画像を取得できる。
+        X(Twitter) の画像を右クリックで保存すると、手元に残るのは X が縮小した版になる。画像 URL の <code>name=</code> を <code>orig</code> に変えれば、投稿されたときの画質のまま保存できる。スマホなら X アプリの長押しメニューで 4K に切り替えてから保存すればいい。
       </p>
 
       <h2>なぜ画質が落ちるのか</h2>
       <p>
-        X(Twitter) は表示速度を優先して、画像を自動的に圧縮・リサイズして配信してる。右クリックで保存した画像は、この圧縮版になるため、本来の画質より劣化してる。
+        X は 1 枚の画像を何種類かのサイズで配信していて、タイムラインや投稿ページでは画面に合わせた縮小版を読み込んでる。右クリックで保存されるのはこの縮小版なので、元の画像より解像度が低い。
       </p>
-
-      <h2>オリジナル画質で取得する方法</h2>
-
-      <h3>方法1: :orig を追加する（推奨）</h3>
       <p>
-        画像の URL の末尾に <code>:orig</code> を追加する。
+        どのサイズが返ってくるかは、画像 URL の <code>name=</code> で決まる。
       </p>
+      <pre><code class="language-text">https://pbs.twimg.com/media/ABC123xyz?format=jpg&amp;name=small</code></pre>
+
+      <h2>サイズ指定ごとの実際の大きさ</h2>
+      <p>
+        3600×2400 の写真で <code>name=</code> を変えながらダウンロードして、実際の解像度とファイルサイズを比べてみた。
+      </p>
+      <div class="table-wrapper">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>name の値</th>
+              <th>保存される解像度</th>
+              <th>ファイルサイズ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>thumb</code></td>
+              <td>150×150（正方形に切り抜き）</td>
+              <td>6 KB</td>
+            </tr>
+            <tr>
+              <td><code>small</code></td>
+              <td>680×453</td>
+              <td>38 KB</td>
+            </tr>
+            <tr>
+              <td><code>medium</code></td>
+              <td>1200×800</td>
+              <td>103 KB</td>
+            </tr>
+            <tr>
+              <td><code>large</code></td>
+              <td>2048×1365</td>
+              <td>319 KB</td>
+            </tr>
+            <tr>
+              <td><code>4096x4096</code></td>
+              <td>3600×2400</td>
+              <td>1.18 MB</td>
+            </tr>
+            <tr>
+              <td><code>orig</code></td>
+              <td>3600×2400</td>
+              <td>1.18 MB</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        名前に反して <code>large</code> でも長辺は 2048px までで、この写真だと画素数は元の 3 分の 1 もない。<code>name=</code> を付けずに開くと <code>medium</code> と同じ 1200px の画像が返ってきた。
+      </p>
+      <p>
+        <code>4096x4096</code> と <code>orig</code> はこの画像ではファイルの中身まで完全に同じだった。ほかに <code>900x900</code>・<code>360x360</code>・<code>240x240</code> も指定できる。<code>2048x2048</code> のような一覧にないサイズを指定すると 404 になる。
+      </p>
+      <p>
+        元の画像が小さければ、どれを指定しても結果は変わらない。2017 年に投稿された 1024×576 の画像で試したら、<code>medium</code>・<code>large</code>・<code>orig</code> がまったく同じファイルだった。<code>orig</code> で保存し直しても画質が変わらないなら、投稿された時点でその解像度だったと考えていい。
+      </p>
+
+      <h2>PC で元の画質のまま保存する</h2>
+
+      <h3>方法1: URL の name を orig に書き換える</h3>
       <ol>
-        <li>保存したい画像を右クリック → <strong>画像アドレスをコピー</strong></li>
-        <li>コピーした URL をブラウザのアドレスバーに貼り付ける</li>
-        <li>URL の末尾に <code>:orig</code> を追加</li>
-        <li>Enter で開いて、右クリック → <strong>名前を付けて画像を保存</strong></li>
+        <li>保存したい画像をクリックして大きく表示する</li>
+        <li>画像を右クリック → <strong>新しいタブで画像を開く</strong></li>
+        <li>アドレスバーの URL の <code>name=</code> の部分を <code>name=orig</code> に書き換えて Enter</li>
+        <li>開いた画像を右クリック → <strong>名前を付けて画像を保存</strong></li>
       </ol>
 
       <p>例：</p>
+      <pre><code class="language-text">元のURL:
+https://pbs.twimg.com/media/ABC123xyz?format=jpg&amp;name=small
+
+オリジナル画質:
+https://pbs.twimg.com/media/ABC123xyz?format=jpg&amp;name=orig</code></pre>
+
+      <p>
+        ひとつハマりどころがある。URL が <code>format=webp</code> になっていると、<code>name=orig</code> にしただけでは 404 で開けない。ログインせずに投稿ページを開いたときは、画像が <code>format=webp&amp;name=small</code> で読み込まれていた。この場合は <code>format=jpg</code> にも書き換える。
+      </p>
+
+      <h3>方法2: 古い形式の URL には :orig を付ける</h3>
+      <p>
+        <code>.jpg</code> のような拡張子が付いた古い形式の URL なら、末尾に <code>:orig</code> を付ける。この形式も今のところ使える。
+      </p>
       <pre><code class="language-text">元のURL:
 https://pbs.twimg.com/media/ABC123xyz.jpg
 
 オリジナル画質:
 https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
-
-      <h3>方法2: ?name=orig を追加する</h3>
       <p>
-        新しい形式の URL では、<code>?name=orig</code> をパラメータとして追加する。
-      </p>
-
-      <p>例：</p>
-      <pre><code class="language-text">元のURL:
-https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=small
-
-オリジナル画質:
-https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
-
-      <p>
-        <code>name=small</code> や <code>name=large</code> の部分を <code>name=orig</code> に変更するだけ。
+        <code>:large</code> や <code>:small</code> も同じように使えて、返ってくるサイズは <code>name=</code> の同名の指定と同じだった。
       </p>
 
       <h2>ブックマークレットで1クリック化</h2>
       <p>
-        毎回 URL をコピーして編集するのが面倒なら、ブックマークレットを使うと便利。画像を開いた状態でクリックすると、自動的にオリジナル画質の URL に切り替わる。
+        毎回 URL を書き換えるのが面倒なら、ブックマークレットにしておくと楽。画像を新しいタブで開いた状態で実行すると、元の画質の URL に切り替わる。<code>format=webp</code> は <code>jpg</code> に直し、<code>.jpg:large</code> のような古い形式も新しい形式に変換してから <code>name=orig</code> を付ける。
+      </p>
+      <p>
+        以前このページに載せていた版は、古い形式の URL と <code>format=webp</code> の URL で正しく動いていなかった。登録済みの人は入れ替えてほしい。
       </p>
 
       <p>
@@ -86,66 +152,53 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
       <ol>
         <li>保存したい画像を右クリック → <strong>新しいタブで画像を開く</strong></li>
         <li>ブックマークレットをクリック</li>
-        <li>オリジナル画質のURLに切り替わる</li>
+        <li>オリジナル画質の URL に切り替わる</li>
         <li>右クリック → <strong>名前を付けて画像を保存</strong></li>
       </ol>
 
-      <h2>画質の違い</h2>
+      <h2>スマホ（iPhone・Android）で保存する</h2>
       <p>
-        通常保存とオリジナル画質の違いは、元画像の解像度による：
+        スマホは X アプリから保存するのが早い。画像をタップして全画面で開き、長押しするとメニューが出る。iPhone のアプリなら「4Kを読み込む」を選び、高画質版に切り替わってから保存する。Android のアプリでは同じメニューに「4K画像を保存」がある。
       </p>
-      <ul>
-        <li>高解像度のイラストや写真: 違いが顕著</li>
-        <li>スクリーンショット: 元から圧縮されてるので違いは少ない</li>
-        <li>低解像度の画像: ほとんど違いがない</li>
-      </ul>
+      <p>
+        4K の項目が出てこないときは、投稿された画像がもともと大きくないことが多い。自分の側でデータセーバーをオンにしていても出ないので、設定とプライバシー →「アクセシビリティ、表示、言語」→「データ利用の設定」を確認する。
+      </p>
+      <p>
+        ちゃんと保存できたかは、iPhone なら写真アプリで画像を開いて上にスワイプすると解像度が表示される。長辺が 2048px ちょうどなら、縮小版のまま保存されてる可能性が高い。
+      </p>
+      <p>
+        スマホのブラウザでも、画像の URL を開けるなら PC と同じく <code>name=orig</code> に書き換えて長押しで保存できる。
+      </p>
 
-      <h2>その他のパラメータ</h2>
+      <h2>PNG や WebP にすれば劣化しない？</h2>
       <p>
-        <code>:orig</code> 以外にも、次のような指定ができる：
+        <code>format=png</code> にすれば劣化しないように思えるけど、元が JPEG なら意味はない。<code>format=png&amp;name=large</code> は開けて 3.1MB の PNG が返ってくる。ただ中身は 2048px に縮小した画像を PNG にし直したもので、ファイルが JPEG 版（319KB）の 10 倍近くに膨らむだけだった。
       </p>
-      <ul>
-        <li><code>:large</code> - 大サイズ（オリジナルより小さい場合がある）</li>
-        <li><code>:medium</code> - 中サイズ</li>
-        <li><code>:small</code> - 小サイズ</li>
-        <li><code>:thumb</code> - サムネイル</li>
-      </ul>
       <p>
-        基本的には <code>:orig</code> を使えば最高画質が得られる。
+        しかも <code>name=orig</code> と組み合わせると、<code>png</code> でも <code>webp</code> でも 404 になる。形式を変えられるのは <code>large</code> などの縮小版だけで、<code>orig</code> は変えられない。同じ理屈で、PNG のまま投稿された画像は <code>format=jpg&amp;name=orig</code> では開けないはず。<code>orig</code> で 404 になったら <code>format=png</code> を試してみるといい。
       </p>
 
       <h2>注意</h2>
       <ul>
-        <li>この方法は<strong>非公式の仕様</strong>で、X(Twitter) の仕様変更で将来使えなくなる可能性がある。</li>
-        <li>元画像が低画質やスクリーンショットの場合、<code>:orig</code> を付けても画質は向上しない。</li>
-        <li>非常に大きい画像（例: 10000px以上）は、X 側で自動的に縮小されてる場合がある。</li>
-        <li>GIF 画像や MP4 動画には効果がない。</li>
-        <li>画像を保存する際は、著作権に注意。</li>
+        <li>URL のサイズ指定は<strong>非公式の仕様</strong>で、X の仕様変更で使えなくなる可能性がある。この記事の内容は 2026 年 9 月に確認した。</li>
+        <li><code>orig</code> で取れるのは投稿された時点の画像なので、元より高画質になるわけではない。</li>
+        <li>X では GIF も動画（MP4）として扱われるので、この方法は使えない。</li>
+        <li>保存した画像を再投稿・加工するときは著作権に注意する。</li>
       </ul>
 
-      <h2>こんな時に便利</h2>
-      <ul>
-        <li>イラストレーターが投稿した高解像度のイラストを保存したい</li>
-        <li>写真家の投稿した写真を壁紙にしたい</li>
-        <li>細かい文字が読めないくらい圧縮された画像を高画質で見たい</li>
-        <li>自分の投稿した画像をオリジナル画質で保存し直したい</li>
-      </ul>
-
-      <h2>補足：Chrome拡張機能もある</h2>
+      <h2>まとめて保存したいとき</h2>
       <p>
-        自動的にオリジナル画質で保存できる Chrome 拡張機能もいくつか公開されてるけど、ブックマークレットなら拡張機能をインストールせずに使える。
+        1 枚ずつではなく、あるアカウントの画像をまとめて保存したいなら<a href="/tips/twitter-media-url-extractor/">メディア欄から画像 URL を一括で取り出す方法</a>がある。取り出した URL はそのまま <code>name=orig</code> になっている。タイムラインを見ながら条件に合う画像を元の画質で自動的に開く Chrome 拡張も<a href="/tried/twitter-image-opener/">作ってみた</a>。
       </p>
 
       <h2>よくある質問</h2>
       <dl class="faq-list">
-        <dt>Xの画像を保存する方法は？</dt>
-        <dd>画像を右クリックして「名前を付けて画像を保存」を選べば保存できる。ただしこの方法だとXが配信時に圧縮した低画質版が保存される。画質を落とさず保存したい場合は、画像URLの末尾に :orig を追加してから保存する。</dd>
-        <dt>Twitterの画像を高画質で保存するには？</dt>
-        <dd>画像URLの末尾に :orig を追加する。例: https://pbs.twimg.com/media/xxx.jpg の場合は https://pbs.twimg.com/media/xxx.jpg:orig にアクセスして右クリックで保存する。新しい形式のURLでは ?name=orig をパラメータとして追加する。</dd>
-        <dt>なぜTwitterの画像は劣化するのか？</dt>
-        <dd>X(Twitter)は表示速度を優先して、画像を自動的に圧縮・リサイズして配信している。右クリックで保存した画像はこの圧縮版になるため、本来の画質より劣化している。</dd>
-        <dt>:orig とは？</dt>
-        <dd>X(Twitter)の画像URLに付けるパラメータで、オリジナル画質の画像を取得するための指定。:large、:medium、:small など他のサイズ指定もあるが、:orig が最高画質。</dd>
+        {faqItems.map((item) => (
+          <>
+            <dt>{item.question}</dt>
+            <dd>{item.answer}</dd>
+          </>
+        ))}
       </dl>
 
     </article>
@@ -191,13 +244,6 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
     color: var(--color-text);
   }
 
-  .article-body h4 {
-    font-size: 1.1rem;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    color: var(--color-text-muted);
-  }
-
   .article-body p, .article-body ul, .article-body ol {
     margin-bottom: 1rem;
     color: var(--color-text);
@@ -236,9 +282,34 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&name=orig</code></pre>
     padding: 0;
   }
 
+  .table-wrapper {
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
 
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
 
+  .info-table th,
+  .info-table td {
+    border: 1px solid var(--color-border-strong);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
 
+  .info-table th {
+    background: var(--color-bg-subtle);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .info-table td:first-child,
+  .info-table td:last-child {
+    white-space: nowrap;
+  }
 
   .faq-list dt {
     font-weight: 600;
