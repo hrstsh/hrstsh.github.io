@@ -4,8 +4,8 @@ import ArticleFooterNav from '../../components/ArticleFooterNav.astro';
 import CodeBlock from '../../components/CodeBlock.astro';
 import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
-const title = 'macOSでファイルパスを一発でターミナルにコピーする - hrの備忘録';
-const description = 'macOS で Finder のファイルパスをターミナルに簡単にコピーする5つの方法。Option+右クリック、ドラッグ&ドロップなど。';
+const title = 'MacのFinderでファイルパスをコピーする方法（ターミナルへの貼り付けも） - hrの備忘録';
+const description = 'Mac の Finder でファイルやフォルダのパスをコピーする5つの方法。Option+右クリックの「パス名をコピー」や Cmd+Option+C、ターミナルへのドラッグ&ドロップなど。';
 const path = '/tips/macos-copy-file-path';
 const faqItems = [
   { question: 'macOSでファイルパスをコピーする方法は？', answer: 'Option+右クリックで「～のパス名をコピー」を選ぶ。または Cmd+Option+C のショートカット。ターミナルに直接貼りたい場合は、Finderからファイルをターミナルにドラッグ&ドロップするとパスが入力される。' },
@@ -41,7 +41,7 @@ const currentTags = ['macos'];
 <ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">← Tips一覧</a>
-      <h1>macOSでファイルパスを一発でターミナルにコピーする</h1>
+      <h1>MacのFinderでファイルパスをコピーする方法（ターミナルへの貼り付けも）</h1>
       <p class="article-date">2026.02</p>
     </header>
 
