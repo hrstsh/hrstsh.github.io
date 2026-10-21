@@ -190,7 +190,7 @@ cat -v file.txt</code></pre>
         ZWS（<code>U+200B</code>）の UTF-8 バイト列は <code>e2 80 8b</code>。ZWNJ は <code>e2 80 8c</code>、ZWJ は <code>e2 80 8d</code>。まとめて除去したい場合は sed を複数回パイプするか、perl で書くとまとめやすい。
       </p>
       <pre><code class="language-bash"># perl でゼロ幅文字を一括除去
-perl -CSD -pe 's/[\x&#123;200B}-\x&#123;200D}\x&#123;FEFF}]//g' input.txt &gt; output.txt</code></pre>
+perl -CSD -pe 's/[\x&#123;200B&#125;-\x&#123;200D&#125;\x&#123;FEFF&#125;]//g' input.txt &gt; output.txt</code></pre>
 
       <h2 id="use">あえて使う場面</h2>
       <p>

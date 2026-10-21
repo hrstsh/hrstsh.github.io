@@ -5,7 +5,7 @@
 ## プロジェクト概要
 
 - **目的**: GitHub Pages用の個人サイト
-- **技術スタック**: Astro 4.x, TypeScript
+- **技術スタック**: Astro 7.x, TypeScript
 - **デプロイ**: GitHub Actions (自動)
 - **URL**: https://hrstsh.com
 

@@ -6,7 +6,7 @@ Personal site built with Astro. Hosted on GitHub Pages with custom domain.
 
 ## About
 
-This repository hosts the source code for my personal website. The site is built with Astro 4.x and automatically deployed via GitHub Actions.
+This repository hosts the source code for my personal website. The site is built with Astro 7.x and automatically deployed via GitHub Actions.
 
 ## Site Structure
 
@@ -65,7 +65,7 @@ https://hrstsh.com/
 
 ### Prerequisites
 
-- Node.js 20.x or later
+- Node.js 22.22 or later (`.nvmrc`: 24)
 - npm
 
 ### Setup
