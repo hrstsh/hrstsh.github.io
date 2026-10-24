@@ -42,7 +42,7 @@ src/
 ├── utils/        jsonLd.ts（構造化データ）、articles.ts（記事一覧の集約）
 └── styles/       global.css（色・フォントのトークン）
 scripts/          generate-sitemap.js、Git 用のスクリプト
-public/           画像・ファビコン・robots.txt・CNAME
+public/           画像・ファビコン・robots.txt
 ```
 
 ## 記事を追加するとき
@@ -64,7 +64,7 @@ public/           画像・ファビコン・robots.txt・CNAME
 ## デプロイ
 
 - `main` に push すると `.github/workflows/deploy.yml` がビルドして GitHub Pages に公開する。Actions の画面から手動でも実行できる
-- 独自ドメインは `public/CNAME`（hrstsh.com）、リポジトリの Settings → Pages、DNS の A レコード（`185.199.108.153`〜`185.199.111.153` の 4 つ）で設定してある
+- 独自ドメイン（hrstsh.com）はリポジトリの Settings → Pages で設定している
 
 ## 運用メモ
 
