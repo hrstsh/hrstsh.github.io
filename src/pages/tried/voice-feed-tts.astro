@@ -72,51 +72,51 @@ const currentTags = ['macos', 'automation'];
 
     <article class="article-body">
       <p>
-        Mac 上で動かしている bot のログ監視結果や通知を音声で受け取りたくなりました。定期的な読み上げや通知用途でテキスト→音声の変換基盤が必要だったので、ローカルで動く TTS を検討しました。「ローカル・永年無料」「日本語の流暢さを最優先」「カスタム性を重視」を条件に、VOICEVOX を主軸に、英語向けのフォールバックとして Kokoro を組み合わせる構成にしました。
+        Mac で動かしてる bot のログ監視結果や通知を音声で受け取りたくなった。定期的な読み上げや通知の用途でテキスト→音声の変換基盤が必要だったので、ローカルで動く TTS を調べてみた。条件にしたのは「ローカル・永年無料」「日本語の流暢さを最優先」「カスタム性を重視」。VOICEVOX を主軸にして、英語向けのフォールバックとして Kokoro を組み合わせる構成にした。
       </p>
 
-      <h2>設計</h2>
+      <h2>言語で VOICEVOX と Kokoro を切り替える</h2>
       <p>
-        全体の流れは次のとおりです。
+        全体の流れはこう。
       </p>
       <CodeBlock code={archOverview} language="text" />
 
       <p>
-        候補として VOICEVOX、Kokoro、piper-plus、say、Edge TTS などを比較しました。say は追加インストール不要ですがカスタム性がなく基盤を作る意義が薄いと判断して除外。Edge TTS はオフライン不可のためローカル必須の条件に合わず除外しました。日本語の流暢さでは VOICEVOX が最上位で、英語は Kokoro が強みでした。
+        候補として VOICEVOX・Kokoro・piper-plus・say・Edge TTS などを比べた。say は追加インストールがいらない。ただカスタム性がないので基盤を作る意味が薄いと思って除外。Edge TTS はオフラインで使えないのでローカル必須の条件に合わず除外した。日本語の流暢さでは VOICEVOX がいちばんで、英語は Kokoro が強かった。
       </p>
 
       <p>
-        VOICEVOX は HTTP API 経由で、<code>audio_query</code> でクエリを取得してから <code>synthesis</code> で WAV を取得する 2 段階の流れです。
+        VOICEVOX は HTTP API 経由。<code>audio_query</code> でクエリを取ってから <code>synthesis</code> で WAV を取る 2 段階の流れ。
       </p>
       <CodeBlock code={voicevoxSynthesize} language="python" />
 
       <p>
-        Kokoro は CLI 経由で呼び出すアダプターを実装しました。当初「実行時の cwd にモデルを置く」必要があると読んでいたのですが、<code>--help</code> を確認したら <code>--model</code> / <code>--voices</code> オプションがあり、任意ディレクトリから実行できることが判明しました。<code>model_dir</code> を指定すれば、<code>kokoro-v1.0.onnx</code> と <code>voices-v1.0.bin</code> のパスを渡して実行できます。
+        Kokoro は CLI 経由で呼び出すアダプターを作った。最初は「実行時の cwd にモデルを置く」必要があると読んでいた。でも <code>--help</code> を見たら <code>--model</code> / <code>--voices</code> オプションがあって、任意のディレクトリから実行できるとわかった。<code>model_dir</code> を指定すれば <code>kokoro-v1.0.onnx</code> と <code>voices-v1.0.bin</code> のパスを渡して実行できる。
       </p>
       <CodeBlock code={kokoroModelDir} language="python" />
 
       <p>
-        言語判定は「複数方式を試してから決めたい」という意向があったため、設計書では TODO として残し、まずは文字種比率による仮実装で進めました。日本語文字（ひらがな・カタカナ・漢字）の割合が threshold（デフォルト 0.3）以上なら日本語、未満なら英語と判定。英語判定時は <code>extract_for_english_tts</code> で日本語ブロックを除去し、Kokoro に渡すテキストとスキップした日本語のリストを返しています。後から差し替え可能な設計にしておいたので検証しやすかったです。
+        言語判定は「複数の方式を試してから決めたい」と思っていたので、設計書では TODO のままにしてまずは文字種の比率で仮実装した。日本語の文字（ひらがな・カタカナ・漢字）の割合が threshold（デフォルト 0.3）以上なら日本語、未満なら英語と判定する。英語と判定したときは <code>extract_for_english_tts</code> で日本語のブロックを取り除いて、Kokoro に渡すテキストとスキップした日本語のリストを返している。あとから差し替えられるようにしておいたので検証しやすかった。
       </p>
       <CodeBlock code={langDetect} language="python" />
 
       <p>
-        オーケストレーター（<code>core.py</code>）では、<code>detect</code> の結果に応じてアダプターを切り替え、英語判定時は VOICEVOX で「英語モデルで読み上げます」などの前置きを再生しつつ、Kokoro の合成を ThreadPoolExecutor で並列実行して待ち時間を短縮しています。
+        オーケストレーター（<code>core.py</code>）では <code>detect</code> の結果でアダプターを切り替える。英語のときは VOICEVOX で「英語モデルで読み上げます」みたいな前置きを流しながら、Kokoro の合成を ThreadPoolExecutor で並列に走らせて待ち時間を縮めてる。
       </p>
       <CodeBlock code={coreSpeak} language="python" />
 
-      <h2>実装の工夫</h2>
+      <h2>実装で気をつけたところ</h2>
       <p>
-        pip ではなく uv を使う方針にしたので、<code>pyproject.toml</code> と README を uv 用に統一しました。<code>uv run</code> と <code>uv tool install</code> では実行コンテキストが異なり、<code>.env</code> の読み込み先も変わります。プロジェクトの <code>.env</code> に加えて <code>~/.config/voice-feed/.env</code> も読み込むようにして、両方のパターンで動くようにしました。
+        pip じゃなく uv を使うことにしたので、<code>pyproject.toml</code> と README は uv 用にそろえた。<code>uv run</code> と <code>uv tool install</code> では実行コンテキストが違っていて、<code>.env</code> の読み込み先も変わる。プロジェクトの <code>.env</code> だけでなく <code>~/.config/voice-feed/.env</code> も読み込むようにして、どっちのパターンでも動くようにした。
       </p>
 
       <p>
-        Kokoro は日本語を "japanese character" と読んでしまうため、英語判定時に日本語が含まれていると不自然になります。日本語部分を除去して英語のみ Kokoro に渡し、スキップした内容は stderr でフィードバック。        さらに VOICEVOX で「英文内に含まれていた日本語をスキップしました」と音声で案内するようにしました。
+        Kokoro は日本語を "japanese character" と読んじゃうので、英語と判定した文に日本語が混ざっていると不自然になる。なので日本語の部分は取り除いて英語だけを Kokoro に渡し、スキップした内容は stderr でフィードバックする。あと VOICEVOX で「英文内に含まれていた日本語をスキップしました」と音声でも案内するようにした。
       </p>
 
       <h2>実装した機能</h2>
       <p>
-        実装した機能は、VOICEVOX アダプター（HTTP API・話者 ID 指定）、Kokoro アダプター（CLI・音声・速度オプション）、言語判定（文字種比率の仮実装・後から差し替え可能）、CLI（<code>voice-feed "読み上げたいテキスト"</code>）、VOICEVOX Engine 単体（GUI なし・launchctl で自動起動）です。
+        実装したのは VOICEVOX アダプター（HTTP API・話者 ID 指定）、Kokoro アダプター（CLI・音声・速度オプション）、言語判定（文字種比率の仮実装・後から差し替え可能）、CLI（<code>voice-feed "読み上げたいテキスト"</code>）、VOICEVOX Engine 単体（GUI なし・launchctl で自動起動）。
       </p>
     </article>
 

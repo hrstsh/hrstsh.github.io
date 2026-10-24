@@ -506,133 +506,133 @@ print(row["Name"])   # => "りんご"
 
     <article class="article-body">
       <p>
-        C# と .NET の勉強を目的に、自分用の Web アプリを ASP.NET Core MVC で組んだことがあった。
-        ローカルの macOS で動かす個人ツールで、SQLite にデータを入れて Razor で画面を返すだけのシンプルな構成。
-        せっかく作ったのでそのまま機能を足しながら日常的に使っていたが、ふだん書く言語が Python に寄ってきたこともあり、いつか書き換えたいとは思っていた。
+        C# と .NET を勉強するつもりで、自分用の Web アプリを ASP.NET Core MVC で組んだことがあった。
+        ローカルの macOS で動かす個人用のツールで、SQLite にデータを入れて Razor で画面を返すだけのシンプルなもの。
+        せっかく作ったので機能を足しながらそのまま使ってたけど、ふだん書く言語が Python に寄ってきたのもあって、いつか書き換えたいとは思っていた。
       </p>
       <p>
-        書き換え先に FastAPI を選んだのは、比較的新しいフレームワークで自分が最もよく使う Python であること、それにこの規模のアプリにちょうどいい軽量さだったから。
+        書き換え先を FastAPI にしたのは、自分がいちばんよく使う Python の比較的新しいフレームワークで、この規模のアプリにちょうどいい軽さだったから。
       </p>
       <p>
-        この記事では、ASP.NET Core MVC と FastAPI の対応関係を整理しながら、書き換えの過程で気づいたことをまとめる。
+        ここでは ASP.NET Core MVC と FastAPI の対応関係を整理しつつ、書き換えながら気づいたことを残しておく。
       </p>
 
       <nav class="toc">
         <h2>目次</h2>
         <ol>
           <li><a href="#about-frameworks">ASP.NET Core MVC と FastAPI</a></li>
-          <li><a href="#why-fastapi">なぜ FastAPI にしたか</a></li>
-          <li><a href="#about-htmx">HTMX とは</a></li>
-          <li><a href="#project-structure">プロジェクト構成の比較</a></li>
+          <li><a href="#why-fastapi">FastAPI にした理由</a></li>
+          <li><a href="#about-htmx">部分更新は HTMX に任せる</a></li>
+          <li><a href="#project-structure">プロジェクト構成はこう変わった</a></li>
           <li><a href="#entrypoint">エントリポイント</a></li>
           <li><a href="#controller-router">Controller → Router</a></li>
-          <li><a href="#db-access">DB アクセス: Dapper → sqlite3</a></li>
-          <li><a href="#template">テンプレート: Razor → Jinja2</a></li>
-          <li><a href="#config">設定管理</a></li>
-          <li><a href="#runtime">実行環境とデプロイ</a></li>
-          <li><a href="#testing">テスト</a></li>
+          <li><a href="#db-access">DB アクセスは Dapper から sqlite3 へ</a></li>
+          <li><a href="#template">Razor のテンプレートを Jinja2 に移す</a></li>
+          <li><a href="#config">設定は環境変数で済ませた</a></li>
+          <li><a href="#runtime">起動と常駐のさせ方</a></li>
+          <li><a href="#testing">テストは TestClient で書く</a></li>
           <li><a href="#packages">パッケージ管理</a></li>
-          <li><a href="#mapping-table">対応関係のまとめ</a></li>
+          <li><a href="#mapping-table">対応関係を表にしておく</a></li>
           <li><a href="#retrospective">書き換えてみて</a></li>
         </ol>
       </nav>
 
       <h2 id="about-frameworks">ASP.NET Core MVC と FastAPI</h2>
       <p>
-        まず今回の主役である 2 つのフレームワークを簡単に整理しておく。
+        まずは今回の主役の 2 つのフレームワークについて簡単に。
       </p>
 
       <h3>ASP.NET Core MVC</h3>
       <p>
-        Microsoft の Web フレームワーク。C# で書き、MVC（Model-View-Controller）パターンに沿ってアプリケーションを構成する。
+        Microsoft の Web フレームワーク。C# で書いて、MVC（Model-View-Controller）パターンに沿ってアプリを組み立てる。
       </p>
       <p>
-        .NET のエコシステムは成熟していて、DI（依存性注入）コンテナやミドルウェアパイプラインが標準で組み込まれている。
-        NuGet でパッケージ管理し、<code>dotnet</code> CLI でビルド・実行する。
-        HTTP サーバーも Kestrel が内蔵されているので、アプリ単体で起動すればそのままリクエストを受けられる。
+        .NET のエコシステムは成熟していて、DI（依存性注入）コンテナやミドルウェアパイプラインも標準で組み込まれている。
+        パッケージは NuGet で管理して、ビルドや実行は <code>dotnet</code> CLI でやる。
+        HTTP サーバーも Kestrel が入っているので、アプリを単体で起動すればそのままリクエストを受けられる。
       </p>
       <p>
-        型が強く、コンパイル時にエラーを拾ってくれる安心感がある一方、クラスやインターフェースの定義が増えがちで、小規模なアプリでもファイル数が膨らみやすい。
+        型が強くてコンパイル時にエラーを拾ってくれる安心感はある。ただクラスやインターフェースの定義が増えがちで、小さいアプリでもファイル数が膨らみやすい。
       </p>
 
       <h3>FastAPI</h3>
       <p>
-        Python の Web フレームワーク。2018 年にリリースされた比較的新しいフレームワークで、Python の型ヒント（type hints）を活用するのが特徴。
+        Python の Web フレームワーク。2018 年に出た比較的新しいもので、Python の型ヒント（type hints）を活かすのが特徴。
       </p>
       <p>
-        Python の Web フレームワークといえば Django や Flask が有名だが、FastAPI はこの 2 つとは少し立ち位置が違う。
-        Django は「全部入り」で、ORM・管理画面・認証などが最初からセットになっている。
+        Python の Web フレームワークだと Django や Flask が有名だが、FastAPI の立ち位置はこの 2 つと少し違う。
+        Django は「全部入り」で、ORM・管理画面・認証などが最初からセットになってる。
         Flask は「最小限」で、必要な機能をプラグインで足していくスタイル。
-        FastAPI は Flask に近い軽量さを持ちつつ、型ヒントによる自動バリデーションと API ドキュメント自動生成（Swagger UI）が標準で付いてくる。
+        FastAPI は Flask に近い軽さで、型ヒントによる自動バリデーションと API ドキュメントの自動生成（Swagger UI）が標準で付いてくる。
       </p>
       <p>
-        もう一つの特徴は非同期（async/await）対応。
-        FastAPI は ASGI（Asynchronous Server Gateway Interface）という非同期対応のインターフェース仕様に準拠している。
-        従来の Python Web フレームワーク（Django や Flask）は WSGI（Web Server Gateway Interface）という同期的なインターフェースが主流だったが、
-        ASGI はリクエストを非同期に処理できるため、I/O 待ちが多い場面でのスループットが高い。
+        もう 1 つの特徴は非同期（async/await）への対応。
+        FastAPI は ASGI（Asynchronous Server Gateway Interface）という非同期対応のインターフェース仕様に沿っている。
+        これまでの Python の Web フレームワーク（Django や Flask）は WSGI（Web Server Gateway Interface）という同期的なインターフェースが主流だった。
+        ASGI はリクエストを非同期で処理できるので、I/O 待ちが多い場面でのスループットが高い。
       </p>
       <p>
-        ただし ASGI アプリケーション単体では HTTP リクエストを受けられないので、Uvicorn のような ASGI サーバーが別途必要になる。
-        .NET の Kestrel のように「フレームワークにサーバーが内蔵されている」わけではないのがこの点の違い。
+        ただ ASGI アプリ単体だと HTTP リクエストを受けられないので、Uvicorn のような ASGI サーバーが別で必要になる。
+        .NET の Kestrel のように「フレームワークにサーバーが内蔵されている」わけじゃないのがここの違い。
       </p>
 
-      <h2 id="why-fastapi">なぜ FastAPI にしたか</h2>
+      <h2 id="why-fastapi">FastAPI にした理由</h2>
       <p>
-        書き換えたいとは思いつつ、.NET のまま使い続けていたのは「動いているから」に尽きる。ただ、macOS で <code>dotnet</code> を使う運用にはいくつか面倒な点があった。
+        書き換えたいとは思いつつ、.NET のまま使い続けていたのは単に「動いてるから」。ただ macOS で <code>dotnet</code> を使う運用には面倒なところがいくつかあった。
       </p>
       <ul>
-        <li>.NET ランタイムのバージョン管理（メジャーバージョンが上がるたびに <code>.csproj</code> の <code>TargetFramework</code> を書き換えてパッケージを更新する必要がある）</li>
-        <li>ビルド時間の長さ（自分しか使わないアプリで毎回コンパイルが走るのが重い）</li>
+        <li>.NET ランタイムのバージョン管理（メジャーバージョンが上がるたびに <code>.csproj</code> の <code>TargetFramework</code> を書き換えてパッケージも更新しないといけない）</li>
+        <li>ビルド時間の長さ（自分しか使わないアプリなのに毎回コンパイルが走って重い）</li>
         <li>NuGet パッケージの依存解決がたまに壊れる</li>
       </ul>
       <p>
-        自分しか使わないローカルツールにしては構えが大きい、というのが正直な感覚だった。
+        正直、自分しか使わないローカルツールにしては構えが大きいなと思ってた。
       </p>
       <p>
-        書き換え先を Python にしたのは、ふだん最もよく書いている言語だったから。macOS なら Homebrew で <code>python3</code> が入るし、SQLite は標準ライブラリに含まれている。インタプリタ言語なのでビルド不要、ファイルを書き換えたら即反映される。
+        書き換え先を Python にしたのは、ふだんいちばんよく書いている言語だから。macOS なら Homebrew で <code>python3</code> が入るし、SQLite は標準ライブラリに入っている。インタプリタ言語なのでビルドもいらないし、ファイルを書き換えたらすぐ反映される。
       </p>
       <p>
-        Python の Web フレームワークの中で FastAPI を選んだのは、比較的新しいフレームワークであることと、型ヒントベースのバリデーションが .NET の「型で守る」感覚に近かったこと。
-        Flask も候補にあったが、Flask は型ヒントがあくまでドキュメント的な役割にとどまる。
-        FastAPI は型ヒントからバリデーションルールと API ドキュメントが自動生成されるので、書いた型が実際に動作に効く。
+        Python のフレームワークの中でも FastAPI にしたのは、比較的新しいことと、型ヒントベースのバリデーションが .NET の「型で守る」感覚に近かったから。
+        Flask も候補にはあった。でも Flask だと型ヒントはあくまでドキュメント的な役割どまり。
+        FastAPI は型ヒントからバリデーションルールと API ドキュメントが自動で作られるので、書いた型がちゃんと動作に効いてくる。
       </p>
       <p>
-        Django は今回の用途に対して機能が多すぎた。ORM も管理画面も認証も不要で、SQLite を直接叩いて HTML を返すだけのアプリには FastAPI くらいの粒度がちょうどいい。
+        Django は今回の用途には機能が多すぎた。ORM・管理画面・認証はどれもいらなくて、SQLite を直接叩いて HTML を返すだけのアプリなら FastAPI くらいの粒度がちょうどいい。
       </p>
 
-      <h2 id="about-htmx">HTMX とは</h2>
+      <h2 id="about-htmx">部分更新は HTMX に任せる</h2>
       <p>
-        HTMX は、HTML の属性だけでサーバーとの非同期通信を実現するライブラリ。JavaScript をほぼ書かずに、ページの部分更新ができる。
+        HTMX は HTML の属性だけでサーバーと非同期に通信するライブラリ。JavaScript をほぼ書かずにページを部分的に更新できる。
       </p>
       <p>
-        従来の Web アプリでは、フォーム送信後にサーバーがページ全体を返してリダイレクト → ページ丸ごと再読み込みという流れが一般的だった。
-        部分更新をやりたければ jQuery の <code>$.ajax()</code> や <code>fetch()</code> で JavaScript を書く必要がある。
-        React や Vue のような SPA フレームワークを入れる手もあるが、自分用のツールにはオーバースペック。
+        昔ながらの Web アプリだと、フォーム送信後にサーバーがページ全体を返してリダイレクト → ページ丸ごと再読み込みという流れが普通だった。
+        部分更新したければ jQuery の <code>$.ajax()</code> や <code>fetch()</code> で JavaScript を書かないといけない。
+        React や Vue みたいな SPA フレームワークを入れる手もあるけど、自分用のツールにはオーバースペック。
       </p>
       <p>
-        HTMX はその中間を埋めてくれる。
+        HTMX はちょうどその間を埋めてくれる感じ。
       </p>
       <CodeBlock code={htmxDeleteExample} language="html" />
       <p>
-        この例だと、削除ボタンを押すと HTMX が <code>POST /items/42/delete</code> をバックグラウンドで送信し、サーバーが返した HTML 断片で <code>#item-list</code> の中身を差し替える。ページ全体のリロードは起きない。
+        この例では削除ボタンを押すと HTMX が <code>POST /items/42/delete</code> を裏で送って、サーバーが返した HTML の断片で <code>#item-list</code> の中身を差し替える。ページ全体のリロードは起きない。
       </p>
       <p>
-        サーバー側は「HTML の断片を返すだけ」でよくて、JSON API を設計する必要がない。
-        テンプレートエンジンで HTML を生成する従来のサーバーサイドレンダリングの延長線上で部分更新が実現できるのが、自分のようなバックエンド寄りの人間にはありがたかった。
+        サーバー側は「HTML の断片を返すだけ」でよくて、JSON API を設計する必要もない。
+        テンプレートエンジンで HTML を作る今までのサーバーサイドレンダリングの延長で部分更新ができるので、自分みたいなバックエンド寄りの人間にはありがたかった。
       </p>
       <p>
-        .NET 版ではフォーム送信のたびにページ全体をリダイレクトで再読み込みしていたが、HTMX を入れたことで操作のたびに画面がちらつくことがなくなった。
+        .NET 版ではフォームを送るたびにページ全体をリダイレクトで読み込み直していた。HTMX を入れてからは操作のたびに画面がちらつくこともなくなった。
       </p>
 
-      <h2 id="project-structure">プロジェクト構成の比較</h2>
+      <h2 id="project-structure">プロジェクト構成はこう変わった</h2>
       <p>
-        .NET（ASP.NET Core MVC）のプロジェクトはこんな形になる。Controller・Service・Model・View がフォルダで分かれていて、それぞれが役割ごとのレイヤーを持つ構造。
+        .NET（ASP.NET Core MVC）のプロジェクトはこんな感じ。Controller・Service・Model・View がフォルダで分かれていて、それぞれが役割ごとのレイヤーになっている。
       </p>
       <CodeBlock code={dotnetStructure} language="text" />
       <p>
-        Models の中が Entities・ViewModels・DTOs と分かれ、さらに DataAccess が独立しているのが .NET の MVC らしいところ。
+        Models の中が Entities・ViewModels・DTOs に分かれていて、DataAccess まで独立してるのが .NET の MVC らしいところ。
         Entity はデータベースのテーブルに対応するクラス、ViewModel は画面に渡すデータをまとめたクラス、DTO（Data Transfer Object）はフォームの入力値などリクエストデータを受け取るクラス。
-        Repository は DB へのクエリ実行を担当する。それぞれ専用のクラスを作るのが .NET の流儀。
+        Repository は DB へのクエリ実行の担当。それぞれに専用のクラスを作るのが .NET の流儀。
       </p>
 
       <p>
@@ -640,78 +640,78 @@ print(row["Name"])   # => "りんご"
       </p>
       <CodeBlock code={fastapiStructure} language="text" />
       <p>
-        ルーター（= Controller）・DB・テンプレート（= View）でフォルダを分けている。.NET 版にあった Service 層・ViewModel・Entity・DTO がまるごとない。
+        フォルダはルーター（= Controller）・DB・テンプレート（= View）で分けてる。.NET 版にあった Service 層・ViewModel・Entity・DTO はまるごとない。
       </p>
       <p>
-        .NET 版では Controller → Service → Repository → Entity / ViewModel と 4 つのレイヤーを通るのが定番だったが、
-        FastAPI ではルーターから直接 DB 関数を呼んでテンプレートに渡す 2 層構成にした。
-        レイヤーが減った分だけ追うコードも減る。
-        チーム開発やテスタビリティを考えれば層を分けたほうがいいが、自分専用ツールならこのくらいの粒度がちょうどいい。
+        .NET 版は Controller → Service → Repository → Entity / ViewModel と 4 つのレイヤーを通るのが定番だった。
+        FastAPI 版はルーターが直接 DB の関数を呼んでテンプレートに渡すだけの 2 層構成。
+        レイヤーが減ったぶん追うコードも減る。
+        チーム開発やテストのしやすさを考えれば層を分けたほうがいいが、自分専用のツールならこのくらいがちょうどいい。
       </p>
 
       <h2 id="entrypoint">エントリポイント</h2>
       <p>
-        アプリケーションの起動地点がどう違うかを見てみる。
+        アプリの起動地点がどう違うか見てみる。
       </p>
 
       <h3>ASP.NET Core の Program.cs</h3>
       <p>
-        .NET の <code>Program.cs</code> はビルダーパターンでサービス登録やミドルウェアの設定を行い、最後に <code>app.Run()</code> で起動する。
+        .NET の <code>Program.cs</code> はビルダーパターンでサービスを登録したりミドルウェアを設定したりして、最後に <code>app.Run()</code> で起動する。
       </p>
       <CodeBlock code={programCs} language="csharp" />
       <p>
-        <code>builder.Services.AddControllersWithViews()</code> で MVC に必要なサービス一式を DI コンテナに登録し、DB の接続文字列も <code>DatabaseConfig</code> として DI に入れておく。
-        この「ビルダーでサービスを登録 → パイプラインを構築 → 起動」という流れは ASP.NET Core の基本パターン。
+        <code>builder.Services.AddControllersWithViews()</code> で MVC に必要なサービス一式を DI コンテナに登録する。DB の接続文字列も <code>DatabaseConfig</code> として DI に入れておく。
+        この「ビルダーでサービスを登録 → パイプラインを組む → 起動」という流れが ASP.NET Core の基本のパターン。
       </p>
       <p>
-        <code>app.Run()</code> を呼ぶと内蔵の Kestrel サーバーが HTTP リクエストの受付を開始する。
-        別途 Web サーバーを用意しなくてもアプリが起動するのは便利だが、裏を返すとアプリのコードとサーバーの起動が一体化している。
+        <code>app.Run()</code> を呼ぶと内蔵の Kestrel サーバーが HTTP リクエストを受け付け始める。
+        Web サーバーを別に用意しなくてもアプリが立ち上がるのは便利。でも裏を返すと、アプリのコードとサーバーの起動が一体になってる。
       </p>
 
       <h3>FastAPI の main.py</h3>
       <p>
-        FastAPI 版の <code>main.py</code> はこう書く。
+        FastAPI 版の <code>main.py</code> はこう。
       </p>
       <CodeBlock code={mainPy} language="python" />
       <p>
-        <code>FastAPI()</code> のインスタンスを作って、ルーターを <code>include_router</code> で登録するだけ。.NET の <code>Program.cs</code> と比べるとかなり短い。
+        <code>FastAPI()</code> のインスタンスを作って、ルーターを <code>include_router</code> で登録するだけ。.NET の <code>Program.cs</code> に比べるとだいぶ短い。
       </p>
       <p>
-        ここで一つ気になるのが「サーバーの起動コードがない」こと。
-        FastAPI は ASGI アプリケーションを定義するだけで、HTTP サーバーとしての起動は Uvicorn に任せる。
-        つまり <code>main.py</code> は「アプリの定義」だけを書くファイルで、「起動」は別のコマンド（<code>uvicorn app.main:app</code>）で行う。
+        ここで 1 つ気になるのは「サーバーを起動するコードがない」こと。
+        FastAPI 側は ASGI アプリを定義するだけで、HTTP サーバーとして起動するのは Uvicorn の仕事。
+        要は <code>main.py</code> は「アプリの定義」だけを書くファイルで、「起動」は別のコマンド（<code>uvicorn app.main:app</code>）でやる。
       </p>
       <p>
-        .NET では <code>builder.Services.AddControllersWithViews()</code> で MVC の一式を DI コンテナに登録するが、FastAPI にはそういう仕組みがない。
-        ルーターのモジュールを <code>import</code> して <code>include_router</code> するだけ。
-        DI に慣れていると最初は「これだけで動くの？」と思うが、Python ではモジュールの import 自体が事実上の DI として機能する。
+        .NET では <code>builder.Services.AddControllersWithViews()</code> で MVC の一式を DI コンテナに登録する。
+        FastAPI にはそういう仕組みがなくて、ルーターのモジュールを <code>import</code> して <code>include_router</code> するだけ。
+        DI に慣れていると最初は「これだけで動くの？」と思うが、Python ではモジュールの import 自体が実質 DI の代わりになっている。
       </p>
 
-      <h3>lifespan（起動・終了時の処理）</h3>
+      <h3>起動・終了時の処理は lifespan で</h3>
       <p>
-        .NET の <code>Program.cs</code> で起動時に DB 初期化などを書いていた部分は、FastAPI では <code>lifespan</code> で書く。
-        <code>@asynccontextmanager</code> で囲んだジェネレータの <code>yield</code> 前が起動処理、<code>yield</code> 後が終了処理にあたる。
+        .NET の <code>Program.cs</code> で起動時の DB 初期化などを書いてた部分は、FastAPI だと <code>lifespan</code> に書く。
+        <code>@asynccontextmanager</code> で囲んだジェネレータの <code>yield</code> より前が起動処理、後ろが終了処理になる。
       </p>
       <CodeBlock code={lifespanPy} language="python" />
       <p>
-        .NET だと <code>Program.cs</code> の上から下に初期化コードを書けば起動時に実行されるし、終了処理は <code>IHostedService</code> や <code>IDisposable</code> で書くのが一般的。
-        FastAPI の lifespan は Python のコンテキストマネージャの仕組みを使っていて、<code>yield</code> の前後で起動・終了を分けるのは Python らしい書き方。
-        最初は少し独特に感じたが、起動と終了の処理が 1 つの関数にまとまるので見通しはよい。
+        .NET だと <code>Program.cs</code> に上から順に初期化コードを書けば起動時に実行されるし、終了処理は <code>IHostedService</code> や <code>IDisposable</code> で書くことが多い。
+        FastAPI の lifespan は Python のコンテキストマネージャの仕組みを使っていて、<code>yield</code> の前後で起動と終了を分けるのはいかにも Python っぽい書き方。
+        最初は若干クセがあるなと思ったけど、起動と終了の処理が 1 つの関数にまとまるので見通しはいい。
       </p>
 
       <h2 id="controller-router">Controller → Router</h2>
       <p>
-        リクエストを受けて処理を振り分ける部分。.NET では Controller、FastAPI では Router と呼ぶ。名前は違うが、やっていることは同じ。
+        リクエストを受けて処理を振り分ける部分。.NET では Controller、FastAPI では Router と呼ぶ。名前が違うだけでやってることは同じ。
       </p>
 
       <h3>ASP.NET Core の Controller</h3>
       <p>
-        .NET の Controller はクラスにアクションメソッドを並べる形。<code>[Route]</code> 属性でパスを、<code>[HttpPost]</code> で HTTP メソッドを指定する。
+        .NET の Controller はクラスにアクションメソッドを並べる形。<code>[Route]</code> 属性でパス、<code>[HttpPost]</code> で HTTP メソッドを指定する。
       </p>
       <CodeBlock code={controllerCs} language="csharp" />
       <p>
-        Controller クラスは <code>Controller</code> を継承し、メソッドごとに <code>[Route("...")]</code> と <code>[HttpPost]</code> などの属性（Attribute）を付けてルーティングを定義する。
-        GET では <code>return View(model)</code> で Razor テンプレートをレンダリングし、POST では <code>RedirectToAction</code> で一覧に戻る。
+        Controller クラスは <code>Controller</code> を継承して、メソッドごとに <code>[Route("...")]</code> と <code>[HttpPost]</code> などの属性（Attribute）を付けてルーティングを決める。
+        GET では <code>return View(model)</code> で Razor テンプレートをレンダリングして、POST では <code>RedirectToAction</code> で一覧に戻る。
         コンストラクタで <code>IItemService</code> を受け取っているのは DI（依存性注入）のパターン。
       </p>
 
@@ -721,20 +721,20 @@ print(row["Name"])   # => "りんご"
       </p>
       <CodeBlock code={routerPy} language="python" />
       <p>
-        .NET の「クラス + 属性」に対して、FastAPI は「関数 + デコレータ」。パスとHTTPメソッドの指定方法が違うだけで、やっていることは変わらない。
+        .NET の「クラス + 属性」に対して FastAPI は「関数 + デコレータ」。パスと HTTP メソッドの指定の仕方が違うだけで、やっていることは変わらない。
       </p>
       <p>
-        FastAPI 版では HTMX のパーシャルレスポンスを返している。
-        POST の処理が終わったら更新後のリスト HTML だけを返して、HTMX が画面の該当部分だけを差し替える。
-        .NET 版の「POST → リダイレクト → ページ全体を再読み込み」に比べて、画面がちらつかない。
+        FastAPI 版のほうは HTMX 向けのパーシャルレスポンスを返している。
+        POST の処理が終わったら更新後のリストの HTML だけを返して、HTMX が画面のその部分だけを差し替える。
+        .NET 版の「POST → リダイレクト → ページ全体を再読み込み」と違って画面がちらつかない。
       </p>
 
       <h3>POST パラメータの受け取り方</h3>
       <p>
-        フォームから送信されたデータをサーバー側でどう受け取るかは、両者で書き方が結構違う。
+        フォームから送られたデータをサーバー側でどう受け取るかは、両者で書き方が結構違う。
       </p>
       <p>
-        .NET は DTO（Data Transfer Object）クラスを定義して、ASP.NET のモデルバインド機能で自動マッピングする。
+        .NET は DTO（Data Transfer Object）クラスを定義しておいて、ASP.NET のモデルバインドが自動でマッピングしてくれる。
       </p>
       <CodeBlock code={formParamCs} language="csharp" />
       <p>
@@ -742,114 +742,114 @@ print(row["Name"])   # => "りんご"
       </p>
       <CodeBlock code={formParamPy} language="python" />
       <p>
-        .NET の方式は「フィールドが増えても DTO クラスに足すだけ」で管理しやすいが、クラスファイルが増える。
-        FastAPI の方式は関数の引数を見ればフォームの項目がわかるのが利点。
-        ただしフィールドが 10 個を超えるような大きなフォームだと引数が長くなるので、そういう場合は Pydantic の <code>BaseModel</code> にまとめることもできる。
+        .NET のやり方は「フィールドが増えても DTO クラスに足すだけ」で管理しやすいが、そのぶんクラスファイルが増える。
+        FastAPI のほうは関数の引数を見ればフォームの項目がわかるのがいいところ。
+        ただフィールドが 10 個を超えるような大きいフォームだと引数が長くなるので、そういうときは Pydantic の <code>BaseModel</code> にまとめることもできる。
       </p>
 
-      <h3>Service 層はどこに行ったか</h3>
+      <h3>Service 層はなくても困らなかった</h3>
       <p>
-        .NET 版にはこういう Service クラスがあった。Controller から呼ばれ、ViewModel の組み立てと Repository の呼び出しを担当する。
+        .NET 版にはこんな Service クラスがあった。Controller から呼ばれて、ViewModel の組み立てと Repository の呼び出しを受け持つ。
       </p>
       <CodeBlock code={serviceCs} language="csharp" />
       <p>
-        Controller → Service → Repository の 3 層構造は .NET の定番パターンだが、見てのとおり Service がやっていることは「DB から取ってきて ViewModel に詰める」だけ。
-        ビジネスロジックが薄いアプリだと、Service 層はただの受け渡し役になりがち。
+        Controller → Service → Repository の 3 層構造は .NET の定番のパターン。でも見てのとおり、Service がやってるのは「DB から取ってきて ViewModel に詰める」だけ。
+        ビジネスロジックが薄いアプリだと Service 層はただの受け渡し役になりがち。
       </p>
       <p>
-        FastAPI 版ではこの層を作らなかった。
-        ルーターの関数内で直接 <code>queries.load_items(conn)</code> を呼び、結果をテンプレートに辞書で渡している。
-        Python は関数ベースなので「わざわざクラスにまとめる必要がない」場面が多い。処理が複雑になったらモジュールを切り出せばよくて、最初から層を設けなくても困らなかった。
+        なので FastAPI 版ではこの層を作らなかった。
+        ルーターの関数の中で直接 <code>queries.load_items(conn)</code> を呼んで、結果を辞書でテンプレートに渡している。
+        Python は関数ベースなので「わざわざクラスにまとめる必要がない」場面が多い。処理が複雑になったらモジュールを切り出せばいいし、最初から層を作っておく必要はなかった。
       </p>
 
-      <h2 id="db-access">DB アクセス: Dapper → sqlite3 標準ライブラリ</h2>
+      <h2 id="db-access">DB アクセスは Dapper から sqlite3 へ</h2>
 
-      <h3>Dapper とは</h3>
+      <h3>Dapper は SQL を自分で書く ORM</h3>
       <p>
-        Dapper は .NET のマイクロ ORM。Entity Framework のようなフル ORM とは違い、SQL は自分で書く。
-        Dapper がやってくれるのは「クエリ結果を C# のクラスに自動マッピングする」ことと「パラメータのバインド」。
+        Dapper は .NET のマイクロ ORM。Entity Framework のようなフル ORM と違って SQL は自分で書く。
+        Dapper がやってくれるのは「クエリ結果を C# のクラスに自動でマッピングする」ことと「パラメータのバインド」の 2 つ。
       </p>
       <p>
-        SQL を自分でコントロールしたいが、結果の変換は自動でやってほしい――そんな需要にちょうどいい。Stack Overflow が開発元で、パフォーマンスの高さに定評がある。
+        SQL は自分でコントロールしたいが、結果の変換は自動でやってほしい。そういうときにちょうどいい。ちなみに開発元は Stack Overflow で、パフォーマンスの高さでも知られている。
       </p>
       <CodeBlock code={dapperSample} language="csharp" />
       <p>
-        <code>db.Query&lt;ItemEntity&gt;(sql)</code> で、クエリの結果が <code>ItemEntity</code> クラスのプロパティに自動的にマッピングされる。
-        パラメータは匿名オブジェクト（<code>new &#123; Name = request.Name &#125;</code>）で渡し、SQL 内の <code>@Name</code> に対応づけられる。
+        <code>db.Query&lt;ItemEntity&gt;(sql)</code> と書くと、クエリの結果が <code>ItemEntity</code> クラスのプロパティに自動でマッピングされる。
+        パラメータは匿名オブジェクト（<code>new &#123; Name = request.Name &#125;</code>）で渡すと、SQL の中の <code>@Name</code> に対応づけてくれる。
       </p>
       <p>
-        結果を受け取る Entity クラスは別途定義する。
+        結果を受け取る Entity クラスは別に定義しておく。
       </p>
       <CodeBlock code={entityCs} language="csharp" />
 
-      <h3>Python の sqlite3 標準ライブラリ</h3>
+      <h3>Python 側は sqlite3 をそのまま使う</h3>
       <p>
-        Python 版では外部パッケージの ORM を入れず、<code>sqlite3</code> 標準ライブラリを直接使った。
-        Python には SQLAlchemy という有名な ORM があるが、Dapper と同じく SQL を直接書くスタイルで移行したかったので不要と判断した。
+        Python 版では外部パッケージの ORM は入れずに、標準ライブラリの <code>sqlite3</code> を直接使った。
+        Python には SQLAlchemy という有名な ORM もある。でも Dapper と同じく SQL を直接書くスタイルのまま移行したかったので見送った。
       </p>
       <CodeBlock code={sqlite3Sample} language="python" />
       <p>
         ポイントは <code>conn.row_factory = sqlite3.Row</code> の行。
-        これを設定しないと、クエリ結果はタプル（<code>(1, "りんご")</code>）で返ってくるためカラム名がわからない。
-        <code>sqlite3.Row</code> を指定すると辞書のようにカラム名でアクセスできるようになる。
+        これを設定しないとクエリ結果がタプル（<code>(1, "りんご")</code>）で返ってくるので、カラム名がわからない。
+        <code>sqlite3.Row</code> を指定すると辞書みたいにカラム名でアクセスできるようになる。
       </p>
       <CodeBlock code={rowFactoryPy} language="python" />
 
-      <h3>クエリ関数の比較</h3>
+      <h3>クエリ関数を並べてみる</h3>
       <p>
-        クエリ関数を並べてみる。書き味はかなり近い。
+        書き味は Dapper 版とかなり近い。
       </p>
       <CodeBlock code={queriesPy} language="python" />
       <p>
-        Dapper も sqlite3 も「SQL を自分で書く」スタイルなので、移植はほぼ機械的だった。違いは 2 点。
+        Dapper も sqlite3 も「SQL を自分で書く」スタイルなので、移植はほぼ機械的にできた。違うのは次の 2 点。
       </p>
       <ul>
         <li>パラメータのバインドが <code>new &#123; Name = param.Name &#125;</code>（名前付き）から <code>(name,)</code>（位置指定のタプル）に変わる</li>
         <li>結果のマッピングが Entity クラスへの自動変換（Dapper）から <code>sqlite3.Row</code>（辞書風アクセス）になる</li>
       </ul>
       <p>
-        <code>sqlite3.Row</code> は Entity クラスのように事前にプロパティを定義する必要がない。
-        その分だけファイルが減るが、型安全性は落ちる。<code>row["Naem"]</code> のようなタイポがあっても実行時まで気づけない。
-        自分用ツールなら許容範囲だが、チーム開発だと Entity クラスのような型定義があるほうが安全。
+        <code>sqlite3.Row</code> は Entity クラスのように前もってプロパティを定義しなくていい。
+        そのぶんファイルは減るけど、型安全性は落ちる。<code>row["Naem"]</code> みたいなタイポがあっても実行するまで気づけない。
+        自分用のツールなら許容範囲。ただチーム開発なら Entity クラスのような型定義はあったほうが安全。
       </p>
 
       <h3>DB 接続管理の違い</h3>
       <p>
-        .NET 版では接続文字列を <code>DatabaseConfig</code> クラスに持たせ、DI で各 Service に渡す。接続のオープン・クローズは <code>using</code> ステートメントで管理する。
+        .NET 版では接続文字列を <code>DatabaseConfig</code> クラスに持たせて、DI で各 Service に渡している。接続のオープン・クローズは <code>using</code> ステートメントで管理する。
       </p>
       <CodeBlock code={dbConfigCs} language="csharp" />
       <p>
-        Python 版では <code>get_connection()</code> 関数と <code>contextlib.closing</code> で同じことをやっている。
+        Python 版は <code>get_connection()</code> 関数と <code>contextlib.closing</code> で同じことをやっている。
       </p>
       <p>
-        C# の <code>using var db = new SqliteConnection(...)</code> と Python の <code>with closing(get_connection()) as conn:</code> は構文が違うだけで意図は同じ。「スコープを抜けたらリソースを閉じる」という確実なクリーンアップを保証する仕組み。
+        C# の <code>using var db = new SqliteConnection(...)</code> と Python の <code>with closing(get_connection()) as conn:</code> は構文が違うだけで意図は同じ。どちらも「スコープを抜けたらリソースを閉じる」を確実にやるための仕組み。
       </p>
       <p>
-        Python 版では <code>PRAGMA journal_mode=WAL</code> を設定している。SQLite の WAL（Write-Ahead Logging）モードで、複数プロセスが同時に DB を読み書きする場合の競合を緩和する設定。
+        あと Python 版では <code>PRAGMA journal_mode=WAL</code> も設定している。SQLite の WAL（Write-Ahead Logging）モードのことで、複数のプロセスが同時に DB を読み書きするときの競合を和らげてくれる。
       </p>
 
-      <h2 id="template">テンプレート: Razor → Jinja2</h2>
+      <h2 id="template">Razor のテンプレートを Jinja2 に移す</h2>
       <p>
-        サーバー側で HTML を生成するテンプレートエンジン。.NET では Razor、FastAPI では Jinja2 を使う。
+        サーバー側で HTML を作るテンプレートエンジンの話。.NET では Razor、FastAPI では Jinja2 を使う。
       </p>
 
       <h3>Razor（.NET）</h3>
       <p>
-        Razor は C# の式をテンプレート内に埋め込むエンジン。<code>@</code> から始まる記法で C# のコードを HTML の中に書ける。
-        <code>@model</code> で ViewModel の型を宣言し、<code>@foreach</code> で繰り返す。
+        Razor は C# の式をテンプレートに埋め込むタイプのエンジン。<code>@</code> から始まる記法で HTML の中に C# のコードを書ける。
+        <code>@model</code> で ViewModel の型を宣言して、<code>@foreach</code> で繰り返す。
       </p>
       <CodeBlock code={razorSample} language="html" />
       <p>
-        共通レイアウトは <code>_Layout.cshtml</code> に書き、各ページの内容を <code>@RenderBody()</code> で差し込む。
+        共通レイアウトは <code>_Layout.cshtml</code> に書いて、各ページの中身を <code>@RenderBody()</code> で差し込む。
       </p>
       <CodeBlock code={layoutCshtml} language="html" />
 
       <h3>Jinja2（FastAPI）</h3>
       <p>
-        Jinja2 は Python のテンプレートエンジン。Flask でも標準的に使われていて、Python のテンプレートエンジンとしては最もメジャーな存在。FastAPI でも <code>Jinja2Templates</code> クラスを通じて利用できる。
+        Jinja2 は Python のテンプレートエンジン。Flask でも標準で使われていて、Python のテンプレートエンジンだといちばんメジャーなもの。FastAPI でも <code>Jinja2Templates</code> クラス経由で使える。
       </p>
       <p>
-        Razor の <code>@</code> が Jinja2 では 2 種類の記法に分かれる。
+        Razor の <code>@</code> は Jinja2 だと 2 種類の記法に分かれる。
       </p>
       <ul>
         <li><code>&#123;&#123; 変数名 &#125;&#125;</code> … 変数の値を出力する（Razor の <code>@item.Name</code> に相当）</li>
@@ -857,122 +857,122 @@ print(row["Name"])   # => "りんご"
       </ul>
       <CodeBlock code={jinja2Sample} language="html" />
       <p>
-        共通レイアウトは <code>base.html</code> に書き、各ページは <code>&#123;% extends "base.html" %&#125;</code> で継承する。Razor の <code>@RenderBody()</code> に相当するのが <code>&#123;% block content %&#125;</code>。
+        共通レイアウトは <code>base.html</code> に書いて、各ページは <code>&#123;% extends "base.html" %&#125;</code> で継承する。Razor の <code>@RenderBody()</code> にあたるのが <code>&#123;% block content %&#125;</code>。
       </p>
       <CodeBlock code={baseHtml} language="html" />
 
-      <h3>パーシャルテンプレート（HTMX との連携）</h3>
+      <h3>HTMX 用のパーシャルテンプレート</h3>
       <p>
-        HTMX を導入したことで「パーシャルテンプレート」という概念が加わった。ページ全体ではなく、画面の一部分だけを表す HTML 断片のテンプレートのこと。
+        HTMX を入れたことで「パーシャルテンプレート」という考え方が加わった。ページ全体ではなく、画面の一部分だけを表す HTML 断片のテンプレートのこと。
       </p>
       <CodeBlock code={jinja2Partial} language="html" />
       <p>
-        フォーム送信時に <code>hx-post</code> でサーバーにリクエストを送ると、サーバーはこのパーシャルテンプレートだけをレンダリングして返す。
-        HTMX が受け取った HTML 断片で <code>hx-target</code> の要素を差し替えるので、ページ全体を再読み込みする必要がない。
+        フォームを送るときに <code>hx-post</code> でリクエストを投げると、サーバーはこのパーシャルテンプレートだけをレンダリングして返す。
+        HTMX は受け取った HTML の断片で <code>hx-target</code> の要素を差し替えるので、ページ全体を読み込み直さなくていい。
       </p>
       <p>
-        .NET 版では Razor にもパーシャル（Partial View）の仕組みはあったが、活用していなかった。
-        フォーム送信 → ページ全体をリダイレクト → 再読み込みという古典的な流れで実装していたので、操作のたびに画面がちらついていた。
-        HTMX のパーシャルに変えてからは、画面の更新が滑らかになって使い勝手が明らかに良くなった。
+        Razor にもパーシャル（Partial View）の仕組みはあるが、.NET 版では使っていなかった。
+        フォーム送信 → ページ全体をリダイレクト → 再読み込みという古典的な流れで作ってたので、操作のたびに画面がちらついていた。
+        HTMX のパーシャルに変えてからは画面の更新が滑らかになって、使い勝手が明らかによくなった。
       </p>
 
-      <h3>テンプレートインスタンスの共有</h3>
+      <h3>テンプレートのインスタンスは 1 つを使い回す</h3>
       <p>
-        .NET では <code>return View(model)</code> と書けば Razor エンジンが暗黙に動くが、FastAPI では <code>Jinja2Templates</code> のインスタンスを自分で作る必要がある。全ルーターで同じインスタンスを使い回すために、別モジュールに切り出した。
+        .NET なら <code>return View(model)</code> と書けば裏で Razor エンジンが動く。FastAPI では <code>Jinja2Templates</code> のインスタンスを自分で作らないといけないので、全ルーターで同じものを使い回せるように別モジュールに切り出した。
       </p>
       <CodeBlock code={templatingPy} language="python" />
       <p>
-        各ルーターのファイルで <code>from app.templating import templates</code> と書けば、同じ <code>Jinja2Templates</code> インスタンスを共有できる。
-        .NET のように DI コンテナで管理するのではなく、Python のモジュールシステムそのものがシングルトンの役割を果たしている。
+        各ルーターのファイルで <code>from app.templating import templates</code> と書けば、同じ <code>Jinja2Templates</code> のインスタンスを共有できる。
+        .NET のように DI コンテナで管理するのではなく、Python のモジュールの仕組み自体がシングルトンの代わりになっている。
       </p>
 
-      <h2 id="config">設定管理: appsettings.json → 環境変数</h2>
+      <h2 id="config">設定は環境変数で済ませた</h2>
       <p>
-        .NET は <code>appsettings.json</code> を中心とした設定管理の仕組みが組み込まれている。<code>appsettings.json</code>（共通）と <code>appsettings.Development.json</code>（開発環境用）のように、環境別のファイルを用意すると自動でマージしてくれる。
+        .NET には <code>appsettings.json</code> を中心にした設定管理の仕組みが最初から入っている。<code>appsettings.json</code>（共通）と <code>appsettings.Development.json</code>（開発環境用）のように環境別のファイルを用意しておくと、自動でマージしてくれる。
       </p>
       <CodeBlock code={appsettingsJson} language="json" />
       <p>
-        コード内では <code>Configuration.GetConnectionString("Default")</code> のように、キー名を指定して値を取得する。
-        環境（Development / Production）は <code>ASPNETCORE_ENVIRONMENT</code> 環境変数で切り替わり、対応する JSON ファイルが自動的に読み込まれる。
+        コードの中では <code>Configuration.GetConnectionString("Default")</code> のようにキー名を指定して値を取ってくる。
+        環境（Development / Production）は環境変数の <code>ASPNETCORE_ENVIRONMENT</code> で切り替わって、対応する JSON ファイルが自動で読み込まれる。
       </p>
       <p>
-        FastAPI（Python）側には、こういった組み込みの設定管理機構はない。<code>os.environ.get()</code> で環境変数から読むのが一般的な方法。
+        FastAPI（Python）側にはこういう組み込みの設定管理の仕組みはない。<code>os.environ.get()</code> で環境変数から読むのがよくあるやり方。
       </p>
       <CodeBlock code={configPy} language="python" />
       <p>
-        Pydantic の <code>BaseSettings</code> を使えば、<code>.env</code> ファイルからの読み込みと型バリデーションを自動化できるが、今回は自分用なのでシンプルに <code>os.environ</code> で済ませた。デフォルト値をコード内に書いておけば、環境変数を設定しなくてもそのまま動く。
+        Pydantic の <code>BaseSettings</code> を使えば <code>.env</code> ファイルからの読み込みと型バリデーションも自動化できる。ただ今回は自分用なので、シンプルに <code>os.environ</code> で済ませた。デフォルト値をコードに書いておけば、環境変数を設定しなくてもそのまま動く。
       </p>
       <p>
-        .NET の「環境ごとに JSON ファイルを分ける」仕組みは整理されていて便利だが、ローカル専用のアプリで環境が 1 つしかないなら環境変数のほうが素直。設定ファイルがないぶん管理するファイルが減る。
+        .NET の「環境ごとに JSON ファイルを分ける」仕組みは整理されていて便利。でもローカル専用で環境は 1 つしかないアプリなら、環境変数のほうが素直だと思う。設定ファイルがないので管理するファイルも減る。
       </p>
 
-      <h2 id="runtime">実行環境とデプロイ</h2>
+      <h2 id="runtime">起動と常駐のさせ方</h2>
 
       <h3>開発時の起動</h3>
       <p>
-        .NET では <code>dotnet run</code> でアプリを起動する。コンパイル → ビルド → Kestrel サーバー起動が一連で実行される。ファイル変更時の自動リロードは <code>dotnet watch run</code> で対応。
+        .NET では <code>dotnet run</code> でアプリを起動する。コンパイル → ビルド → Kestrel サーバーの起動までが一気に走る。ファイルを変えたときの自動リロードは <code>dotnet watch run</code> でやる。
       </p>
       <p>
-        FastAPI は ASGI アプリケーションなので、Uvicorn のような ASGI サーバーを使って起動する。
+        FastAPI は ASGI アプリなので、Uvicorn のような ASGI サーバーから起動する。
       </p>
       <CodeBlock code={uvicornCmd} language="bash" />
       <p>
-        <code>app.main:app</code> の意味は「<code>app</code> パッケージの <code>main</code> モジュールにある <code>app</code> という変数」。
-        .NET の <code>dotnet run</code> がプロジェクトファイルからエントリポイントを自動解決するのに比べると明示的だが、「何を起動しているか」がコマンドを見るだけでわかるのはよい。
+        <code>app.main:app</code> は「<code>app</code> パッケージの <code>main</code> モジュールにある <code>app</code> という変数」という意味。
+        .NET の <code>dotnet run</code> がプロジェクトファイルからエントリポイントを勝手に見つけてくれるのに比べると明示的だが、「何を起動しているか」がコマンドを見るだけでわかるのはいい。
       </p>
       <p>
-        <code>--reload</code> を付けるとファイル変更時に自動リロードしてくれる。.NET の <code>dotnet watch run</code> と同じ役割だが、Python はコンパイル不要なので再起動が速い。ファイルを保存した瞬間にはもう反映されている。
+        <code>--reload</code> を付けるとファイルを変えたときに自動でリロードしてくれる。.NET の <code>dotnet watch run</code> と同じ役割だが、Python はコンパイルしなくていいぶん再起動が速い。ファイルを保存した瞬間にはもう反映されてる。
       </p>
 
-      <h3>本番環境の常駐化（launchd）</h3>
+      <h3>常駐は launchd のまま</h3>
       <p>
-        macOS で 24 時間動かすために launchd を使っている。.NET 版でも同じく launchd で <code>dotnet MyApp.dll</code> を常駐させていたので、起動コマンドを書き換えるだけで移行できた。
+        macOS で 24 時間動かすのに launchd を使っている。.NET 版も同じく launchd で <code>dotnet MyApp.dll</code> を常駐させてたので、起動コマンドを書き換えるだけで移行できた。
       </p>
       <CodeBlock code={plistSample} language="xml" />
       <p>
-        <code>RunAtLoad</code> で OS 起動時に自動開始、<code>KeepAlive</code> でプロセスが落ちたら自動再起動。
-        .NET 版では <code>dotnet /path/to/MyApp.dll</code> だったところを <code>.venv/bin/uvicorn app.main:app</code> に書き換えた。
-        仮想環境（<code>.venv</code>）内の uvicorn をフルパスで指定するのがポイントで、launchd はログインシェルの PATH を引き継がないのでフルパスでないと見つからない。
+        <code>RunAtLoad</code> で OS の起動時に自動で開始して、<code>KeepAlive</code> でプロセスが落ちたら自動で再起動する。
+        .NET 版で <code>dotnet /path/to/MyApp.dll</code> だったところを <code>.venv/bin/uvicorn app.main:app</code> に書き換えた。
+        気をつけたいのは仮想環境（<code>.venv</code>）の中の uvicorn をフルパスで指定すること。launchd はログインシェルの PATH を引き継がないので、フルパスじゃないと見つからない。
       </p>
 
-      <h2 id="testing">テスト</h2>
+      <h2 id="testing">テストは TestClient で書く</h2>
       <p>
-        .NET では <code>xUnit</code> や <code>NUnit</code> でテストを書くのが一般的。テストメソッドに <code>[Fact]</code> や <code>[Theory]</code> 属性を付けて実行する。
+        .NET だと <code>xUnit</code> や <code>NUnit</code> でテストを書くのが定番。テストメソッドに <code>[Fact]</code> や <code>[Theory]</code> の属性を付けて実行する。
       </p>
       <p>
-        FastAPI には <code>TestClient</code> というテスト用のクライアントが用意されている。サーバーを実際に起動しなくてもリクエストを投げられるので、テストの書き方がシンプル。
+        FastAPI には <code>TestClient</code> というテスト用のクライアントが用意されている。サーバーを実際に立ち上げなくてもリクエストを投げられるので、テストがシンプルに書ける。
       </p>
       <CodeBlock code={testSample} language="python" />
       <p>
-        <code>pytest</code> で実行する。
-        .NET のように属性を付ける必要がなく、<code>test_</code> で始まる関数を書くだけで自動収集される。
-        <code>TestClient</code> は内部で ASGI アプリを直接呼び出すので、テスト用にポートを開ける必要もない。
+        実行は <code>pytest</code>。
+        .NET みたいに属性を付けなくても、<code>test_</code> で始まる関数を書くだけで勝手に集めてくれる。
+        <code>TestClient</code> は中で ASGI アプリを直接呼んでいるので、テスト用にポートを開ける必要もない。
       </p>
       <p>
-        .NET のテストでは <code>WebApplicationFactory</code> を使ってテスト用サーバーを立てるのが一般的だが、セットアップのコードがそこそこ長くなる。FastAPI の <code>TestClient</code> は 2 行で使い始められるので、テストを書くハードルが低い。
+        .NET のテストだと <code>WebApplicationFactory</code> でテスト用のサーバーを立てることが多いが、セットアップのコードがそこそこ長くなる。FastAPI の <code>TestClient</code> は 2 行で使い始められるので、テストを書くハードルが低い。
       </p>
 
       <h2 id="packages">パッケージ管理</h2>
       <p>
-        本番用に必要なパッケージはこの 4 つだけ。
+        本番で必要なパッケージはこの 4 つだけ。
       </p>
       <CodeBlock code={requirementsTxt} language="text" />
       <ul>
         <li><code>fastapi</code> … Web フレームワーク本体</li>
         <li><code>uvicorn[standard]</code> … ASGI サーバー。<code>[standard]</code> で HTTP パーサーや WebSocket 対応が付く</li>
-        <li><code>jinja2</code> … テンプレートエンジン。FastAPI に同梱されていないので別途インストールが必要</li>
+        <li><code>jinja2</code> … テンプレートエンジン。FastAPI には入っていないので別でインストールが必要</li>
         <li><code>python-multipart</code> … フォームデータの解析用。これがないと <code>Form()</code> が使えない</li>
       </ul>
       <p>
-        開発用は pytest や mypy などを追加する。
+        開発用には pytest や mypy などを足している。
       </p>
       <CodeBlock code={requirementsDevTxt} language="text" />
       <p>
-        .NET 版の <code>.csproj</code> には <code>Microsoft.Data.Sqlite</code> と <code>Dapper</code> の NuGet パッケージがあったが、
-        Python 版では SQLite が標準ライブラリに入っているので外部パッケージは不要。依存パッケージが少ないほど、バージョン更新やセキュリティパッチの追従が楽になる。
+        .NET 版の <code>.csproj</code> には <code>Microsoft.Data.Sqlite</code> と <code>Dapper</code> の NuGet パッケージが入っていた。
+        Python 版は SQLite が標準ライブラリにあるので DB 用の外部パッケージはいらない。依存パッケージが少ないほどバージョン更新やセキュリティパッチへの追従が楽になる。
       </p>
 
-      <h2 id="mapping-table">対応関係のまとめ</h2>
+      <h2 id="mapping-table">対応関係を表にしておく</h2>
       <table>
         <thead>
           <tr>
@@ -1002,28 +1002,28 @@ print(row["Name"])   # => "りんご"
 
       <h2 id="retrospective">書き換えてみて</h2>
       <p>
-        全体としてコード量は半分くらいになった。
-        .NET 版にあった Service 層・ViewModel・Entity・DTO クラスの大半がなくなったのが大きい。
-        Python のほうが書くときは楽だが、型情報が減る分だけ「あのカラム名なんだっけ」と DB を確認する頻度が増えた気はする。
+        全体でコード量は半分くらいになった。
+        大きいのは .NET 版にあった Service 層・ViewModel・Entity・DTO クラスの大半がなくなったこと。
+        書くときは Python のほうが楽。でも型情報が減ったぶん、「あのカラム名なんだっけ」と DB を確認することは増えた気がする。
       </p>
       <p>
-        Dapper → sqlite3 の移行が思ったよりスムーズだったのは発見だった。
-        どちらも「SQL を自分で書く」スタイルなので、クエリ部分はほぼコピペで移植できた。
-        仮に .NET 版で Entity Framework のようなフル ORM を使っていたら、テーブル定義やマイグレーションの仕組みごと作り直す必要があったはずで、こうはいかなかったと思う。
+        Dapper → sqlite3 の移行は思ってたよりスムーズだった。
+        どっちも「SQL を自分で書く」スタイルなので、クエリの部分はほぼコピペで移植できた。
+        もし .NET 版で Entity Framework のようなフル ORM を使っていたら、テーブル定義やマイグレーションの仕組みごと作り直しになるので、こうはいかなかったと思う。
       </p>
       <p>
-        FastAPI の開発体験で一番よかったのは Swagger UI が勝手に生えてくるところ。
-        <code>/docs</code> にアクセスするだけで API の一覧と試し打ちができる。
-        .NET でも Swagger は使えるが、NuGet パッケージ（Swashbuckle）の追加と設定が必要で、FastAPI のように何もしなくても出てくる手軽さはない。
+        FastAPI の開発体験でいちばんよかったのは Swagger UI が勝手に生えてくるところ。
+        <code>/docs</code> を開くだけで API の一覧と試し打ちができる。
+        .NET でも Swagger は使えるが、NuGet パッケージ（Swashbuckle）を足して設定しないといけない。FastAPI みたいに何もしなくても出てくる手軽さはない。
       </p>
       <p>
-        HTMX の導入は副次的な効果が大きかった。
-        .NET 版のときはフォーム送信のたびにページ全体がリロードされていたが、HTMX で部分更新にしたことで操作感がかなり良くなった。
-        JavaScript を書かずに HTML の属性だけで実現できるのも、保守の手間が増えなくて助かる。
+        副次的な効果が大きかったのは HTMX。
+        .NET 版のときはフォームを送るたびにページ全体がリロードされていたが、HTMX で部分更新にしてから操作感がかなりよくなった。
+        JavaScript を書かずに HTML の属性だけで済むので、保守の手間が増えないのもいい。
       </p>
       <p>
-        DB ファイルをそのまま引き継げたのも助かった。テーブル定義が変わらないので、.NET 版で溜めたデータがそのまま使える。
-        フレームワーク間の移行でデータ移行が不要だったのは地味だが大きい。SQLite はファイル 1 つで完結するので、こういうときの身軽さが際立つ。
+        DB ファイルをそのまま引き継げたのも助かった。テーブル定義は変えていないので、.NET 版で溜めたデータがそのまま使える。
+        フレームワークを移るのにデータ移行がいらなかったのは地味に大きい。SQLite はファイル 1 つで完結するので、こういうときに身軽さが効いてくる。
       </p>
     </article>
 

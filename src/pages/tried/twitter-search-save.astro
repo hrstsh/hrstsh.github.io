@@ -70,55 +70,55 @@ const currentTags = ['twitter', 'chrome-extension'];
 
     <article class="article-body">
       <p>
-        X の公式「検索の保存」が新規追加・削除できなくなり、よく使う検索を自分で管理できなくなっていました。代替として Chrome 拡張を作ることにしました。あわせて、ツイートの画像をまとめて別タブで開きたい場面も多かったので、右クリックで「画像をすべて開く」「ツイートのリンクをコピー」ができる機能も足しました。
+        X の公式「検索の保存」が新規追加・削除できなくなって、よく使う検索を自分で管理できなくなっていた。なので代わりになる Chrome 拡張を作ることにした。ついでにツイートの画像をまとめて別タブで開きたい場面も多かったので、右クリックで「画像をすべて開く」「ツイートのリンクをコピー」ができる機能も足した。
       </p>
 
-      <h2>検索の保存</h2>
+      <h2>よく使う検索を保存しておく</h2>
       <p>
-        保存データは <code>chrome.storage.local</code> にこんな形で持っています。
+        保存データは <code>chrome.storage.local</code> にこんな形で持ってる。
       </p>
       <CodeBlock code={storageStructure} language="text" />
 
       <p>
-        ポップアップにテキスト入力と追加ボタン、保存済み一覧を実装しました。検索ページにいる最中にワンクリックで保存できるようにしたくて、UI の配置を検討しました。検索入力欄の近くにボタンを挿入する案は、X の DOM 構造に強く依存し、UI 変更で壊れやすいと判断して却下。採用したのは <code>[data-testid="primaryColumn"]</code> の右端に動的配置するフローティングボタンです。<code>getBoundingClientRect</code> で primaryColumn の位置を取得し、fixed でボタンを配置。X は SPA なので検索ページへの遷移で content script が再実行されないため、2 秒ごとに URL をチェックしてボタンの表示・位置を更新しています。
+        ポップアップにはテキスト入力と追加ボタン・保存済みの一覧を置いた。検索ページにいるときはワンクリックで保存できるようにしたくて、UI の配置をどうするか考えた。検索入力欄の近くにボタンを差し込む案は、X の DOM 構造に強く依存するので UI 変更で壊れやすいと思ってやめた。採用したのは <code>[data-testid="primaryColumn"]</code> の右端に動的に配置するフローティングボタン。<code>getBoundingClientRect</code> で primaryColumn の位置を取って、fixed でボタンを置いている。X は SPA で、検索ページに遷移しても content script が再実行されない。なので 2 秒ごとに URL をチェックしてボタンの表示・位置を更新している。
       </p>
       <CodeBlock code={updateSaveButtonPosition} language="javascript" />
 
       <p>
-        削除ボタンクリック時に <code>stopPropagation</code> を入れ忘れたら、親要素のクリック（検索を開く）も発火してしまいます。ドラッグ並び替えはハンドル（⋮⋮）を分離することで、「クリックで検索を開く」と「ドラッグで並び替え」を明確に区別できるようにしています。
+        削除ボタンのクリックで <code>stopPropagation</code> を入れ忘れると、親要素のクリック（検索を開く）まで発火しちゃう。ドラッグ並び替えはハンドル（⋮⋮）を分けることで、「クリックで検索を開く」と「ドラッグで並び替え」を明確に区別できるようにしている。
       </p>
       <CodeBlock code={deleteStopPropagation} language="javascript" />
 
-      <h2>ツイート右クリック</h2>
+      <h2>ツイートの右クリックメニューは自前で出す</h2>
       <p>
-        ツイート右クリックで画像をまとめて開く機能では、Chrome 標準の <code>contextMenus</code> API を検討しました。ただ、メニュー表示時点では「どのツイートか」の情報が background に渡せず、画像 0 枚のツイートでメニューを非表示にする動的制御が難しいと判断しました。採用したのはカスタムコンテキストメニューです。content script で <code>contextmenu</code> を <code>preventDefault</code> し、右クリック時に同期的にツイートを特定して画像 URL を取得。画像が 1 枚以上あるときだけ自前の div メニューを表示する形にしました。
+        ツイートの右クリックで画像をまとめて開く機能では、Chrome 標準の <code>contextMenus</code> API も考えた。でもメニューを出す時点では「どのツイートか」が background に渡せなくて、画像 0 枚のツイートでメニューを隠すような動的な制御が難しそうだった。それでカスタムコンテキストメニューにした。content script で <code>contextmenu</code> を <code>preventDefault</code> し、右クリック時に同期的にツイートを特定して画像 URL を取得する。画像が 1 枚以上あるときだけ自前の div メニューを出す形。
       </p>
 
       <p>
-        画像 URL は <code>[data-testid="tweetPhoto"] img</code> から取得し、<code>pbs.twimg.com/media/</code> を含むものだけ対象にしています。<code>/profile_images/</code> のプロフィールアイコンは除外。原寸表示のため URL に <code>name=orig</code> を付与しています。
+        画像 URL は <code>[data-testid="tweetPhoto"] img</code> から取って、<code>pbs.twimg.com/media/</code> を含むものだけを対象にしている。<code>/profile_images/</code> のプロフィールアイコンは除外。原寸で表示したいので URL に <code>name=orig</code> を付けてる。
       </p>
       <CodeBlock code={getImageUrls} language="javascript" />
 
       <p>
-        右クリック時に <code>e.target.closest('article[data-testid="tweet"]')</code> でツイートを特定し、画像・リンクがあれば <code>preventDefault</code> してカスタムメニューを表示します。
+        右クリックされたら <code>e.target.closest('article[data-testid="tweet"]')</code> でツイートを特定して、画像・リンクがあれば <code>preventDefault</code> してカスタムメニューを出す。
       </p>
       <CodeBlock code={contextMenuPrevent} language="javascript" />
 
       <p>
-        実装した機能は、検索の保存（ポップアップ・検索ページのワンクリック）、保存検索の管理（一覧・ドラッグ並び替え・削除・クリックで検索を開く）、ツイート右クリック（画像をすべて開く・リンクをコピー）です。
+        実装した機能は 3 つ。検索の保存（ポップアップ・検索ページのワンクリック）、保存検索の管理（一覧・ドラッグ並び替え・削除・クリックで検索を開く）、ツイート右クリック（画像をすべて開く・リンクをコピー）。
       </p>
 
       <h2>作ってみて詰まったところ</h2>
       <p>
-        いちばん手こずったのは、X が SPA で画面遷移しても content script が読み込み直されない点でした。検索ページに入った瞬間に保存ボタンを出したいのに、最初の1回しか実行されないため、位置がずれたりボタンが消えたりします。最終的には一定間隔で URL と表示位置を見直す形に落ち着きましたが、本来はもっと素直に遷移を検知したいところです。
+        いちばん手こずったのは、X が SPA で画面遷移しても content script が読み込み直されない点。検索ページに入った瞬間に保存ボタンを出したいのに最初の1回しか実行されないので、位置がずれたりボタンが消えたりする。最終的には一定間隔で URL と表示位置を見直す形に落ち着いた。でも本当はもっと素直に遷移を検知したいところ。
       </p>
       <p>
-        もうひとつは <code>data-testid</code> への依存です。<code>primaryColumn</code> や <code>tweetPhoto</code> といった目印は X 側の更新で変わることがあり、変わると配置も画像取得も一斉に効かなくなります。壊れたときにどこを直せばよいか分かるよう、目印にしている属性名は一か所にまとめておくと後が楽でした。
+        もうひとつは <code>data-testid</code> への依存。<code>primaryColumn</code> や <code>tweetPhoto</code> みたいな目印は X 側の更新で変わることがあって、変わると配置も画像取得も一斉に効かなくなる。壊れたときにどこを直せばいいかわかるように、目印にしている属性名は一か所にまとめておくとあとが楽だった。
       </p>
 
       <h2>使うときの注意</h2>
       <p>
-        右クリックでまとめて開いた画像は、自分が見るための取得にとどめるのが無難です。投稿された画像には作成者の権利があるため、再配布や無断転載にならないよう、保存する場合は私的な利用の範囲で扱います。
+        右クリックでまとめて開いた画像は、自分で見るための取得にとどめておくのが無難。投稿された画像には作成者の権利があるので、保存するにしても再配布や無断転載にならないよう私的な利用の範囲で。
       </p>
     </article>
 

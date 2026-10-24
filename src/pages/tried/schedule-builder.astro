@@ -125,42 +125,42 @@ const currentTags = ['automation', 'macos'];
       <nav class="toc">
         <h2>目次</h2>
         <ol>
-          <li><a href="#spec-diff">3形式の仕様差</a></li>
-          <li><a href="#design">変換ロジックの設計</a></li>
-          <li><a href="#expand">フィールド展開の実装</a></li>
-          <li><a href="#launchd-convert">cron → launchd 変換の勘所</a></li>
-          <li><a href="#systemd-convert">cron → systemd 変換</a></li>
+          <li><a href="#spec-diff">3形式で書き方が結構違う</a></li>
+          <li><a href="#design">内部は cron の5フィールドにそろえる</a></li>
+          <li><a href="#expand">フィールドを数値の配列に展開する</a></li>
+          <li><a href="#launchd-convert">cron → launchd はエントリを全部並べる</a></li>
+          <li><a href="#systemd-convert">cron → systemd はほぼそのまま書ける</a></li>
           <li><a href="#stumble">つまずいたところ</a></li>
           <li><a href="#wrapup">できあがったもの</a></li>
         </ol>
       </nav>
 
       <p>
-        Mac を買い替えて旧 Mac から環境を移行した際、ついでに cron から launchd に乗り換えた。改めて cron・launchd・systemd timer の仕様差を整理し、変換ツールも作ったのでその記録。
+        Mac を買い替えて旧 Mac から環境を移すときに、ついでに cron から launchd に乗り換えた。改めて cron・launchd・systemd timer の仕様差を整理して、変換ツールまで作ったのでその記録。
       </p>
 
-      <h2 id="spec-diff">3形式の仕様差</h2>
+      <h2 id="spec-diff">3形式で書き方が結構違う</h2>
       <p>
-        まず、同じ「平日9時に実行」を3形式で書くとこうなる。
+        まず、同じ「平日9時に実行」を3形式で書くとこんな感じ。
       </p>
 
       <h3>cron</h3>
       <CodeBlock code={cronExample} language="bash" />
       <p>
-        5フィールド（分 時 日 月 曜日）で表現する。レンジ（<code>1-5</code>）、ステップ（<code>*/5</code>）、リスト（<code>1,15</code>）が書けるので、たいていのパターンは1行で収まる。
+        5フィールド（分 時 日 月 曜日）で表す。レンジ（<code>1-5</code>）・ステップ（<code>*/5</code>）・リスト（<code>1,15</code>）が書けるので、たいていのパターンは1行で収まる。
       </p>
 
       <h3>launchd（macOS）</h3>
       <p>
-        単純なケースは <code>StartCalendarInterval</code> で素直に書ける。
+        単純なケースなら <code>StartCalendarInterval</code> で素直に書ける。
       </p>
       <CodeBlock code={launchdSimple} language="xml" />
       <p>
-        問題は「平日9時」のような指定。launchd の CalendarInterval はレンジもステップも受け付けないため、曜日を1つずつ列挙する必要がある。
+        困るのは「平日9時」みたいな指定。launchd の CalendarInterval はレンジもステップも受け付けないので、曜日を1つずつ並べるしかない。
       </p>
       <CodeBlock code={launchdExpanded} language="xml" />
       <p>
-        一方「5分ごと」のような等間隔は <code>StartInterval</code>（秒数指定）で書く。CalendarInterval とは別の仕組み。
+        「5分ごと」みたいな等間隔のほうは <code>StartInterval</code>（秒数指定）で書く。CalendarInterval とは別の仕組みになっている。
       </p>
       <CodeBlock code={launchdInterval} language="xml" />
 
@@ -170,76 +170,76 @@ const currentTags = ['automation', 'macos'];
       </p>
       <CodeBlock code={systemdCalendar} language="ini" />
       <p>
-        等間隔の場合は <code>OnUnitActiveSec</code> を使う。
+        等間隔なら <code>OnUnitActiveSec</code> を使う。
       </p>
       <CodeBlock code={systemdInterval} language="ini" />
 
-      <h2 id="design">変換ロジックの設計</h2>
+      <h2 id="design">内部は cron の5フィールドにそろえる</h2>
       <p>
-        3形式を相互変換するにあたって、内部表現を cron の5フィールド（minute, hour, day, month, weekday）に統一した。フォームからの入力もこの形式にまとめて、出力時にそれぞれの形式に変換する。
+        3形式を相互に変換するので、内部の表現は cron の5フィールド（minute, hour, day, month, weekday）にそろえた。フォームからの入力も一旦この形にまとめて、出力するときにそれぞれの形式に変換している。
       </p>
       <p>
-        変換の方針は大きく2つに分かれる。
+        変換の方針は大きく分けて2つ。
       </p>
       <ul>
         <li><strong>純粋な等間隔</strong>（<code>*/5 * * * *</code> のように、1フィールドだけステップで他が全ワイルドカード）: launchd は <code>StartInterval</code>、systemd は <code>OnUnitActiveSec</code> で出力</li>
         <li><strong>それ以外</strong>: cron のフィールドを数値の配列に展開して、launchd は CalendarInterval のエントリ群に、systemd は OnCalendar の式に変換</li>
       </ul>
       <p>
-        この「等間隔かどうか」の分岐を最初に入れたおかげで、後の処理がだいぶ整理できた。
+        この「等間隔かどうか」の分岐を最初に入れておいたおかげで、あとの処理がだいぶすっきりした。
       </p>
 
-      <h2 id="expand">フィールド展開の実装</h2>
+      <h2 id="expand">フィールドを数値の配列に展開する</h2>
       <p>
-        変換の核になるのは、cron フィールド（<code>*/5</code> や <code>9-17</code> や <code>1,3,5</code>）を数値の配列に展開する関数。
+        変換の核になるのは、cron のフィールド（<code>*/5</code> や <code>9-17</code> や <code>1,3,5</code>）を数値の配列に展開する関数。
       </p>
       <CodeBlock code={expandField} language="typescript" />
       <p>
-        ステップ・レンジ・リスト・単一値を正規表現で判定して、Set に追加してからソートする。カンマ区切りの各パートを独立に処理するので、<code>1-5,15,*/10</code> のような混合指定にも対応できる。
+        ステップ・レンジ・リスト・単一値を正規表現で判定して、Set に入れてからソートしている。カンマ区切りの各パートを別々に処理するので、<code>1-5,15,*/10</code> みたいな混ざった指定にも対応できる。
       </p>
 
-      <h2 id="launchd-convert">cron → launchd 変換の勘所</h2>
+      <h2 id="launchd-convert">cron → launchd はエントリを全部並べる</h2>
       <p>
-        展開した数値の配列を組み合わせて CalendarInterval のエントリを生成する。ここが一番ややこしかった。
+        展開した数値の配列を組み合わせて CalendarInterval のエントリを作る。ここがいちばんややこしかった。
       </p>
       <CodeBlock code={combinationLogic} language="typescript" />
       <p>
-        ポイントは <code>*</code>（毎回）のフィールドをどう扱うか。cron で <code>*</code> のフィールドは「すべての値にマッチ」だが、launchd では CalendarInterval のキーを<strong>省略する</strong>ことで同じ意味になる。たとえば Minute を省略すると「毎分」を意味する。これを <code>undefined</code> で表現して、値がある場合だけ XML のキーを出力するようにした。
+        ポイントは <code>*</code>（毎回）のフィールドをどう扱うか。cron の <code>*</code> は「すべての値にマッチ」という意味。launchd では CalendarInterval のキーを<strong>省略する</strong>と同じ意味になる。たとえば Minute を省略すると「毎分」。なので <code>*</code> は <code>undefined</code> で持っておいて、値があるときだけ XML のキーを出すようにした。
       </p>
       <p>
-        フィールドが多い式（<code>0 9-17 * * 1-5</code> など）を展開すると、9時間 &times; 5曜日 = 45エントリになる。plist としては冗長だが、launchd の仕様上これ以外に正確な表現方法がない。ツールとしては正確さを優先して全展開する方針にした。
+        フィールドが多い式（<code>0 9-17 * * 1-5</code> など）を展開すると、9時間 &times; 5曜日 = 45エントリになる。plist としては冗長だが、launchd の仕様上これ以外に正確に書く方法がない。ツールとしては正確さを優先して全部展開することにした。
       </p>
 
-      <h2 id="systemd-convert">cron → systemd 変換</h2>
+      <h2 id="systemd-convert">cron → systemd はほぼそのまま書ける</h2>
       <p>
-        systemd の OnCalendar は cron よりも表現力があるので、変換は比較的素直。<code>Mon..Fri</code> のようにレンジが書けるし、カンマ区切りのリストも使える。
+        systemd の OnCalendar は cron より表現力があるので、変換は割と素直。<code>Mon..Fri</code> みたいにレンジが書けるし、カンマ区切りのリストも使える。
       </p>
       <p>
-        フォーマットは <code>曜日 年-月-日 時:分:秒</code>。曜日は <code>Mon,Tue,Wed</code> のように英語略称で並べ、日時部分は <code>*</code> をそのまま使える。cron のフィールドをほぼそのまま埋め込めるので、launchd ほどの展開は必要なかった。
+        フォーマットは <code>曜日 年-月-日 時:分:秒</code>。曜日は <code>Mon,Tue,Wed</code> のように英語の略称で並べて、日時の部分は <code>*</code> がそのまま使える。cron のフィールドをほぼそのまま埋め込めるので、launchd みたいな展開はいらなかった。
       </p>
 
       <h2 id="stumble">つまずいたところ</h2>
-      <h3>launchd の曜日は 0=日曜</h3>
+      <h3>cron によっては 7 も日曜</h3>
       <p>
-        cron も launchd も 0 が日曜なので問題ないと思っていたが、一部の cron 実装では 7 も日曜として扱う。今回は 0-6 に正規化する方針にしたが、7 を入力されたときの処理を入れ忘れて最初はおかしな曜日が出ていた。
+        cron も launchd も 0 が日曜なので問題ないと思ってたけど、一部の cron 実装では 7 も日曜として扱う。今回は 0-6 に正規化することにしたものの、7 が入力されたときの処理を入れ忘れてたせいで最初はおかしな曜日が出ていた。
       </p>
 
-      <h3>「次回実行日時」の算出が意外に重い</h3>
+      <h3>「次回実行日時」の計算が意外と重い</h3>
       <p>
-        次の実行タイミングを5件表示する機能をつけた。単純に現在時刻から1分ずつ進めてマッチするか判定するブルートフォースで実装したが、<code>0 0 29 2 *</code>（2月29日、つまりうるう年だけ）のようなレアケースだと数年分を回す必要がある。上限を1年分（525,600回）に設定して、見つからなければ「1年以内に実行予定がありません」と表示するようにした。
+        次の実行タイミングを5件出す機能もつけた。現在時刻から1分ずつ進めてマッチするか判定する単純なブルートフォースで書いたが、<code>0 0 29 2 *</code>（2月29日、つまりうるう年だけ）みたいなレアケースでは数年分回さないといけない。なので上限を1年分（525,600回）にして、見つからなければ「1年以内に実行予定がありません」と出すようにした。
       </p>
 
-      <h3>等間隔検出の判定</h3>
+      <h3>等間隔の判定でほかのフィールドを見落としてた</h3>
       <p>
-        <code>*/5 * * * *</code> は「5分ごと」なので <code>StartInterval: 300</code> にしたいが、<code>*/5 9-17 * * *</code> は「9時台〜17時台の5分ごと」なので等間隔ではない。最初は minute フィールドだけ見て判定していたが、他のフィールドに制約があるケースを見落としていた。「ステップ指定のフィールドが1つだけ、かつ他が全て <code>*</code>」の場合のみ等間隔と判定するように修正した。
+        <code>*/5 * * * *</code> は「5分ごと」なので <code>StartInterval: 300</code> にしたい。でも <code>*/5 9-17 * * *</code> は「9時台〜17時台の5分ごと」なので等間隔じゃない。最初は minute フィールドしか見てなかったので、ほかのフィールドに制約があるケースを見落としていた。「ステップ指定のフィールドが1つだけで、ほかが全部 <code>*</code>」のときだけ等間隔と判定するように直した。
       </p>
 
       <h2 id="wrapup">できあがったもの</h2>
       <p>
-        <a href="/tools/schedule-builder/">cron / launchd / systemd スケジュール変換ツール</a>として公開した。フォームで月・日・曜日・時・分を選ぶと3形式をタブで切り替えて確認でき、手元の cron 式を貼り付けて launchd・systemd に変換することもできる。
+        <a href="/tools/schedule-builder/">cron / launchd / systemd スケジュール変換ツール</a>として公開した。フォームで月・日・曜日・時・分を選ぶと3形式をタブで切り替えて確認できるし、手元の cron 式を貼り付ければ launchd・systemd に変換できる。
       </p>
       <p>
-        今回の Mac 移行では、旧 Mac の crontab にあった5つのジョブを全部このツールで launchd に変換した。レンジやステップがあると plist が長くなるのは避けられないが、手で展開するよりは漏れがない。Linux サーバー側の systemd timer もここから生成している。
+        今回の Mac 移行では、旧 Mac の crontab にあった5つのジョブを全部このツールで launchd に変換した。レンジやステップがあると plist が長くなるのはどうしようもないが、手で展開するよりは漏れがない。Linux サーバー側の systemd timer もここから作ってる。
       </p>
 
       <h2>関連記事</h2>
