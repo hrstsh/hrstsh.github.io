@@ -84,6 +84,32 @@ npm run dev
 
 The site will be available at `http://localhost:4321`
 
+> **補足: `~/.npmrc` で `ignore-scripts=true` にしている環境について**
+>
+> 開発環境では npm のサプライチェーン攻撃対策として、`~/.npmrc` に
+> `ignore-scripts=true`（インストール時スクリプトを既定で実行しない）を設定している。
+>
+> いまの依存（Astro 7）は、この設定のままで `npm ci` → `npm run build` が通る（2026-10 確認）。
+> インストール時スクリプトを持つ依存は `fsevents`（Vite 経由、macOS のみの任意依存）だけで、
+> ビルド済みのバイナリが同梱されているので、スクリプトを飛ばしても動く。
+> Astro 4 のころは `esbuild` と `sharp` がスクリプトでバイナリを取っていて手当てが必要だったが、
+> Astro 7 で `esbuild` は依存から外れ、`sharp` 0.35 はスクリプトを使わなくなった。
+>
+> 今後スクリプトが必要な依存が増えてビルドが通らなくなったら、そのパッケージだけスクリプトを実行する。
+>
+> ```bash
+> npm rebuild --ignore-scripts=false <パッケージ名>
+> ```
+>
+> - **`--ignore-scripts=false` を省くと直らない**。`npm rebuild` 単体は `.npmrc` の
+>   `ignore-scripts=true` をそのまま尊重するため、スクリプトが実行されない（検証済み）
+> - `npm install --ignore-scripts=false` でも直るが、**全依存のスクリプトが走る**ので対策の意味がなくなる
+> - インストール時スクリプトを持つ依存は、次で一覧できる
+>
+> ```bash
+> node -e "const l=require('./package-lock.json');for(const[k,v]of Object.entries(l.packages))if(v.hasInstallScript)console.log(k,v.version)"
+> ```
+
 ### Available Commands
 
 | Command | Description |
