@@ -1,231 +1,77 @@
 # hrstsh.com
 
-Personal site built with Astro. Hosted on GitHub Pages with custom domain.
+個人サイト [hrstsh.com](https://hrstsh.com) のソースコード。Astro 7 + TypeScript で静的サイトを生成し、GitHub Pages で公開している。
 
-🌐 **Live Site**: https://hrstsh.com
+## 開発
 
-## About
-
-This repository hosts the source code for my personal website. The site is built with Astro 7.x and automatically deployed via GitHub Actions.
-
-## Site Structure
-
-Current pages available on the site:
-
-```
-https://hrstsh.com/
-├── / ...................... Home (トップページ)
-│   https://hrstsh.com/
-│   (やってみた=src/data/tried.ts、Tips=src/data/tips.ts を新しい順に直リンク表示。
-│    ツールは下部に小さく配置)
-│
-├── /tools/ ................ ツール (ブラウザ上で動作)
-│   https://hrstsh.com/tools
-│   ├── /styled-text-replacer ... スタイル付きテキスト置換
-│   │   https://hrstsh.com/tools/styled-text-replacer
-│   │   (書式を維持したまま文字列置換、クライアントサイドで動作)
-│   ├── /sql-formatter ......... SQL整形ツール
-│   │   https://hrstsh.com/tools/sql-formatter
-│   │   (MySQL / PostgreSQL / SQL Server 対応、クライアントサイドで動作)
-│   ├── /x-search-builder ...... X（Twitter）検索ツール
-│   │   https://hrstsh.com/tools/x-search-builder
-│   │   (画像・ユーザー・期間で絞り込み検索、無料・登録不要)
-│   ├── /zero-width-breaker .... ツイートのリンク化回避ツール
-│   │   https://hrstsh.com/tools/zero-width-breaker
-│   │   (ツイートのリンク化を防ぐ、クライアントサイドで動作)
-│   └── /exif-editor ........... EXIF編集ツール
-│       https://hrstsh.com/tools/exif-editor
-│       (JPEGのEXIF情報を読み取り・編集・追加、piexifjs使用)
-│
-├── /tried/ ............... やってみた
-│   https://hrstsh.com/tried
-│   (twitter-search-save, voice-feed-tts, telegram-bot-mac-dl, video-fps-checker, github-pages-setup など)
-│
-├── /tips/ ................. Tips
-│   https://hrstsh.com/tips
-│   (youtube-thumbnail-download, twitter-advanced-search-operators, macos-screenshot-settings, page-images-bookmarklet, chrome-copy-all-tabs, github-pages-trailing-slash-sitemap, meta-info-viewer-bookmarklet, twitter-media-url-extractor, twitter-image-only-filter, twitter-text-only-filter, twitter-hide-reposts, macos-copy-file-path, macos-custom-command, twitter-image-original-quality, youtube-playback-speed, chrome-bookmarklet-favicon, twitter-long-tweet-filter, mac-terminal-customize など)
-│
-├── /privacy ............... プライバシーポリシー・免責事項
-│   https://hrstsh.com/privacy
-│
-└── /contact .............. お問い合わせ
-    https://hrstsh.com/contact
-    (Google Form へのリンク、運営者情報)
-```
-
-## Tech Stack
-
-- **Framework**: [Astro](https://astro.build/) 4.16+
-- **Language**: TypeScript
-- **Styling**: Component-scoped CSS + Global styles
-- **Deployment**: GitHub Actions (automatic)
-- **Hosting**: GitHub Pages
-
-## Development
-
-### Prerequisites
-
-- Node.js 22.22 or later (`.nvmrc`: 24)
-- npm
-
-### Setup
+Node.js 24（`.nvmrc`）を使う。
 
 ```bash
-# Clone the repository
-git clone https://github.com/hrstsh/hrstsh.github.io.git
-cd hrstsh.github.io
-
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
+npm run dev      # http://localhost:4321
+npm run build    # 型チェック → ビルド → サイトマップ生成
+npm run preview  # ビルド結果をローカルで確認
 ```
 
-The site will be available at `http://localhost:4321`
+### `~/.npmrc` で `ignore-scripts=true` にしている場合
 
-> **補足: `~/.npmrc` で `ignore-scripts=true` にしている環境について**
->
-> 開発環境では npm のサプライチェーン攻撃対策として、`~/.npmrc` に
-> `ignore-scripts=true`（インストール時スクリプトを既定で実行しない）を設定している。
->
-> いまの依存（Astro 7）は、この設定のままで `npm ci` → `npm run build` が通る（2026-10 確認）。
-> インストール時スクリプトを持つ依存は `fsevents`（Vite 経由、macOS のみの任意依存）だけで、
-> ビルド済みのバイナリが同梱されているので、スクリプトを飛ばしても動く。
-> Astro 4 のころは `esbuild` と `sharp` がスクリプトでバイナリを取っていて手当てが必要だったが、
-> Astro 7 で `esbuild` は依存から外れ、`sharp` 0.35 はスクリプトを使わなくなった。
->
-> 今後スクリプトが必要な依存が増えてビルドが通らなくなったら、そのパッケージだけスクリプトを実行する。
->
-> ```bash
-> npm rebuild --ignore-scripts=false <パッケージ名>
-> ```
->
-> - **`--ignore-scripts=false` を省くと直らない**。`npm rebuild` 単体は `.npmrc` の
->   `ignore-scripts=true` をそのまま尊重するため、スクリプトが実行されない（検証済み）
-> - `npm install --ignore-scripts=false` でも直るが、**全依存のスクリプトが走る**ので対策の意味がなくなる
-> - インストール時スクリプトを持つ依存は、次で一覧できる
->
-> ```bash
-> node -e "const l=require('./package-lock.json');for(const[k,v]of Object.entries(l.packages))if(v.hasInstallScript)console.log(k,v.version)"
-> ```
+開発環境では npm のサプライチェーン攻撃対策として、インストール時スクリプトを既定で実行しない設定にしている。いまの依存はこの設定のままで `npm install` → `npm run build` が通る（スクリプトを持つのは、ビルド済みバイナリが同梱された `fsevents` だけ）。
 
-### Available Commands
+スクリプトが必要な依存が増えてビルドが通らなくなったら、そのパッケージだけ実行する。
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build locally |
-| `npm run astro` | Run Astro CLI commands |
+```bash
+npm rebuild --ignore-scripts=false <パッケージ名>
+```
 
-### Scripts (optional)
+- `--ignore-scripts=false` を省くと `.npmrc` の設定が優先され、スクリプトが実行されない
+- `npm install --ignore-scripts=false` は全依存のスクリプトが走るので使わない
+- インストール時スクリプトを持つ依存は次で一覧できる
 
-Helper scripts for Git workflow (run from repository root):
+```bash
+node -e "const l=require('./package-lock.json');for(const[k,v]of Object.entries(l.packages))if(v.hasInstallScript)console.log(k,v.version)"
+```
 
-| Script | Description |
-|--------|-------------|
-| `./scripts/checkout-latest-branch.sh` | Fetch remote and checkout the most recently updated branch (excluding main/master) |
-| `./scripts/commit-and-push.sh "<message>"` | Stage all changes, commit with the given message, and push to origin |
+## ディレクトリ
+
+```
+src/
+├── pages/        ページ（tried/ やってみた、tips/ Tips、tools/ ツール）
+├── data/         一覧のデータ（tried.ts・tips.ts・tools.ts）
+├── layouts/      Layout.astro（全ページ共通）、ArticleLayout.astro（記事）
+├── components/   CodeBlock、SidePanel、ArticleFooterNav
+├── utils/        jsonLd.ts（構造化データ）、articles.ts（記事一覧の集約）
+└── styles/       global.css（色・フォントのトークン）
+scripts/          generate-sitemap.js、Git 用のスクリプト
+public/           画像・ファビコン・robots.txt・CNAME
+```
+
+## 記事を追加するとき
+
+- `src/pages/tried/` か `src/pages/tips/` にページを作り、`src/data/tried.ts` か `src/data/tips.ts` の配列の**先頭**に登録する（新しい順。トップと一覧ページに出る）
+- コード例は `CodeBlock` コンポーネントに文字列で渡す。`.astro` のテンプレートに `{ }` を直書きするとビルドエラーになる
+- 構造化データは `src/utils/jsonLd.ts` のヘルパーで作り、`Layout` の `jsonLd` に渡す
+
+## デザイン
+
+- 色とフォントは `src/styles/global.css` のトークン（「墨と藍」のパレット、IBM Plex Sans JP / IBM Plex Mono）を使い、色を直書きしない。ダークモードは OS の設定（`prefers-color-scheme`）に連動する
+- ファビコンを変えたら `Layout.astro` の `faviconV` を上げる（キャッシュ対策）。PNG は `rsvg-convert -w 48 -h 48 public/favicon.svg -o public/favicon-48.png` で作る（192px も同様）
 
 ## SEO
 
-- **trailingSlash**: `astro.config.mjs` で `trailingSlash: 'always'` を指定。GitHub Pages の directory 形式（`/path/index.html`）と一致させ、サイトマップ・canonical の URL が実 URL と揃うようにしている。これにより Search Console のリダイレクトエラーを防ぐ。
-- **Sitemap**: Generated at build time by `scripts/generate-sitemap.js` (output: `/sitemap-v3.xml`). The script runs after `astro build` and scans `dist/` for pages.
-  - Google Search Console のキャッシュ問題を回避するため v3 を使用
-  - 各ページの `<lastmod>` タグに最終更新日を含む
-  - 標準的な XML 形式（スキーマ定義、適切なインデント）
-  - URL はトレーディングスラッシュ付きで出力（`trailingSlash: 'always'` に合わせる）
-- **robots.txt**: `public/robots.txt` allows all crawlers and points to `https://hrstsh.com/sitemap-v3.xml`.
+- `astro.config.mjs` で `trailingSlash: 'always'` にしている。GitHub Pages は `/path/index.html` 形式なので、URL を末尾スラッシュ付きにそろえて Search Console のリダイレクトエラーを防ぐ
+- サイトマップは `npm run build` の最後に `scripts/generate-sitemap.js` が `dist/` から作る（`/sitemap-v3.xml`。Search Console のキャッシュを避けるため v3）。`public/robots.txt` もこれを指している
 
-## Security
+## デプロイ
 
-- Run `npm audit` periodically to check for known vulnerabilities.
-- `npm audit fix` applies safe updates; use `npm audit fix --force` only if you plan to upgrade to Astro 5 (breaking change). This site is static-only, so production exposure to Astro dev-server/middleware issues is limited.
+- `main` に push すると `.github/workflows/deploy.yml` がビルドして GitHub Pages に公開する。Actions の画面から手動でも実行できる
+- 独自ドメインは `public/CNAME`（hrstsh.com）、リポジトリの Settings → Pages、DNS の A レコード（`185.199.108.153`〜`185.199.111.153` の 4 つ）で設定してある
 
-## Deployment
+## 運用メモ
 
-The site is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
+- `main` から作業ブランチを切り、PR を作ってマージする
+- AI アシスタント向けのルール（`CLAUDE.md` とスキル）は個人環境に依存するので、リポジトリには入れていない（`.gitignore` 対象）
+- Git 用のスクリプト: `./scripts/checkout-latest-branch.sh`（直近に更新されたリモートのブランチに切り替え）、`./scripts/commit-and-push.sh "<メッセージ>"`（全変更をコミットして push）
 
-### Custom Domain (hrstsh.com)
+## ライセンス
 
-1. **GitHub 設定**: リポジトリ → Settings → Pages → Custom domain に `hrstsh.com` を入力
-2. **DNS 設定**: ドメインの DNS で以下を設定
-   - A レコード: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - または CNAME: `hrstsh.github.io` へ（ apex の場合 CNAME 非対応のレジストラもあるため A レコード推奨）
-3. **CNAME ファイル**: `public/CNAME` に `hrstsh.com` を記載済み（ビルド時に dist へコピー）
-
-### Deployment Process
-
-1. Push changes to `main` branch
-2. GitHub Actions workflow (`.github/workflows/deploy.yml`) is triggered
-3. Site is built using `npm run build`
-4. Build output (`dist/`) is deployed to GitHub Pages
-5. Site is live at https://hrstsh.com
-
-### Manual Deployment
-
-You can also trigger deployment manually:
-
-1. Go to [Actions tab](https://github.com/hrstsh/hrstsh.github.io/actions)
-2. Select "Deploy to GitHub Pages" workflow
-3. Click "Run workflow"
-
-## Project Structure
-
-```
-├── .github/
-│   └── workflows/
-│       └── deploy.yml      # GitHub Actions deployment config
-├── scripts/                # Build & Git helpers
-│   ├── generate-sitemap.js # Sitemap generation (post-build)
-│   ├── checkout-latest-branch.sh
-│   └── commit-and-push.sh
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro    # Base layout component
-│   ├── data/
-│   │   ├── tips.ts         # Tips記事一覧（手動管理・新しい順／トップとTips一覧で共有）
-│   │   └── tried.ts        # やってみた記事一覧（手動管理・新しい順／トップとやってみた一覧で共有）
-│   ├── pages/
-│   │   ├── index.astro     # Home page
-│   │   ├── tried/          # やってみた (tried / hand-written reports)
-│   │   ├── tips/           # Tips (tips & tricks)
-│   │   └── tools/          # Tools (browser-based utilities)
-│   ├── components/        # Shared components (SidePanel, CodeBlock, etc.)
-│   └── styles/
-│       └── global.css      # Global styles
-├── public/                 # Static assets (favicon, robots.txt, etc.)
-├── .cursor/
-│   └── skills/             # Cursor Agent Skills（astro-code-blocks はリポジトリ同梱。human-ja-writing は .gitignore で除外・ローカルのみ）
-├── .cursorrules            # AI development guidelines
-├── astro.config.mjs        # Astro configuration
-├── package.json
-├── tsconfig.json
-└── README.md               # This file
-```
-
-## Design Guidelines
-
-- **Color Theme**: Purple gradient (#667eea → #764ba2)
-- **Layout**: Max-width 800px, centered
-- **Favicon**: SVG + PNG (48x48, 192x192) for search results. PNG 再生成: `rsvg-convert -w 48 -h 48 public/favicon.svg -o public/favicon-48.png` および 192px 版（librsvg 要）. 変更時は `Layout.astro` の `faviconV` をインクリメント
-- **Typography**: System font stack
-- **Responsive**: Mobile-first design
-
-## Contributing
-
-For AI assistants and collaborators, please refer to [`.cursorrules`](.cursorrules) for development guidelines.
-
-### Development Workflow
-
-1. Create a new branch from `main`
-2. Make changes
-3. Update this README if project structure changes
-4. Create a Pull Request
-5. Merge to `main` after review
-6. Automatic deployment via GitHub Actions
-
-## License
-
-Personal project - All rights reserved.
+個人のプロジェクトのため、All rights reserved.
