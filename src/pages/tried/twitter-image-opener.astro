@@ -274,7 +274,7 @@ const currentTags = ['twitter', 'chrome-extension'];
 
     <article class="article-body">
       <p>
-        X で「この人の投稿する画像はよく保存する」「このキャラのタグがついた画像はよく保存する」みたいなことってないかな。投稿者やハッシュタグを条件にして、画像が自動で開いたりダウンロードできたりしたら便利だと思って、Chrome 拡張を作ってみた。
+        X で「この人の投稿する画像はよく保存する」「このキャラのタグがついた画像はよく保存する」ということはないだろうか。投稿者やハッシュタグを条件にして画像が自動で開いたりダウンロードできたりしたら便利だと思って、Chrome 拡張を作ってみた。
       </p>
 
       <nav class="toc" aria-label="目次">
@@ -309,25 +309,25 @@ const currentTags = ['twitter', 'chrome-extension'];
         <li><strong>ダウンロード</strong> — 指定フォルダに保存する（重複チェックつき）</li>
       </ul>
       <p>
-        キーワードを設定すると、そのキーワードを含むツイートだけが対象になる。空欄なら画像付きツイート全部が対象。設定はポップアップ UI から切り替えられる。
+        キーワードを設定するとそのキーワードを含むツイートだけが対象になる。空欄なら画像付きツイート全部が対象。設定はポップアップ UI から切り替えられる。
       </p>
 
       <h2 id="mutation-observer">スクロールで増えるツイートは MutationObserver で拾う</h2>
       <p>
-        X は SPA なので、スクロールに合わせて DOM にツイートが追加されていく。ページを読み込んだ時点で全ツイートが揃ってるわけじゃないので、<code>MutationObserver</code> で DOM の変更を検知するようにした。
+        X は SPA なので、スクロールに合わせて DOM にツイートが追加されていく。ページを読み込んだ時点で全ツイートが揃っているわけじゃないので、<code>MutationObserver</code> で DOM の変更を検知するようにした。
       </p>
       <CodeBlock code={observerCode} language="javascript" />
       <p>
-        <code>document.body</code> を <code>childList: true, subtree: true</code> で監視して、追加されたノードから <code>[data-testid="tweet"]</code> にマッチする要素を探す。拾い方は 2 パターンあって、追加されたノード自体が <code>[data-testid="tweet"]</code> の場合と、追加されたコンテナの子孫にツイートがある場合。X はタイムラインの描画タイミングによって両方のケースが起きるので、<code>node.matches</code> と <code>node.querySelectorAll</code> の両方で探している。
+        <code>document.body</code> を <code>childList: true, subtree: true</code> で監視して、追加されたノードから <code>[data-testid="tweet"]</code> にマッチする要素を探す。拾い方は 2 パターン。追加されたノード自体が <code>[data-testid="tweet"]</code> の場合と、追加されたコンテナの子孫にツイートがある場合。X はタイムラインの描画タイミングによって両方のケースが起きるので、<code>node.matches</code> と <code>node.querySelectorAll</code> の両方で探している。
       </p>
 
       <h2 id="check-tweet">ツイートを判定して画像を取ってくる</h2>
       <p>
-        ツイートを見つけたら、キーワードの照合と、処理済みかどうかのチェックをする。
+        ツイートを見つけたら、キーワードの照合と処理済みかどうかのチェックをする。
       </p>
       <CodeBlock code={checkTweet} language="javascript" />
       <p>
-        <code>dataset.imageOpenerProcessed</code> で、同じツイートの二重処理を防いでいる。X は DOM の再利用や再描画が多いので、このフラグがないと同じ画像が何度も開かれちゃう。
+        <code>dataset.imageOpenerProcessed</code> で同じツイートの二重処理を防いでいる。X は DOM の再利用や再描画が多いので、このフラグがないと同じ画像が何度も開かれてしまう。
       </p>
 
       <p>
@@ -337,19 +337,19 @@ const currentTags = ['twitter', 'chrome-extension'];
 
       <h3 id="orig-url">画像 URL は原寸に差し替える</h3>
       <p>
-        X の画像 URL には <code>&amp;name=small</code> や <code>&amp;name=medium</code> みたいなサイズ指定のパラメータがついている。これを <code>&amp;name=orig</code> に差し替えると原寸の画像が取れるので、正規表現で <code>&amp;name=</code> 以降をまとめて置換した。
+        X の画像 URL には <code>&amp;name=small</code> や <code>&amp;name=medium</code> みたいなサイズ指定のパラメータがついている。これを <code>&amp;name=orig</code> に差し替えると原寸の画像が取れる。正規表現で <code>&amp;name=</code> 以降をまとめて置換した。
       </p>
       <p>
-        動画のサムネイルを間違って開かないように、<code>img.closest('[data-testid="videoPlayer"]')</code> で動画プレーヤー内の img は除外してる。
+        動画のサムネイルを間違って開かないように <code>img.closest('[data-testid="videoPlayer"]')</code> で動画プレーヤー内の img は除外している。
       </p>
 
       <h2 id="open-tab">別タブは background 経由で開く</h2>
       <p>
-        Manifest V3 の content script には <code>chrome.tabs</code> API の権限がない。なので別タブを開くには、<code>chrome.runtime.sendMessage</code> で background の service worker にメッセージを送る必要があった。<code>chrome.tabs.create</code> はそっちで呼ぶ。
+        Manifest V3 の content script には <code>chrome.tabs</code> API の権限がない。なので別タブを開くには <code>chrome.runtime.sendMessage</code> で background の service worker にメッセージを送る必要があった。<code>chrome.tabs.create</code> はそっちで呼ぶ。
       </p>
       <CodeBlock code={openImageCode} language="javascript" />
       <p>
-        <code>active: false</code> を指定しておくと、タブが非アクティブ（バックグラウンド）で開く。これがないと画像を開くたびにフォーカスがそっちに移っちゃって、タイムラインのスクロールが止まる。タイムラインを流し見しながら裏でタブを溜めていく使い方だと、これは必須だった。
+        <code>active: false</code> を指定しておくと、タブが非アクティブ（バックグラウンド）で開く。これがないと画像を開くたびにフォーカスがそっちに移っちゃって、タイムラインのスクロールが止まる。タイムラインを流し見しながら裏でタブを溜めていく使い方では必須だった。
       </p>
 
       <h2 id="download">chrome.downloads API でダウンロード</h2>
@@ -367,12 +367,12 @@ const currentTags = ['twitter', 'chrome-extension'];
       </p>
       <CodeBlock code={filenameCode} language="javascript" />
       <p>
-        URL が想定外の形だったときは、<code>image_</code> + タイムスタンプにフォールバックする。
+        URL が想定外の形だったときは <code>image_</code> + タイムスタンプにフォールバックする。
       </p>
 
       <h3 id="dedup">同じ画像は一度だけ保存したい</h3>
       <p>
-        タイムラインを行き来すると、同じツイートがもう一度表示されたりする。content script 側の <code>dataset</code> フラグは DOM が作り直されるとリセットされるので、同じ画像を二重にダウンロードしてしまう。
+        タイムラインを行き来すると同じツイートがもう一度表示されたりする。content script 側の <code>dataset</code> フラグは DOM が作り直されるとリセットされるので、同じ画像を二重にダウンロードしてしまう。
       </p>
       <p>
         これを防ぐのに <code>chrome.downloads.search</code> を使った。URL をキーに過去のダウンロード履歴を検索して、<code>state === 'complete'</code> のものがあればスキップする。
@@ -384,15 +384,15 @@ const currentTags = ['twitter', 'chrome-extension'];
 
       <h2 id="pitfalls">つまずいたところ</h2>
       <p>
-        いちばん手こずったのは画像の遅延読み込み。ツイートの DOM ノードが追加された時点だと <code>[data-testid="tweetPhoto"] img</code> がまだなくて、<code>querySelectorAll</code> が 0 件になる。最初はタイミングの問題だと気づかなくて、「セレクタが間違ってるのでは」とずっと探し回ってた。
+        いちばん手こずったのは画像の遅延読み込み。ツイートの DOM ノードが追加された時点ではまだ <code>[data-testid="tweetPhoto"] img</code> がないので <code>querySelectorAll</code> が 0 件になる。最初はタイミングの問題だと気づかず「セレクタが間違ってるのでは」とずっと探し回ってた。
       </p>
       <p>
-        もうひとつは <code>data-testid</code> への依存。<a href="/tried/twitter-search-save/">検索保存の拡張</a>を作ったときも同じ課題にぶつかったけど、X が DOM 構造を変えると一斉に動かなくなる。対象のセレクタを一か所にまとめておけば直すのは楽。でも根本的にはどうしようもない。
+        もうひとつは <code>data-testid</code> への依存。<a href="/tried/twitter-search-save/">検索保存の拡張</a>を作ったときも同じ課題にぶつかったが、X が DOM 構造を変えると一斉に動かなくなる。対象のセレクタを一か所にまとめておけば直すのは楽。でも根本的にはどうしようもない。
       </p>
 
       <h2 id="full-source">全ソースコード</h2>
       <p>
-        ファイル構成と、各ファイルの中身を全部載せておく。このままコピーすれば <code>chrome://extensions/</code> から読み込んで使える。
+        ファイル構成と各ファイルの中身を全部載せておく。このままコピーすれば <code>chrome://extensions/</code> から読み込んで使える。
       </p>
       <pre><code class="language-text">twitter-image-opener/
 ├── manifest.json
@@ -412,7 +412,7 @@ const currentTags = ['twitter', 'chrome-extension'];
 
       <h3>popup.html</h3>
       <p>
-        ポップアップの HTML はスタイル込みなので長いけど、やってることは有効/無効トグル・動作モード選択・キーワード入力・保存ボタンの 4 つ。
+        ポップアップの HTML はスタイル込みなので長いが、やってることは有効/無効トグル・動作モード選択・キーワード入力・保存ボタンの 4 つ。
       </p>
       <pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html lang="ja"&gt;
