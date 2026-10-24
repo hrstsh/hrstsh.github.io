@@ -86,7 +86,7 @@ window.addEventListener('yt-navigate-finish', (e) => {
         時刻を拾う正規表現、前後1秒以内の重複をまとめる処理、ラベルが空のときに次の行から補完する処理は、<a href="/tips/youtube-timestamp-bookmarklet/">元のブックマークレット</a>のコードをほぼそのまま移植した。変わったのは実行のきっかけとデータの受け渡し方の部分だけで、コアのロジックに手を入れる必要はなかった。
       </p>
       <p>
-        これができたのは、抽出処理を最初から「コメント欄のDOMを受け取ってタイムスタンプの配列を返すだけの関数」として書いていたから。ブックマークレットではボタンを押した瞬間に1回呼んでいた関数を、拡張機能では <code>MutationObserver</code> のコールバックから何度も呼ぶように変えただけで、関数の中身には触れていない。実行タイミングとロジックが最初から分離されていたのが、そのまま移植できた理由になる。
+        これができたのは、抽出処理を最初から「コメント欄のDOMを受け取ってタイムスタンプの配列を返すだけの関数」として書いていたから。ブックマークレットではボタンを押した瞬間に1回呼んでいた関数を、拡張機能では <code>MutationObserver</code> のコールバックから何度も呼ぶように変えただけで、関数の中身には触れていない。
       </p>
 
       <h2>動画を切り替えてもパネルを自動表示させる</h2>
@@ -107,10 +107,10 @@ window.addEventListener('yt-navigate-finish', (e) => {
       </p>
       <CodeBlock code={observerSnippet} language="javascript" />
       <p>
-        監視対象は <code>document.querySelector('ytd-comments') || document.body</code> にしている。パネルを表示した時点では、コメント欄自体がまだDOMに挿入されていないことがあるためだ。いったん <code>document.body</code> 全体を監視しておけば、後からコメント欄が挿入されてきた瞬間もそのまま拾える。
+        監視対象は <code>document.querySelector('ytd-comments') || document.body</code> にしている。パネルを表示した時点では、コメント欄自体がまだDOMに挿入されていないことがあるためだ。一旦 <code>document.body</code> 全体を監視しておけば、後からコメント欄が挿入されてきた瞬間もそのまま拾える。
       </p>
       <p>
-        コメントは連続して差し込まれることがあるので、変化のたびに毎回再抽出すると無駄が多い。500ms のデバウンスを挟んで、DOM変化が落ち着いたタイミングでまとめて再抽出するようにした。
+        コメントは連続して差し込まれることがあるので、変化のたびに再抽出すると無駄が多い。500msのデバウンスを挟んで、DOM変化が落ち着いたタイミングでまとめて再抽出するようにした。
       </p>
 
       <h2>チャプター情報はDOMではなく内部データにあった</h2>
@@ -118,7 +118,7 @@ window.addEventListener('yt-navigate-finish', (e) => {
         コメント由来のタイムスタンプに加えて、動画に公式で設定されているチャプターも一覧に出したくなった。ところがチャプターパネルは自分で開くまでDOMにレンダリングされないため、コメントと同じやり方（DOMを見て抽出）が使えない。
       </p>
       <p>
-        調べてみると、チャプター情報はページ内部の <code>ytInitialData</code> というJS変数の中に、動画の読み込み時点からすでに入っていた。ただしcontent scriptは既定でページ本体とJSの実行環境が分離されているため、<code>window.ytInitialData</code> を直接読もうとしても <code>undefined</code> になる。<code>world: "MAIN"</code> のcontent scriptを追加し、<code>postMessage</code> で通常のcontent script側に受け渡す構成で解決したが、この部分の仕組みは<a href="/tips/chrome-extension-window-object-access/">別のTipsにまとめた</a>。
+        調べてみると、チャプター情報はページ内部の <code>ytInitialData</code> というJS変数の中に、動画の読み込み時点からすでに入っていた。ただしcontent scriptは既定でページ本体とJSの実行環境が分離されているため、<code>window.ytInitialData</code> を直接読もうとしても <code>undefined</code> になる。<code>world: "MAIN"</code> のcontent scriptを追加し、<code>postMessage</code> で通常のcontent script側に受け渡す構成で解決した。この部分の仕組みは<a href="/tips/chrome-extension-window-object-access/">別のTipsにまとめた</a>。
       </p>
       <p>
         実装した直後は、チャプターが一覧にまったく出ないという症状にぶつかった。原因は <code>yt-navigate-finish</code> イベントの <code>detail.response</code> の構造がロードのタイミングによって違うことだった。
@@ -130,7 +130,7 @@ window.addEventListener('yt-navigate-finish', (e) => {
 
       <h2>やってみて</h2>
       <p>
-        ブックマークレットから拡張機能にする作業は、抽出ロジック自体はほぼ流用できた。差分は実質「SPA遷移のフック」「MutationObserverによる追従」「MAIN worldとのメッセージング」の3点だけだった。逆に言うと、ブックマークレットが「開いたら自動で動く」体験を持てないのはこの3点が原理的に無いからで、拡張機能にする意味がどこにあるのかがはっきりした。
+        ブックマークレットから拡張機能にする作業は、抽出ロジック自体はほぼ流用できた。差分は実質「SPA遷移のフック」「MutationObserverによる追従」「MAIN worldとのメッセージング」の3点だけだった。逆に言うと、ブックマークレットだと「開いたら自動で動く」ようにできないのは、この3点が原理的にないからだ。拡張機能にする意味がどこにあるのかがはっきりした。
       </p>
     </article>
 
