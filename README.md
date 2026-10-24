@@ -198,7 +198,6 @@ You can also trigger deployment manually:
 ├── public/                 # Static assets (favicon, robots.txt, etc.)
 ├── .cursor/
 │   └── skills/             # Cursor Agent Skills（astro-code-blocks はリポジトリ同梱。human-ja-writing は .gitignore で除外・ローカルのみ）
-├── .cursorrules            # AI development guidelines
 ├── astro.config.mjs        # Astro configuration
 ├── package.json
 ├── tsconfig.json
@@ -215,7 +214,7 @@ You can also trigger deployment manually:
 
 ## Contributing
 
-For AI assistants and collaborators, please refer to [`.cursorrules`](.cursorrules) for development guidelines.
+AI アシスタント向けのルール（`CLAUDE.md` と Claude Code のスキル）は個人環境に依存するため、リポジトリには含めていない（`.gitignore` 対象）。以前の `.cursorrules` は内容がそれらと重複していたため削除した。
 
 ### Development Workflow
 
