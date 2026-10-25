@@ -84,7 +84,7 @@ const jsonLd = [
 
       <h3>FLAC</h3>
       <p>
-        可逆圧縮（ロスレス）の音声形式。圧縮しても元のデータに完全に戻せるので音質は落ちない。ファイルサイズは WAV の 50〜60% くらいになる。Amazon Music HD や Tidal の高音質プランで採用されている。音源のアーカイブや編集素材の保存に向いている。
+        可逆圧縮（ロスレス）の音声形式。圧縮しても元のデータに完全に戻せるので音質は落ちない。ファイルサイズは WAV の 50〜60% くらいになる。Amazon Music Unlimited（2021 年に Amazon Music HD を統合）や Tidal の高音質プランで採用されている。音源のアーカイブや編集素材の保存に向いている。
       </p>
 
       <h3>WAV</h3>
@@ -94,7 +94,7 @@ const jsonLd = [
 
       <h3>Ogg Vorbis</h3>
       <p>
-        Xiph.org が開発したオープンな非可逆圧縮形式。Spotify のデスクトップ・モバイルアプリはこの形式を採用している（Premium で 320kbps）。品質はいい。ただ同じ Xiph.org 系であとから出てきた Opus がほぼ上位互換なので、新しく採用されることは減っている。
+        Xiph.org が開発したオープンな非可逆圧縮形式。Spotify のデスクトップ・モバイルアプリはこの形式を採用している（Premium で 320kbps。2025 年 9 月からはロスレスの FLAC も選べる）。品質はいい。ただ同じ Xiph.org 系であとから出てきた Opus がほぼ上位互換なので、新しく採用されることは減っている。
       </p>
 
       <h3>音声フォーマット比較表</h3>
@@ -165,7 +165,7 @@ const jsonLd = [
 
       <h3>H.265（HEVC）</h3>
       <p>
-        H.264 の後継コーデック。同じ画質なら H.264 の約半分のビットレートで済む。4K・8K の高解像度コンテンツ向き。ただライセンスの仕組みが複雑。MPEG LA と Access Advance という 2 つのパテントプールに加えて独立した特許保有者もいるので、利用コストが読みにくい。ブラウザの対応も Safari 以外は限られていて、Web 配信ではあまり普及していない。Apple のエコシステム（FaceTime、iPhone の録画）では標準的に使われてる。
+        H.264 の後継コーデック。同じ画質なら H.264 の約半分のビットレートで済む。4K・8K の高解像度コンテンツ向き。ただライセンスの仕組みが複雑。HEVC Advance と VCL Advance という 2 つのパテントプールに加えて独立した特許保有者もいるので、利用コストが読みにくい。VCL Advance は旧 MPEG LA のプールで、Via LA を経て 2025 年 12 月から Access Advance の傘下にある。ブラウザの対応も Safari 以外は限られていて、Web 配信ではあまり普及していない。Apple のエコシステム（FaceTime、iPhone の録画）では標準的に使われてる。
       </p>
 
       <h3>VP9</h3>
@@ -178,7 +178,7 @@ const jsonLd = [
         Alliance for Open Media（Google・Mozilla・Netflix・Amazon などが参加）が策定した次世代のオープンコーデック。ビットレートは VP9 からもう 30% くらい、H.264 からだと約 50% 減らせる見込み。YouTube や Netflix が一部のコンテンツで採用を進めてる。
       </p>
       <p>
-        ネックはエンコードの遅さ。H.264 の 10〜100 倍くらい時間がかかるので、大量の動画をエンコードするには計算リソースが必要になる。再生側のハードウェアデコードは新しめのチップ（Apple M3 以降・Intel 第 12 世代以降・最近の Snapdragon など）から対応が広がってきている。ブラウザは Chrome・Firefox・Edge・Safari 17 以降が対応済み。
+        ネックはエンコードの遅さ。H.264 の 10〜100 倍くらい時間がかかるので、大量の動画をエンコードするには計算リソースが必要になる。再生側のハードウェアデコードは新しめのチップ（Apple M3 以降・Intel 第 11 世代以降・最近の Snapdragon など）から対応が広がってきている。ブラウザは Chrome・Firefox・Edge・Safari 17 以降が対応済み。
       </p>
 
       <h3>動画コーデック比較表</h3>
@@ -291,7 +291,7 @@ segment_002.ts
 
       <h3>MPEG-DASH（.mpd）</h3>
       <p>
-        ISO が標準化したストリーミングプロトコル。仕組みは HLS と似ていて、マニフェストファイル（.mpd）にセグメントの情報が書いてある。HLS より柔軟に設定できて、YouTube や Netflix の配信基盤で使われている。ただ iOS の Safari はネイティブ対応していないので、Apple のデバイスでは JavaScript（Media Source Extensions）経由で処理しないといけない。
+        ISO が標準化したストリーミングプロトコル。仕組みは HLS と似ていて、マニフェストファイル（.mpd）にセグメントの情報が書いてある。HLS より柔軟に設定できて、YouTube や Netflix の配信基盤で使われている。ただ iOS の Safari はネイティブ対応していないので、Apple のデバイスでは JavaScript（Media Source Extensions）経由で処理しないといけない。iPhone の Safari では MSE が使えず、iOS 17.1 で入った Managed Media Source（MSE を省電力にしたもの）経由になる。
       </p>
 
       <h3>プログレッシブダウンロードとの違い</h3>
@@ -353,9 +353,9 @@ segment_002.ts
             <tr>
               <td>Spotify</td>
               <td>—</td>
-              <td>Ogg Vorbis / AAC</td>
+              <td>Ogg Vorbis / AAC / FLAC</td>
               <td>プログレッシブ</td>
-              <td>アプリは Vorbis、Web は AAC</td>
+              <td>アプリは Vorbis（Premium はロスレスの FLAC も）、Web は AAC</td>
             </tr>
             <tr>
               <td>Apple Music</td>
@@ -489,7 +489,7 @@ segment_002.ts
 
       <h3>変換ツール</h3>
       <p>
-        音声・動画の変換なら FFmpeg がほぼ万能。コマンドラインのツールだが、対応フォーマットの広さと変換の品質ではほかのツールよりかなり上。GUI がほしいなら HandBrake（動画向け）や fre:ac（音声向け）がある。どちらも中で FFmpeg を使ってる。
+        音声・動画の変換なら FFmpeg がほぼ万能。コマンドラインのツールだが、対応フォーマットの広さと変換の品質ではほかのツールよりかなり上。GUI がほしいなら HandBrake（動画向け）や fre:ac（音声向け）がある。HandBrake は中で FFmpeg を使ってる。fre:ac は MP3 なら LAME のように形式ごとのエンコーダが中心で、FFmpeg は WMA など一部の形式で使う程度。
       </p>
 
       <h2>関連記事</h2>
