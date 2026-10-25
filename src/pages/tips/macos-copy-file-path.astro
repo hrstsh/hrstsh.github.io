@@ -8,8 +8,8 @@ const title = 'macOSでファイルパスを一発でターミナルにコピー
 const description = 'macOS で Finder のファイルパスをターミナルに簡単にコピーする5つの方法。Option+右クリック、ドラッグ&ドロップなど。';
 const path = '/tips/macos-copy-file-path';
 const faqItems = [
-  { question: 'macOSでファイルパスをコピーする方法は？', answer: 'Option+右クリックで「～のパス名をコピー」を選ぶ。または Cmd+Option+C のショートカット。ターミナルに直接貼りたい場合は、Finderからファイルをターミナルにドラッグ&ドロップするとパスが入力される。' },
-  { question: 'Option+右クリックで何ができる？', answer: 'Finderでファイルを選択した状態で Option キーを押しながら右クリックすると、メニューに「～のパス名をコピー」が追加される。クリックするとフルパスがクリップボードにコピーされる。macOS標準の機能。' },
+  { question: 'macOSでファイルパスをコピーする方法は？', answer: 'Option+右クリックで「～のパス名をコピー」を選ぶ。Cmd+Option+C のショートカットでもいい。ターミナルに直接入れたいときは、Finderからファイルをターミナルにドラッグ&ドロップすればパスが入る。' },
+  { question: 'Option+右クリックで何ができる？', answer: 'Finderでファイルを選んだ状態で Option キーを押しながら右クリックすると、メニューに「～のパス名をコピー」が出てくる。クリックすればフルパスがクリップボードに入る。macOS標準の機能。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
@@ -47,12 +47,12 @@ const currentTags = ['macos'];
 
     <article class="article-body">
       <p>
-        Finder でファイルを選んでからターミナルで操作したい時、パスをコピーするのが面倒。macOS には、簡単にファイルパスを取得する方法がいくつかある。
+        Finder で選んだファイルをターミナルで操作したいとき、パスをコピーするのが地味に面倒。macOS にはファイルパスを手早く取る方法がいくつか用意されてる。
       </p>
 
       <h2>方法1: Option + 右クリック（一番簡単）</h2>
       <p>
-        macOS に標準で備わっている機能。
+        macOS に最初から入っている機能。
       </p>
       <ol>
         <li>Finder でファイルやフォルダを選択</li>
@@ -61,25 +61,25 @@ const currentTags = ['macos'];
         <li>フルパスがクリップボードにコピーされる</li>
       </ol>
 
-      <p>コピーされるパスの例：</p>
+      <p>コピーされるパスはこんな形。</p>
       <pre><code class="language-text">/Users/username/Documents/project/file.txt</code></pre>
 
       <h2>方法2: ターミナルにドラッグ&ドロップ</h2>
       <p>
-        直接ターミナルにパスを貼り付けたい場合に便利。
+        ターミナルにそのままパスを入れたいときはこっちが楽。
       </p>
       <ol>
         <li>ターミナルを開く</li>
         <li>Finder からファイルやフォルダをターミナルのウィンドウにドラッグ&ドロップ</li>
-        <li>パスが自動的に入力される（スペースが含まれる場合はエスケープされる）</li>
+        <li>パスが自動で入力される（スペースが入っているとエスケープされる）</li>
       </ol>
 
-      <p>例：</p>
+      <p>たとえばこうなる。</p>
       <CodeBlock code={bashExampleCode} language="bash" />
 
       <h2>方法3: Cmd + Option + C（ショートカット）</h2>
       <p>
-        ファイルを選択してショートカットでコピーできる。
+        ファイルを選んでショートカットキーを押すだけ。
       </p>
       <ol>
         <li>Finder でファイルやフォルダを選択</li>
@@ -88,19 +88,19 @@ const currentTags = ['macos'];
       </ol>
 
       <p>
-        キーボードだけで完結するので、マウスを使わずに操作したい時に便利。
+        キーボードだけで済むので、マウスに手を伸ばしたくないときはこれ。
       </p>
 
-      <h2>方法4: Automator でカスタムサービスを作成</h2>
+      <h2>方法4: Automator でカスタムサービスを作る</h2>
       <p>
-        より高度なカスタマイズがしたい場合、Automator で独自のサービスを作成できる。
+        もう少し自分好みにしたいなら、Automator で専用のサービスを作れる。
       </p>
       <ol>
         <li><strong>Automator</strong> を起動（Applications > Automator）</li>
         <li><strong>クイックアクション</strong> を選択</li>
         <li>「選択された Finder 項目を取得」アクションを追加</li>
         <li>「AppleScript を実行」アクションを追加</li>
-        <li>以下のスクリプトを入力：</li>
+        <li>次のスクリプトを入力</li>
       </ol>
 
       <CodeBlock code={applescriptCode} language="applescript" />
@@ -110,9 +110,9 @@ const currentTags = ['macos'];
         <li>Finder でファイルを右クリック→「クイックアクション」→作成したサービス名で実行</li>
       </ol>
 
-      <h2>方法5: ショートカット.app で独自ショートカットを作成</h2>
+      <h2>方法5: ショートカット.app で自分用のショートカットを作る</h2>
       <p>
-        macOS Monterey 以降では、「ショートカット」アプリでも同様のことができる。
+        macOS Monterey 以降なら「ショートカット」アプリでも同じことができる。
       </p>
       <ol>
         <li><strong>ショートカット</strong> アプリを開く</li>
@@ -125,53 +125,53 @@ const currentTags = ['macos'];
 
       <h2>相対パス vs 絶対パス</h2>
       <p>
-        上記の方法でコピーされるのは<strong>絶対パス</strong>（フルパス）。相対パスが必要な場合は、以下のように手動で編集する必要がある。
+        ここまでの方法でコピーされるのは<strong>絶対パス</strong>（フルパス）。相対パスが必要なときは、次のように手で直すことになる。
       </p>
 
       <CodeBlock code={pathComparisonCode} language="bash" />
 
-      <h2>複数ファイルのパスを一度にコピー</h2>
+      <h2>複数ファイルのパスもまとめてコピーできる</h2>
       <p>
-        複数のファイルを選択して <strong>Option + 右クリック</strong> → 「～のパス名をコピー」を実行すると、すべてのファイルのパスが改行区切りでコピーされる。
+        複数のファイルを選んだ状態で <strong>Option + 右クリック</strong> → 「～のパス名をコピー」を実行すると、全部のパスが改行区切りでコピーされる。
       </p>
 
       <pre><code class="language-text">/Users/username/Documents/file1.txt
 /Users/username/Documents/file2.txt
 /Users/username/Documents/file3.txt</code></pre>
 
-      <h2>こんな時に便利</h2>
+      <h2>使いどころ</h2>
       <ul>
         <li>Finder で見つけたファイルをターミナルで操作したい</li>
         <li>スクリプトやコマンドにファイルパスを渡したい</li>
         <li>深い階層のディレクトリに <code>cd</code> したい</li>
         <li>複数のファイルパスを一度に取得したい</li>
-        <li>ドキュメントやメールにファイルパスを記載したい</li>
+        <li>ドキュメントやメールにファイルパスを書きたい</li>
       </ul>
 
-      <h2>おまけ: 現在のディレクトリを Finder で開く</h2>
+      <h2>おまけ: 今いるディレクトリを Finder で開く</h2>
       <p>
-        逆に、ターミナルから現在のディレクトリを Finder で開きたい場合は、以下のコマンドを実行する：
+        逆にターミナルから今いるディレクトリを Finder で開きたいときは、これを打てばいい。
       </p>
 
       <CodeBlock code={openCommandCode} language="bash" />
 
       <p>
-        <code>.</code> は現在のディレクトリを意味する。<code>open</code> コマンドは指定したファイルやディレクトリを Finder で開く。
+        <code>.</code> が今いるディレクトリのこと。<code>open</code> は指定したファイルやディレクトリを Finder で開いてくれる。
       </p>
 
       <h2>注意</h2>
       <ul>
-        <li>コピーされるパスにスペースや特殊文字が含まれる場合、ターミナルではエスケープ（<code>\</code>）が必要になることがある。</li>
-        <li>シンボリックリンクの場合、リンク先のパスではなくリンク自体のパスがコピーされる。</li>
-        <li>Automator やショートカットで作成したサービスは、初回実行時にアクセス許可を求められることがある。</li>
+        <li>コピーしたパスにスペースや特殊文字が入っていると、ターミナルではエスケープ（<code>\</code>）しないと通らないことがある。</li>
+        <li>シンボリックリンクだと、リンク先じゃなくリンク自体のパスがコピーされる。</li>
+        <li>Automator やショートカットで作ったサービスは、最初に動かすとアクセスの許可を求められることがある。</li>
       </ul>
 
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>macOSでファイルパスをコピーする方法は？</dt>
-        <dd>Option+右クリックで「～のパス名をコピー」を選ぶ。または Cmd+Option+C のショートカット。ターミナルに直接貼りたい場合は、Finderからファイルをターミナルにドラッグ&ドロップするとパスが入力される。</dd>
+        <dd>Option+右クリックで「～のパス名をコピー」を選ぶ。Cmd+Option+C のショートカットでもいい。ターミナルに直接入れたいときは、Finderからファイルをターミナルにドラッグ&ドロップすればパスが入る。</dd>
         <dt>Option+右クリックで何ができる？</dt>
-        <dd>Finderでファイルを選択した状態で Option キーを押しながら右クリックすると、メニューに「～のパス名をコピー」が追加される。クリックするとフルパスがクリップボードにコピーされる。macOS標準の機能。</dd>
+        <dd>Finderでファイルを選んだ状態で Option キーを押しながら右クリックすると、メニューに「～のパス名をコピー」が出てくる。クリックすればフルパスがクリップボードに入る。macOS標準の機能。</dd>
       </dl>
 
     </article>
