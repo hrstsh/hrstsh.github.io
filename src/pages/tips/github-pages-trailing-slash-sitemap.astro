@@ -14,12 +14,12 @@ const faqItems = [
   {
     question: 'Search Console の「リダイレクトエラー」はなぜ起きる？',
     answer:
-      '提出した URL（例: 末尾スラッシュなし）と、サーバーが返す最終 URL（末尾スラッシュ付き）が一致しないと、リダイレクトエラーとして報告される。GitHub Pages は /path を /path/ へ 301 リダイレクトするので、サイトマップや canonical がどちらか一方の形に偏っていると起きやすい。',
+      '提出 URL（例: 末尾スラッシュなし）とサーバーが返す最終 URL（末尾スラッシュ付き）が一致しないと、リダイレクトエラーとして出る。GitHub Pages は /path を /path/ へ 301 するので、サイトマップや canonical がどちらか一方の形に偏っていると起きやすい。',
   },
   {
     question: 'Astro ではどう直す？',
     answer:
-      'astro.config.mjs で trailingSlash: \'always\' を指定し、配信される URL（末尾スラッシュ付き）にページと canonical を揃える。サイトマップを自前で出しているなら、loc も同じルールで末尾スラッシュを付ける。',
+      'astro.config.mjs で trailingSlash: \'always\' を指定して、配信される URL（末尾スラッシュ付き）にページと canonical をそろえる。サイトマップを自前で出しているなら、loc も同じルールで末尾スラッシュを付ける。',
   },
 ];
 
@@ -55,23 +55,23 @@ const currentTags = ['dev', 'github'];
 
     <article class="article-body">
       <p>
-        個人サイトを GitHub Pages に載せたあと、Search Console でインデックスが進まなかった。理由を開くと「リダイレクトエラー」が並んでいた。
+        個人サイトを GitHub Pages に載せたあと、Search Console でインデックスがなかなか進まなかった。理由を見てみたら「リダイレクトエラー」が並んでた。
       </p>
       <p>
-        末尾スラッシュの付け方と、サイトマップに書いた URL が噛み合っていなかった。Astro の設定とサイトマップ生成を同じルールに揃えたら、こちらでは収まった。
+        原因は末尾スラッシュの付け方とサイトマップに書いた URL が噛み合ってなかったこと。Astro の設定とサイトマップの生成を同じルールにそろえたら、自分の環境ではこれで収まった。
       </p>
 
       <h2>何が起きていたか</h2>
       <p>
-        GitHub Pages は多くの場合、<code>/foo/bar</code> を <code>foo/bar/index.html</code> として配信する。<code>/foo/bar</code>（末尾スラッシュなし）で開くと <code>/foo/bar/</code> へ 301 される構成になりやすい。
+        GitHub Pages はだいたい <code>/foo/bar</code> を <code>foo/bar/index.html</code> として配信する。なので <code>/foo/bar</code>（末尾スラッシュなし）で開くと <code>/foo/bar/</code> へ 301 される形になりやすい。
       </p>
       <p>
-        サイトマップや canonical が <code>https://example.com/foo/bar</code> のままだと、提出した URL とクロール後の最終 URL が一致しない。Search Console はそれをリダイレクトまわりの不整合として扱う。
+        サイトマップや canonical が <code>https://example.com/foo/bar</code> のままだと、提出した URL とクロールしたあとの最終 URL がずれる。Search Console はこれをリダイレクトまわりの不整合として扱う。
       </p>
 
       <h2>やったこと（方針）</h2>
       <p>
-        ページ本体・canonical・サイトマップの <code>&lt;loc&gt;</code> を、ブラウザで実際に着地する URL に揃えた。このサイトでは末尾スラッシュ付きに統一している。
+        ページ本体・canonical・サイトマップの <code>&lt;loc&gt;</code> を、ブラウザで実際に着地する URL にそろえた。このサイトは末尾スラッシュ付きで統一してる。
       </p>
       <ol>
         <li>Astro で <code>trailingSlash: 'always'</code> を指定する</li>
@@ -80,46 +80,46 @@ const currentTags = ['dev', 'github'];
 
       <h2>1. Astro の設定</h2>
       <p>
-        <code>astro.config.mjs</code> に次を入れる（<code>site</code> は自分のドメインに置き換え）。
+        <code>astro.config.mjs</code> に次を入れる（<code>site</code> は自分のドメインに置き換える）。
       </p>
       <CodeBlock code={astroConfigSnippet} language="javascript" />
 
       <h2>2. サイトマップの URL 形式</h2>
       <p>
-        このサイトでは <code>@astrojs/sitemap</code> の代わりに、ビルド後の <code>dist/</code> を走査して <code>sitemap-v3.xml</code> を出すスクリプトを使っている。<code>pathToUrl</code> だけ抜き出すと、次のイメージになる。
+        このサイトは <code>@astrojs/sitemap</code> を使わずに、ビルド後の <code>dist/</code> を走査して <code>sitemap-v3.xml</code> を出すスクリプトで作っている。<code>pathToUrl</code> だけ抜き出すとこんな感じ。
       </p>
       <CodeBlock code={pathToUrlSnippet} language="javascript" />
       <p>
-        ルート <code>/</code> だけは二重スラッシュにならないよう分けている。別のジェネレータを使う場合も、出力 URL を本番で開いて最終表示と突き合わせておくとよい。
+        ルートの <code>/</code> だけは二重スラッシュにならないように分けてる。別のジェネレータを使うときも、出力された URL を本番で開いて最終的な表示と突き合わせておくといい。
       </p>
 
-      <h2>どちらに統一するか</h2>
+      <h2>どちらにそろえるか</h2>
       <p>
-        末尾スラッシュは、付ける方針（<code>always</code>）でも付けない方針（<code>never</code>）でも、サイト全体で揃ってさえいれば問題ない。大事なのは方向ではなく、ページ・canonical・サイトマップの三つが同じ形を指していることになる。ただし GitHub Pages は <code>/path/index.html</code> を配信する都合で末尾スラッシュ付きに着地しやすいため、無理に <code>never</code> へ寄せるより <code>always</code> に合わせるほうが衝突が少ない。書き換えを細かく制御できるホスティングなら、どちらに寄せても構わない。
+        末尾スラッシュは付ける方針（<code>always</code>）でも付けない方針（<code>never</code>）でも、サイト全体でそろってさえいれば問題ない。大事なのは向きじゃなく、ページ・canonical・サイトマップの三つが同じ形を指していること。ただ GitHub Pages は <code>/path/index.html</code> を配信する都合で末尾スラッシュ付きに着地しやすいので、無理に <code>never</code> へ寄せるより <code>always</code> に合わせるほうがぶつかりにくい。書き換えを細かく制御できるホスティングなら、どちらに寄せてもいい。
       </p>
 
       <h2>デプロイ後の確認</h2>
       <ul>
-        <li>任意の記事ページを開き、アドレスバーが末尾スラッシュ付きになっているか</li>
+        <li>適当な記事ページを開いて、アドレスバーが末尾スラッシュ付きになっているか</li>
         <li>公開中のサイトマップの <code>&lt;loc&gt;</code> がそれと同じ形式か</li>
-        <li>コマンドで確かめるなら <code>curl -I https://example.com/foo/bar</code> を実行し、<code>301</code> と <code>location</code> ヘッダで最終的にどの URL へ着地するかを見る</li>
+        <li>コマンドで確かめるなら <code>curl -I https://example.com/foo/bar</code> を実行して、<code>301</code> と <code>location</code> ヘッダで最終的にどの URL へ着地するかを見る</li>
         <li>Search Console の URL 検査で、選んだ URL が「インデックス登録済み」に落ち着くか（反映は数日かかることもある）</li>
       </ul>
 
       <h2>関連</h2>
       <p>
-        サイト全体の立ち上げは <a href="/tried/github-pages-setup/">GitHub Pages を作成して公開してみた</a> に書いてある。SEO の方針はリポジトリの README にも短く載せている。
+        サイト全体の立ち上げは <a href="/tried/github-pages-setup/">GitHub Pages を作成して公開してみた</a> に書いた。SEO の方針はリポジトリの README にも短く載せてる。
       </p>
 
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>Search Console の「リダイレクトエラー」はなぜ起きる？</dt>
         <dd>
-          提出 URL（例: 末尾スラッシュなし）と、サーバーが返す最終 URL（末尾スラッシュ付き）が一致しないと、リダイレクトエラーとして出る。GitHub Pages は /path を /path/ へ 301 するので、サイトマップや canonical がどちらか一方の形に偏っていると起きやすい。
+          提出 URL（例: 末尾スラッシュなし）とサーバーが返す最終 URL（末尾スラッシュ付き）が一致しないと、リダイレクトエラーとして出る。GitHub Pages は /path を /path/ へ 301 するので、サイトマップや canonical がどちらか一方の形に偏っていると起きやすい。
         </dd>
         <dt>Astro ではどう直す？</dt>
         <dd>
-          astro.config.mjs で trailingSlash: 'always' を指定し、配信される URL（末尾スラッシュ付き）にページと canonical を揃える。サイトマップを自前で出しているなら、loc も同じルールで末尾スラッシュを付ける。
+          astro.config.mjs で trailingSlash: 'always' を指定して、配信される URL（末尾スラッシュ付き）にページと canonical をそろえる。サイトマップを自前で出しているなら、loc も同じルールで末尾スラッシュを付ける。
         </dd>
       </dl>
     </article>
