@@ -48,10 +48,26 @@ function toCSV(rows) {
 const pickSnippet = `// 表が複数あるときはクリックで選べるようにする
 const tables = [...document.querySelectorAll('table')];
 
+function onPick(e) {
+  // リンク遷移などのページ側の動作を止める
+  e.preventDefault();
+  e.stopPropagation();
+  const table = e.currentTarget;
+
+  // 枠とイベントを外してから、選ばれた表だけを変換してコピーする
+  tables.forEach((t) => {
+    t.style.outline = '';
+    t.style.cursor = '';
+    t.removeEventListener('click', onPick, true);
+  });
+  copyTable(table); // 中身は tableToRows → toTSV / toCSV → クリップボード（省略）
+}
+
 tables.forEach((t) => {
   t.style.outline = '2px solid #667eea';
   t.style.cursor = 'pointer';
-  t.addEventListener('click', onPick, { once: true });
+  // 第3引数を true にして、キャプチャ段階で受け取る
+  t.addEventListener('click', onPick, true);
 });`;
 
 const bookmarkletCode = `javascript:(function(){var mode=confirm('OK=TSV（Excel/スプレッドシート向け）, キャンセル=CSV')?'tsv':'csv';function cell(c){return c.innerText.replace(/[\\t\\r\\n]+/g,' ').trim();}function rows(t){return [].map.call(t.rows,function(tr){return [].map.call(tr.cells,cell);});}function tsv(r){return r.map(function(x){return x.join('\\t');}).join('\\n');}function csv(r){return r.map(function(x){return x.map(function(c){return /[\",\\n]/.test(c)?'\"'+c.replace(/\"/g,'\"\"')+'\"':c;}).join(',');}).join('\\n');}function out(t){var r=rows(t);if(!r.length){alert('この表には行がありません');return;}var text=mode==='tsv'?tsv(r):csv(r);navigator.clipboard.writeText(text).then(function(){toast(r.length+'行を'+mode.toUpperCase()+'でコピーしました');}).catch(function(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast(r.length+'行を'+mode.toUpperCase()+'でコピーしました');}catch(e){toast('コピーに失敗しました');}ta.remove();});}function toast(m){var d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#667eea;color:#fff;padding:8px 16px;border-radius:4px;z-index:99999;font-family:sans-serif;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.3)';document.body.appendChild(d);setTimeout(function(){d.remove();},2000);}var tables=[].slice.call(document.querySelectorAll('table'));if(!tables.length){alert('このページには表（table要素）が見つかりませんでした');return;}if(tables.length===1){out(tables[0]);return;}function clear(){tables.forEach(function(t){t.style.outline='';t.style.cursor='';t.removeEventListener('click',pick,true);});}function pick(e){e.preventDefault();e.stopPropagation();var t=e.currentTarget;clear();out(t);}tables.forEach(function(t){t.style.outline='2px solid #667eea';t.style.cursor='pointer';t.addEventListener('click',pick,true);});toast('コピーしたい表をクリックしてください（'+tables.length+'個）');})();`;
