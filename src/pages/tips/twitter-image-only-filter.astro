@@ -10,11 +10,6 @@ const jsonLd = tipArticle(title.replace(/ - hrの備忘録$/, ''), description, 
 
 const bookmarkletCode = `javascript:(function(){const id='twitter-img-filter';let s=document.getElementById(id);if(s){s.remove();}else{s=document.createElement('style');s.id=id;s.textContent='div[data-testid="cellInnerDiv"]:has(article):not(:has(div[data-testid="tweetPhoto"])):not(:has(video)){display:none!important;}';document.head.appendChild(s);}})();`;
 
-const folderStructure = `twitter-image-only-filter/
-├── manifest.json
-├── content.js
-└── popup.html`;
-
 const manifestCode = `{
   "manifest_version": 3,
   "name": "Twitter Image Only Filter",
@@ -220,7 +215,7 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
         <li>X(Twitter) を開く</li>
         <li>拡張機能アイコンをクリック</li>
         <li>「画像のみ表示」チェックボックスをオン</li>
-        <li>ページをリロードするとフィルターが適用される</li>
+        <li>開いている X のタブにすぐフィルターがかかる（効かなければページをリロードする）</li>
       </ol>
 
       <h2>どうやって隠しているか</h2>
