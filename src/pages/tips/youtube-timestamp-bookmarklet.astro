@@ -149,7 +149,7 @@ const currentTags = ['youtube', 'bookmarklet'];
       <CodeBlock code={selectorSnippet} language="javascript" />
 
       <p>
-        各コメントのテキストから、行頭に時刻（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抜き出す。<code>m</code> フラグで <code>^</code> を各行の先頭にマッチさせているので、<code>1:23コメント</code> みたいにスペースなしで続く書き方も拾える。文の途中に書かれた時刻（「3:45あたりが好き」のような書き方）は行頭の判定で弾かれる。抜き出した時刻は秒数に変換しておく。
+        各コメントのテキストから、行頭に時刻（<code>0:00</code> や <code>1:23:45</code>）が来るパターンを正規表現で抜き出す。<code>m</code> フラグで <code>^</code> を各行の先頭にマッチさせているので、複数行のコメントでも行ごとに拾える。時刻のあとのスペースや区切りの記号は省略できるパターンにしてあって、<code>1:23コメント</code> みたいに続けて書いたものも拾える。文の途中に書かれた時刻（「サビの3:45あたりが好き」のような書き方）は行頭の判定で弾かれる。抜き出した時刻は秒数に変換しておく。
       </p>
       <CodeBlock code={regexSnippet} language="javascript" />
 
