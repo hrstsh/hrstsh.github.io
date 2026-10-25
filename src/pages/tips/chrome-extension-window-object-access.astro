@@ -24,7 +24,7 @@ const faqItems = [
   {
     question: 'postMessageを使うときのセキュリティ上の注意点は？',
     answer:
-      '送信先は targetOrigin に location.origin を指定して、任意のオリジンには送らない。受信側では event.source が window自身であることと event.data.type が想定した値であることを確かめてから処理する。ほかのスクリプトやiframeからの偽装メッセージを拾わないようにするため。',
+      '送信先は targetOrigin に location.origin を指定して、任意のオリジンには送らない。受信側では event.source が window自身であることと event.data.type が想定した値であることを確かめてから処理する。これでiframeからのメッセージや関係ないメッセージは拾わずに済む。ただページ自身のスクリプトは type を真似て送れるので、受け取ったデータは信用しすぎない。',
   },
   {
     question: 'この仕組みはYouTube以外のサイトでも使える？',
@@ -132,7 +132,7 @@ window.postMessage({ type: 'my-ext-request' }, location.origin);`;
       <CodeBlock code={mainWorldSnippet} language="javascript" />
       <CodeBlock code={isolatedWorldSnippet} language="javascript" />
       <p>
-        受信側で <code>e.source !== window</code> と <code>e.data.type</code> をチェックしてるのは、ほかのiframeやページ内の別のスクリプトが送ってくる関係ない message イベントを拾わないため。<code>postMessage</code> の送信先も <code>'*'</code> ではなく <code>location.origin</code> にして、想定外のオリジンには送らないようにしている。
+        受信側で <code>e.source !== window</code> と <code>e.data.type</code> をチェックしてるのは、ほかのiframeやページ内の別のスクリプトが送ってくる関係ない message イベントを拾わないため。ただページのスクリプトも同じ <code>window</code> から送れるので <code>type</code> を真似されると見分けられない。受け取ったデータは信用しすぎないほうがいい。<code>postMessage</code> の送信先も <code>'*'</code> ではなく <code>location.origin</code> にして、想定外のオリジンには送らないようにしている。
       </p>
 
       <h2 id="timing">1回送るだけだと取りこぼす</h2>
@@ -144,7 +144,7 @@ window.postMessage({ type: 'my-ext-request' }, location.origin);`;
       </p>
       <CodeBlock code={requestResponseSnippet} language="javascript" />
       <p>
-        これでisolated world側のリスナー登録が多少遅れても、こっちから再送を頼めば必ず最新のデータを受け取れる。YouTubeみたいにSPA遷移でページ内のデータが更新されるサイトなら、遷移イベントのたびに同じ流れでpostMessageし直す作りにしておくと安定する。
+        これでisolated world側のリスナー登録が多少遅れても、こっちから再送を頼めば必ず最新のデータを受け取れる。SPA遷移でデータが入れ替わるサイトなら、遷移イベントのたびに同じ流れでpostMessageし直す作りにしておくと安定する。ただYouTubeの <code>window.ytInitialData</code> は最初に開いたページのまま更新されない（2026年10月時点）。遷移後のデータは <code>yt-navigate-finish</code> イベントの <code>detail.response</code> に入ってくるので、送り直すときはそこから取り出す。
       </p>
 
       <h2>関連記事</h2>
@@ -160,7 +160,7 @@ window.postMessage({ type: 'my-ext-request' }, location.origin);`;
         <dt>MAIN worldのスクリプトから chrome.storage は使える？</dt>
         <dd>使えない。MAIN worldはページと同じ実行環境になる代わりに、ほとんどのchrome.* APIが使えなくなる。データはpostMessageなどでisolated world側のcontent scriptに渡して、chrome.* APIはisolated world側で呼ぶ。</dd>
         <dt>postMessageを使うときのセキュリティ上の注意点は？</dt>
-        <dd>送信先は targetOrigin に location.origin を指定して、任意のオリジンには送らない。受信側では event.source が window自身であることと event.data.type が想定した値であることを確かめてから処理する。ほかのスクリプトやiframeからの偽装メッセージを拾わないようにするため。</dd>
+        <dd>送信先は targetOrigin に location.origin を指定して、任意のオリジンには送らない。受信側では event.source が window自身であることと event.data.type が想定した値であることを確かめてから処理する。これでiframeからのメッセージや関係ないメッセージは拾わずに済む。ただページ自身のスクリプトは type を真似て送れるので、受け取ったデータは信用しすぎない。</dd>
         <dt>この仕組みはYouTube以外のサイトでも使える？</dt>
         <dd>使える。SPA（Single Page Application）で、実際のデータがDOMに描画される前からページ内部のJS変数に入っているサイトなら同じやり方でいける。変数名や構造はサイトごとに違うので、DevToolsのConsoleで window を調べて探すことになる。</dd>
       </dl>
