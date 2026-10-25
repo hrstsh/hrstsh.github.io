@@ -144,28 +144,28 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
 
     <article class="article-body">
       <p>
-        X(Twitter) でイラストレーターや写真家の投稿を見る時、テキストツイートが邪魔で画像だけをサクッと見たいことがある。ブックマークレットまたは Chrome 拡張機能でテキストツイートを自動で非表示にできる。
+        X(Twitter) でイラストレーターや写真家の投稿を見るとき、テキストツイートが邪魔で画像だけサクッと見たいことがある。ブックマークレットか Chrome 拡張機能を使えばテキストツイートを自動で非表示にできる。
       </p>
 
       <h2>何ができるか</h2>
       <p>
-        以下が実現できる：
+        できるのはこのあたり。
       </p>
       <ul>
         <li>画像・動画が含まれないツイートを自動で非表示</li>
         <li>タイムラインが画像・動画付きツイートだけになる</li>
-        <li>イラストや写真の閲覧に集中できる</li>
-        <li>ワンクリックで ON/OFF 切り替え可能（拡張機能版）</li>
+        <li>イラストや写真を見るのに集中できる</li>
+        <li>ワンクリックで ON/OFF を切り替えられる（拡張機能版）</li>
       </ul>
 
       <h2>方法1: ブックマークレット版（一番簡単）</h2>
       <p>
-        インストール不要で、ブックマークレットを作成するだけ。
+        インストールはいらない。ブックマークレットを作るだけ。
       </p>
       <ol>
-        <li>Chrome で新しいブックマークを作成（ブックマークバーを右クリック → 「ページを追加」）</li>
+        <li>Chrome で新しいブックマークを作る（ブックマークバーを右クリック → 「ページを追加」）</li>
         <li>名前を「Twitter 画像のみ」などに設定</li>
-        <li>URL に以下のコードを貼り付け：</li>
+        <li>URL に次のコードを貼り付ける</li>
       </ol>
 
       <CodeBlock code={bookmarkletCode} language="javascript" />
@@ -173,18 +173,18 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
       <h3>使い方</h3>
       <ol>
         <li>X(Twitter) のタイムラインを開く</li>
-        <li>作成したブックマークレットをクリック</li>
+        <li>作ったブックマークレットをクリック</li>
         <li>画像・動画がないツイートが非表示になる</li>
         <li>もう一度クリックすると解除される（トグル動作）</li>
       </ol>
 
       <h2>方法2: Chrome 拡張機能版（自動適用）</h2>
       <p>
-        ページを開くたびに自動で適用される拡張機能を作成する。
+        ページを開くたびに自動で効く拡張機能を作る。
       </p>
 
       <h3>1. フォルダ構成</h3>
-      <p>以下の構成でフォルダを作成する：</p>
+      <p>フォルダはこんな構成にする。</p>
       <pre><code class="language-text">twitter-image-only-filter/
 ├── manifest.json
 ├── content.js
@@ -202,7 +202,7 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
 
       <h3>5. popup.js</h3>
       <p>
-        CSP (Content Security Policy) 対策のため、スクリプトを別ファイルに分離：
+        CSP (Content Security Policy) 対策で、スクリプトは別ファイルに分けておく。
       </p>
       <CodeBlock code={popupJsCode} language="javascript" />
 
@@ -211,7 +211,7 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
         <li>Chrome で <code>chrome://extensions/</code> を開く</li>
         <li>右上の「デベロッパーモード」をオン</li>
         <li>「パッケージ化されていない拡張機能を読み込む」をクリック</li>
-        <li>作成したフォルダを選択</li>
+        <li>作ったフォルダを選択</li>
         <li>拡張機能がインストールされる</li>
       </ol>
 
@@ -223,15 +223,15 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
         <li>ページをリロードするとフィルターが適用される</li>
       </ol>
 
-      <h2>仕組みの解説</h2>
+      <h2>どうやって隠しているか</h2>
       <p>
         このフィルターは CSS の <code>:has()</code> 擬似クラスを使ってる。
       </p>
       
-      <h3>セレクタの詳細</h3>
+      <h3>セレクタの中身</h3>
       <pre><code class="language-css">div[data-testid="cellInnerDiv"]:has(article):not(:has(div[data-testid="tweetPhoto"])):not(:has(video))</code></pre>
       
-      <p>このセレクタの意味：</p>
+      <p>このセレクタはこう読む。</p>
       <ul>
         <li><code>div[data-testid="cellInnerDiv"]</code> - タイムラインの各セル（ツイート全体を囲む div）</li>
         <li><code>:has(article)</code> - article 要素を含むセル（実際のツイート）</li>
@@ -240,37 +240,37 @@ const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
       </ul>
       
       <p>
-        X(Twitter) の DOM 構造では、各ツイートは <code>cellInnerDiv</code> という div で囲まれており、画像がある場合は <code>tweetPhoto</code> という testid を持つ div が含まれる。article タグではなく、その親の div を隠すことで確実にツイート全体が非表示になる。
+        X(Twitter) の DOM では各ツイートが <code>cellInnerDiv</code> という div で囲まれていて、画像があるときは <code>tweetPhoto</code> という testid を持つ div が入っている。article タグではなくその親の div ごと隠してるので、ツイート全体が確実に消える。
       </p>
 
       <h2>カスタマイズ</h2>
 
-      <h3>リツイートも非表示にしたい場合</h3>
-      <p>content.js の <code>applyFilter()</code> 関数内、<code>style.textContent</code> に以下の CSS を追加：</p>
+      <h3>リツイートも隠したいとき</h3>
+      <p>content.js の <code>applyFilter()</code> 関数の中の <code>style.textContent</code> に次の CSS を足す。</p>
       <CodeBlock code={cssCustomCode} language="css" />
 
-      <h3>特定のユーザーのツイートは画像なしでも表示したい場合</h3>
-      <p>content.js の <code>applyFilter()</code> 関数を以下のように書き換える：</p>
+      <h3>特定のユーザーだけは画像なしでも表示したい</h3>
+      <p>content.js の <code>applyFilter()</code> 関数をこう書き換える。</p>
       <CodeBlock code={jsCustomCode} language="javascript" />
       <p>
-        <code>username1</code>, <code>username2</code> のところに、表示したいユーザーの ID を入れる。これらのユーザーのツイートは画像がなくても表示される。
+        <code>username1</code>, <code>username2</code> のところに表示したいユーザーの ID を入れる。ここに入れたユーザーのツイートは画像がなくても表示される。
       </p>
 
       <h2>注意</h2>
       <ul>
-        <li>X(Twitter) の仕様変更で将来的に動作しなくなる可能性がある。</li>
+        <li>X(Twitter) 側の仕様が変わればそのうち効かなくなるかもしれない。</li>
         <li>ブックマークレット版はページをリロードすると解除される。</li>
-        <li>拡張機能版は設定が保存され、次回以降も自動適用される。</li>
-        <li>スクロールして新しいツイートが読み込まれた時も自動でフィルターされる。</li>
+        <li>拡張機能版は設定が保存されるので、次からも ON のまま。</li>
+        <li>スクロールで新しいツイートが読み込まれたときも自動でフィルターされる。</li>
       </ul>
 
-      <h2>こんな時に便利</h2>
+      <h2>こんなときに便利</h2>
       <ul>
         <li>イラストレーターの作品だけを見たい</li>
-        <li>写真家のタイムラインをギャラリーのように見たい</li>
+        <li>写真家のタイムラインをギャラリーみたいに見たい</li>
         <li>画像付きツイートだけを流し見したい</li>
         <li>テキストツイートが多すぎて画像が埋もれる</li>
-        <li>純粋にビジュアルコンテンツだけを楽しみたい</li>
+        <li>単純に画像・動画だけを楽しみたい</li>
       </ul>
 
     </article>
