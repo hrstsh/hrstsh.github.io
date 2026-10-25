@@ -129,7 +129,7 @@ const breakExample = `// @ の直後にゼロ幅スペースを挿入
         このうちよく問題を起こすのは ZWS（<code>U+200B</code>）と BOM（<code>U+FEFF</code>）。ZWS は Web ページや SNS でよく使われていて、コピペで知らないうちに持ち込まれることが多い。BOM はテキストファイルの先頭に残っていて、スクリプトの読み込みや CSV のパースで邪魔になることがある。
       </p>
       <p>
-        ZWJ はふだん見かけない文字に思える。でも実は毎日のように使ってる。スマートフォンで「家族」や「カップル」「肌の色違い」の絵文字を出すとき、中では複数の絵文字を ZWJ でつないで 1 つの絵文字として表示している。たとえば「👩‍👩‍👧‍👦」は、女性+ZWJ+女性+ZWJ+女の子+ZWJ+男の子の 7 文字でできている。
+        ZWJ はふだん見かけない文字に思える。でも実は毎日のように使ってる。スマートフォンで「家族」や「カップル」の絵文字を出すとき、中では複数の絵文字を ZWJ でつないで 1 つの絵文字として表示している。たとえば「👩‍👩‍👧‍👦」は、女性+ZWJ+女性+ZWJ+女の子+ZWJ+男の子の 7 文字でできている。肌の色違いの絵文字のほうは ZWJ を使わず、元の絵文字のすぐ後ろに肌の色を表す文字（<code>U+1F3FB</code>〜<code>U+1F3FF</code>）を付けるだけ。
       </p>
 
       <h2 id="where">どこから混入するか</h2>
@@ -139,7 +139,7 @@ const breakExample = `// @ の直後にゼロ幅スペースを挿入
       <ul>
         <li><strong>Web ページからのコピペ</strong>: CMS や WYSIWYG エディタが行間や単語区切りに ZWS を入れていることがある。見た目は普通のテキストなのに、コピーすると一緒についてくる</li>
         <li><strong>SNS・チャットアプリ</strong>: 一部のアプリは文字列を整形するときにゼロ幅文字を入れる。Slack や Discord でコピーしたテキストに混ざるケースが報告されている</li>
-        <li><strong>テキストファイルの BOM</strong>: Windows のメモ帳で UTF-8 保存すると、ファイルの先頭に BOM（<code>U+FEFF</code>）が付く。別の環境で開くと、この 3 バイトがゴミ文字として出たりパースエラーの原因になったりする</li>
+        <li><strong>テキストファイルの BOM</strong>: Windows のメモ帳で BOM 付きの UTF-8 を選んで保存すると、ファイルの先頭に BOM（<code>U+FEFF</code>）が付く。2019 年の Windows 10（1903）より前のメモ帳は UTF-8 で保存すると必ず付けていた。別の環境で開くと、この 3 バイトがゴミ文字として出たりパースエラーの原因になったりする</li>
         <li><strong>PDF からのコピー</strong>: PDF の内部構造によっては、行末のハイフネーションや段組みの折り返しにゼロ幅文字が埋め込まれていることがある</li>
         <li><strong>意図的な埋め込み</strong>: テキストの出所を追跡する「フィンガープリンティング」に使われることもある。文書の決まった箇所にゼロ幅文字を仕込んでおいて、流出元を突き止めるやり方</li>
       </ul>
@@ -169,7 +169,7 @@ const breakExample = `// @ の直後にゼロ幅スペースを挿入
 
       <h3>テキストエディタで確認する</h3>
       <ul>
-        <li><strong>VS Code</strong>: 設定で <code>editor.renderWhitespace</code> を <code>"all"</code> にすると空白系の文字が見えるようになる。あと <code>editor.unicodeHighlight.ambiguousCharacters</code> を有効にすると、見慣れない Unicode 文字がハイライトされる</li>
+        <li><strong>VS Code</strong>: 見えない文字をハイライトするのは <code>editor.unicodeHighlight.invisibleCharacters</code> の設定（既定で有効）。<code>editor.renderWhitespace</code> を <code>"all"</code> にしても見えるようになるのはスペースやタブだけで、ゼロ幅文字は出ない</li>
         <li><strong>正規表現検索</strong>: 多くのエディタで Ctrl+H（置換）を開いて、正規表現モードで <code>[​-‍﻿]</code> を検索すれば混ざっている場所が見つかる</li>
       </ul>
 
