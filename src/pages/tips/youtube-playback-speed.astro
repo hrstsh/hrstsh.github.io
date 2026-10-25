@@ -8,9 +8,9 @@ const title = 'YouTube動画を2倍速以上で再生する方法（Chrome） - 
 const description = 'YouTube の再生速度を Chrome の開発者コンソールから自由に変更する方法。3倍速・4倍速の高速再生、0.1倍速のスロー再生も可能。Premium 不要。';
 const path = '/tips/youtube-playback-speed';
 const faqItems = [
-  { question: 'YouTube無料で3倍速は可能？', answer: '可能。Chromeの開発者ツール（Command+Option+J / Ctrl+Shift+J）を開き、Console に document.querySelector("video").playbackRate = 3; と入力して Enter する。UI上は2倍速までだが、コンソールから直接設定すれば3倍速・4倍速も再生できる。' },
-  { question: 'Premiumなしで2倍速以上は？', answer: 'Chromeの開発者コンソールを使えば、Premium会員でなくても2倍速以上で再生できる。動画を切り替えたりリロードすると速度はリセットされるので、毎回設定し直す必要がある。' },
-  { question: 'YouTubeの再生速度の変更方法は？', answer: '開発者ツールのConsoleで document.querySelector("video").playbackRate = 数値; を実行する。数値は 0.25（0.25倍速）～16 まで指定可能。ブックマークレットにしておくと1クリックで速度変更できる。' },
+  { question: 'YouTube無料で3倍速は可能？', answer: '可能。Chromeの開発者ツール（Command+Option+J / Ctrl+Shift+J）を開いて、Console に document.querySelector("video").playbackRate = 3; と入力して Enter する。UI上は2倍速までしか選べないが、コンソールから直接設定すれば3倍速・4倍速でも再生できる。' },
+  { question: 'Premiumなしで2倍速以上は？', answer: 'Chromeの開発者コンソールを使えば、Premium会員じゃなくても2倍速以上で再生できる。動画を切り替えたりリロードすると速度はリセットされるので、毎回設定し直す必要がある。' },
+  { question: 'YouTubeの再生速度の変更方法は？', answer: '開発者ツールのConsoleで document.querySelector("video").playbackRate = 数値; を実行する。数値は 0.25（0.25倍速）～16 まで指定できる。ブックマークレットにしておけば1クリックで速度を変えられる。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
@@ -29,29 +29,29 @@ const currentTags = ['youtube', 'chrome'];
 
     <article class="article-body">
       <p>
-        YouTubeの無料アカウントでは、UI上で選べる再生速度は2倍速まで。でもChromeの開発者コンソールを使えば、3倍速、4倍速、それ以上の速度で再生できます。
+        YouTubeの無料アカウントだと、UIで選べる再生速度は2倍速まで。でもChromeの開発者コンソールを使えば、3倍速・4倍速やそれ以上の速さでも再生できる。
       </p>
 
-      <h2>UI上の速度制限</h2>
+      <h2>UIで選べる速度の上限</h2>
       <p>
-        2026年2月現在、YouTubeの再生速度設定は以下の通りです：
+        2026年2月時点で、YouTubeの再生速度の設定はこんな感じ。
       </p>
       <ul>
         <li><strong>無料ユーザー</strong>: 0.25倍速～2.00倍速まで</li>
         <li><strong>YouTube Premium</strong>: 0.25倍速～4.00倍速まで</li>
       </ul>
       <p>
-        Premium会員じゃないと2倍以上は選べませんが、コンソールから直接設定すれば回避できます。
+        Premium会員じゃないと2倍以上は選べないが、コンソールから直接設定すれば回避できる。
       </p>
 
-      <h2>やり方（1行のコマンドで完了）</h2>
+      <h2>やり方（コマンド1行で済む）</h2>
       <p>
-        Chrome（またはEdge、Brave等のChromiumブラウザ）でYouTube動画を開いている状態で：
+        まずChrome（またはEdge、Brave等のChromiumブラウザ）でYouTubeの動画を開いておく。
       </p>
 
       <h3>1. 開発者ツールを開く</h3>
       <p>
-        以下のいずれかの方法で開きます：
+        次のどれかで開く。
       </p>
       <ul>
         <li>Macの場合: <code>Command + Option + J</code></li>
@@ -59,21 +59,21 @@ const currentTags = ['youtube', 'chrome'];
         <li>または右クリック → <strong>検証</strong> → <strong>Console</strong>タブ</li>
       </ul>
 
-      <h3>2. コンソールにコマンドを入力</h3>
+      <h3>2. コンソールにコマンドを打つ</h3>
       <p>
-        Console に以下を打って Enter：
+        Console に次のコマンドを打って Enter。
       </p>
       <CodeBlock code={basicCommand} language="javascript" />
       <p>
         <code>3</code> のところを変えれば好きな速度になる。
       </p>
 
-      <h3>3. 即座に速度が変わる</h3>
+      <h3>3. すぐに速度が変わる</h3>
       <p>
-        Enter した瞬間から指定速度で再生される。UI の速度表示は変わらないけど、実際の速度は変わってる。
+        Enter した瞬間から指定した速度で再生される。UI の速度表示は変わらないけど、実際の速度は変わってる。
       </p>
 
-      <h2>おすすめの速度設定</h2>
+      <h2>おすすめの速度</h2>
       
       <h3>高速再生</h3>
       <ul>
@@ -83,7 +83,7 @@ const currentTags = ['youtube', 'chrome'];
         <li><code>8</code>: 流し見するとき（音声はほぼ聞き取れない）</li>
       </ul>
       <p>
-        理論上は16倍速まで設定できるけど、実用的には4～8倍速くらいまで。
+        理論上は16倍速まで設定できる。ただ実際に使えるのは4～8倍速くらいまで。
       </p>
 
       <h3>スロー再生</h3>
@@ -97,18 +97,18 @@ const currentTags = ['youtube', 'chrome'];
         0.1倍速くらいまで下げるとコマ送りに近い感覚で見られる。
       </p>
 
-      <h2>現在の速度を確認する</h2>
+      <h2>今の速度を確認する</h2>
       <p>
-        今何倍速か確認したいときは、コンソールで：
+        今何倍速になっているか確認したいときは、コンソールで次を打つ。
       </p>
       <CodeBlock code={checkCommand} language="javascript" />
       <p>
-        現在の速度が数値で返ってくる（例: <code>3</code>）。
+        今の速度が数値で返ってくる（例: <code>3</code>）。
       </p>
 
-      <h2>ブックマークレットで1クリック化</h2>
+      <h2>ブックマークレットにして1クリックで変える</h2>
       <p>
-        毎回コンソール開くのが面倒なら、ブックマークレットにしておくといい。次のコードを<strong>URL</strong>欄にしたブックマークを作る：
+        毎回コンソール開くのが面倒なら、ブックマークレットにしておくと楽。次のコードを<strong>URL</strong>欄に入れたブックマークを作る。
       </p>
       <CodeBlock code={bookmarkletCode} language="javascript" />
       <p>
@@ -143,11 +143,11 @@ const currentTags = ['youtube', 'chrome'];
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>YouTube無料で3倍速は可能？</dt>
-        <dd>可能。Chromeの開発者ツール（Command+Option+J / Ctrl+Shift+J）を開き、Console に document.querySelector("video").playbackRate = 3; と入力して Enter する。UI上は2倍速までだが、コンソールから直接設定すれば3倍速・4倍速も再生できる。</dd>
+        <dd>可能。Chromeの開発者ツール（Command+Option+J / Ctrl+Shift+J）を開いて、Console に document.querySelector("video").playbackRate = 3; と入力して Enter する。UI上は2倍速までしか選べないが、コンソールから直接設定すれば3倍速・4倍速でも再生できる。</dd>
         <dt>Premiumなしで2倍速以上は？</dt>
-        <dd>Chromeの開発者コンソールを使えば、Premium会員でなくても2倍速以上で再生できる。動画を切り替えたりリロードすると速度はリセットされるので、毎回設定し直す必要がある。</dd>
+        <dd>Chromeの開発者コンソールを使えば、Premium会員じゃなくても2倍速以上で再生できる。動画を切り替えたりリロードすると速度はリセットされるので、毎回設定し直す必要がある。</dd>
         <dt>YouTubeの再生速度の変更方法は？</dt>
-        <dd>開発者ツールのConsoleで document.querySelector("video").playbackRate = 数値; を実行する。数値は 0.25（0.25倍速）～16 まで指定可能。ブックマークレットにしておくと1クリックで速度変更できる。</dd>
+        <dd>開発者ツールのConsoleで document.querySelector("video").playbackRate = 数値; を実行する。数値は 0.25（0.25倍速）～16 まで指定できる。ブックマークレットにしておけば1クリックで速度を変えられる。</dd>
       </dl>
 
     </article>
