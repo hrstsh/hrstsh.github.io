@@ -145,21 +145,18 @@ const currentTags = ['twitter', 'bookmarklet'];
 
     <article class="article-body">
       <p>
-        X(Twitter) のメディアタブに並ぶ画像を、オリジナル画質でまとめて保存する方法。
-        ブックマークレットで画像URLをワンクリック取得し、wget や Python で一括ダウンロードできる。
-        すべて <code>&name=orig</code> 付きのオリジナル画質で保存される。
+        X(Twitter) のメディアタブに並んでる画像をオリジナル画質でまとめて保存したいときのやり方。ブックマークレットで画像URLをワンクリックで取ってきて、wget か Python で一括ダウンロードする。URLはすべて <code>&name=orig</code> 付きなのでオリジナル画質のまま保存できる。
       </p>
 
       <h2>メディアタブとは</h2>
       <p>
-        ユーザープロフィールページの「メディア」タブをクリックすると、
-        そのユーザーが投稿した画像や動画が一覧表示される。
+        ユーザーのプロフィールページで「メディア」タブをクリックすると、そのユーザーが投稿した画像や動画が一覧で出てくる。
       </p>
       <p>
-        <code>https://x.com/username/media</code> の形式でアクセスできる。
+        URLで直接開くなら <code>https://x.com/username/media</code>。
       </p>
 
-      <h2>基本：画像URLを取得する</h2>
+      <h2>基本：画像URLを取り出す</h2>
       
       <h3>1. メディアタブを開く</h3>
       <p>
@@ -168,7 +165,7 @@ const currentTags = ['twitter', 'bookmarklet'];
 
       <h3>2. 開発者ツールを開く</h3>
       <p>
-        以下のいずれかの方法で開く：
+        どれかの方法で開く。
       </p>
       <ul>
         <li>Macの場合: <code>Command + Option + J</code></li>
@@ -176,36 +173,34 @@ const currentTags = ['twitter', 'bookmarklet'];
         <li>または右クリック → <strong>検証</strong> → <strong>Console</strong>タブ</li>
       </ul>
 
-      <h3>3. コンソールにスクリプトを入力</h3>
+      <h3>3. コンソールにスクリプトを貼る</h3>
       <p>
-        以下のスクリプトをコピーして、コンソールに貼り付けて Enter。
+        次のスクリプトをコピーして、コンソールに貼り付けて Enter。
       </p>
       <CodeBlock code={basicScript} language="javascript" />
       <p>
-        現在表示されている画像のURLがコンソールに出力される。
-        <code>&name=orig</code> が付いているのでオリジナル画質で取得できる。
+        今表示されている画像のURLがコンソールに出てくる。<code>&name=orig</code> 付きなのでオリジナル画質で取れる。
       </p>
 
-      <h3>4. 出力されたURLをコピー</h3>
+      <h3>4. 出てきたURLをコピー</h3>
       <p>
-        コンソールに出力されたURLをマウスでドラッグして選択し、コピー（<code>Ctrl+C</code> / <code>Cmd+C</code>）。
+        コンソールに出たURLをマウスのドラッグで選択してコピーする（<code>Ctrl+C</code> / <code>Cmd+C</code>）。
       </p>
       
       <div class="note-box">
         <strong>💡 Tips: 見やすく出力する</strong>
         <p>
-          区切り線付きで見やすく出力するバージョン：
+          区切り線を入れて見やすく出すバージョン。
         </p>
         <CodeBlock code={selectAllScript} language="javascript" />
         <p>
-          これだとURLの部分を選択しやすくなる。
+          これならURLの部分だけ選択しやすい。
         </p>
       </div>
 
       <h2>ブックマークレット版（おすすめ）</h2>
       <p>
-        毎回コンソールを開くのが面倒な場合、ブックマークレットにしておくとワンクリックで実行できる。
-        <strong>ブックマークレットならクリップボードへの自動コピーも動作する。</strong>
+        毎回コンソールを開くのが面倒なときは、ブックマークレットに登録しておけばワンクリックで実行できる。<strong>ブックマークレットならクリップボードへの自動コピーもできる。</strong>
       </p>
 
       <h3>登録方法</h3>
@@ -213,99 +208,92 @@ const currentTags = ['twitter', 'bookmarklet'];
         <li>ブックマークバーを表示（<code>Ctrl+Shift+B</code> / <code>Cmd+Shift+B</code>）</li>
         <li>ブックマークバーの上で右クリック → 「ページを追加」</li>
         <li>名前: <code>X画像URL取得</code>（任意）</li>
-        <li>URL: 以下のコードをコピー</li>
+        <li>URL: 次のコードをコピー</li>
       </ol>
       <CodeBlock code={bookmarkletCode} language="javascript" />
       <p>
-        登録後、メディアタブでブックマークレットをクリックすると、
-        <strong>画像URLが自動的にクリップボードにコピーされる。</strong>
+        登録したら、メディアタブでブックマークレットをクリックするだけ。<strong>画像URLが自動でクリップボードにコピーされる。</strong>
       </p>
       
       <div class="note-box note-box-info">
         <strong>💡 ブックマークレットがおすすめな理由</strong>
         <ul>
           <li>ワンクリックで実行できる</li>
-          <li>クリップボードへの自動コピーが動作する（コンソールでは不可）</li>
-          <li>開発者ツールを開く必要がない</li>
+          <li>クリップボードに自動でコピーできる（コンソールだとできない）</li>
+          <li>開発者ツールを開かなくていい</li>
         </ul>
       </div>
 
-      <h2>応用：自動スクロールで全画像を取得</h2>
+      <h2>応用：自動スクロールで全部の画像を拾う</h2>
       <p>
-        メディアタブは最初に一部の画像しか表示されないので、
-        スクロールして追加読み込みする必要がある。
-        自動スクロールで全画像を読み込んでから取得するスクリプト：
+        メディアタブは最初に一部の画像しか表示されないので、スクロールして追加で読み込まないといけない。自動でスクロールして全部の画像を読み込んでからURLを取るスクリプトがこれ。
       </p>
       <CodeBlock code={autoScrollScript} language="javascript" />
       <p>
-        このスクリプトは自動的にスクロールして画像を読み込み、
-        最後まで到達したらURLを取得する。
-        大量の画像がある場合は時間がかかるので注意。
+        スクロールしながら画像を読み込んで、いちばん下まで着いたらURLを取り出す。画像が多いと時間がかかるので注意。
       </p>
 
-      <h2>取得したURLをダウンロードする</h2>
+      <h2>URLから画像をまとめてダウンロードする</h2>
       
       <div class="note-box">
-        <strong>⚠️ ブラウザからの直接ダウンロードについて</strong>
+        <strong>⚠️ ブラウザから直接は保存できない</strong>
         <p>
-          Twitter の画像は別ドメイン（pbs.twimg.com）にあるため、
-          ブラウザのセキュリティ制約（CORS）により、JavaScriptから直接ダウンロードすることができません。
+          Twitter の画像は別ドメイン（pbs.twimg.com）に置かれていて、JavaScriptからだとブラウザのセキュリティ制約（CORS）に引っかかるので。
         </p>
         <p>
-          そのため、以下のいずれかの方法でダウンロードする必要があります。
+          ダウンロードは次のどれかの方法でやる。
         </p>
       </div>
       
       <h3>方法1: タブで一括表示 → 手動保存</h3>
       <p>
-        各画像を新しいタブで開いて、手動で保存する方法：
+        画像をそれぞれ新しいタブで開いて、手動で保存するやり方。
       </p>
       <CodeBlock code={openTabsScript} language="javascript" />
       
       <div class="note-box">
-        <strong>⚠️ 初回実行時の確認</strong>
+        <strong>⚠️ 初めて実行したとき</strong>
         <p>
-          初回実行時、ブラウザのポップアップブロックが働いて1つ目のタブしか開かれません。
-          以下の手順でポップアップを許可してください：
+          最初に実行したときは、ブラウザのポップアップブロックが働いて1つ目のタブしか開かない。次の手順でポップアップを許可する。
         </p>
         <ol>
-          <li>アドレスバーの右側に表示される ポップアップブロックのアイコンをクリック</li>
+          <li>アドレスバーの右側に出るポップアップブロックのアイコンをクリック</li>
           <li>「x.com のポップアップとリダイレクトを常に許可する」を選択</li>
           <li>スクリプトを再実行</li>
         </ol>
         <p>
-          許可後は全ての画像が新しいタブで開かれます。
+          許可したあとはすべての画像が新しいタブで開く。
         </p>
       </div>
       
       <p>
-        各タブで右クリック → 「名前を付けて画像を保存」でダウンロード。
+        あとは各タブで右クリック → 「名前を付けて画像を保存」でダウンロードする。
       </p>
       
       <div class="note-box note-box-info">
         <strong>💡 Tips</strong>
         <ul>
-          <li>大量の画像がある場合、ブラウザが重くなる可能性がある</li>
+          <li>画像が多いとブラウザが重くなりやすい</li>
           <li>10〜20件ずつに分けて実行するのがおすすめ</li>
         </ul>
       </div>
 
       <h3>方法2: wget で一括ダウンロード</h3>
       <p>
-        <code>wget</code> を使ってターミナルから一括ダウンロード：
+        <code>wget</code> を使えばターミナルから一括でダウンロードできる。
       </p>
       <ol>
-        <li>上記のスクリプトでURLを取得してコピー</li>
+        <li>上のスクリプトでURLを取ってコピー</li>
         <li>テキストエディタで <code>urls.txt</code> に保存（1行1URL）</li>
-        <li>ターミナルで以下を実行</li>
+        <li>ターミナルで次を実行</li>
       </ol>
       <CodeBlock code="wget -i urls.txt -P ./twitter_images" language="bash" />
       <p>
-        <code>./twitter_images</code> フォルダに全ての画像がダウンロードされる。
+        <code>./twitter_images</code> フォルダに画像が全部ダウンロードされる。
       </p>
       
       <div class="note-box note-box-info">
-        <strong>💡 wget がない場合</strong>
+        <strong>💡 wget が入っていないとき</strong>
         <ul>
           <li><strong>Mac</strong>: <code>brew install wget</code></li>
           <li><strong>Windows</strong>: Git Bash または WSL で <code>wget</code> が使える</li>
@@ -314,7 +302,7 @@ const currentTags = ['twitter', 'bookmarklet'];
 
       <h3>方法3: Python3 で一括ダウンロード（おすすめ）</h3>
       <p>
-        Python3 を使った一括ダウンロードスクリプト：
+        Python3 で一括ダウンロードするスクリプト。
       </p>
       
       <h4>準備</h4>
@@ -322,37 +310,37 @@ const currentTags = ['twitter', 'bookmarklet'];
       
       <h4>スクリプト</h4>
       <p>
-        <code>download_twitter_images.py</code> として保存：
+        <code>download_twitter_images.py</code> という名前で保存する。
       </p>
       <CodeBlock code={pythonScript} language="python" />
       
       <h4>実行</h4>
       <ol>
-        <li>URLを取得して <code>urls.txt</code> に保存（1行1URL）</li>
-        <li>スクリプトと同じフォルダに <code>urls.txt</code> を配置</li>
+        <li>URLを取って <code>urls.txt</code> に保存（1行1URL）</li>
+        <li>スクリプトと同じフォルダに <code>urls.txt</code> を置く</li>
         <li>ターミナルで実行</li>
       </ol>
       <CodeBlock code="python3 download_twitter_images.py" language="bash" />
       <p>
-        <code>twitter_images/</code> フォルダに <code>twitter_image_001.jpg</code>、<code>twitter_image_002.jpg</code>... の形式で保存される。
+        <code>twitter_images/</code> フォルダに <code>twitter_image_001.jpg</code>、<code>twitter_image_002.jpg</code>... という連番で保存される。
       </p>
       
       <div class="note-box note-box-info">
-        <strong>💡 Python の利点</strong>
+        <strong>💡 Python を使うと楽なところ</strong>
         <ul>
-          <li>進捗が表示されるので分かりやすい</li>
-          <li>エラーが出てもスキップして続行する</li>
+          <li>進み具合が出るのでわかりやすい</li>
+          <li>エラーが出ても飛ばして続ける</li>
           <li>連番でファイル名を整理できる</li>
           <li>Windows / Mac / Linux どこでも動く</li>
         </ul>
       </div>
 
-      <h2>注意事項</h2>
+      <h2>注意</h2>
       <ul>
-        <li>大量の画像を一気にダウンロードすると、Twitter側のレート制限に引っかかる可能性がある</li>
-        <li>他人の画像をダウンロードする場合、著作権に注意</li>
-        <li>ブラウザによっては自動ダウンロードがブロックされる場合がある</li>
-        <li>スクリプトはTwitterの仕様変更で動かなくなる可能性がある</li>
+        <li>画像を一気に大量にダウンロードすると、Twitter側のレート制限に引っかかるかもしれない</li>
+        <li>他人の画像をダウンロードするときは著作権に注意</li>
+        <li>ブラウザによっては自動ダウンロードをブロックされることもある</li>
+        <li>Twitterの仕様が変わったら、スクリプトは動かなくなるかも</li>
       </ul>
 
       <h2>関連記事</h2>
