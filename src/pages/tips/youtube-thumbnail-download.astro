@@ -7,9 +7,9 @@ const title = 'YouTubeのサムネイル画像を取得・保存する方法 - h
 const description = 'YouTube動画のサムネイル画像をURLだけで取得する方法。img.youtube.com の形式を使えば、最大解像度（maxresdefault）まで保存できる。動画IDの見つけ方と解像度別のURLを紹介。';
 const path = '/tips/youtube-thumbnail-download';
 const faqItems = [
-  { question: 'YouTubeのサムネイル画像を保存するには？', answer: '動画IDを使って https://img.youtube.com/vi/動画ID/maxresdefault.jpg にアクセスし、右クリックで保存する。動画IDは watch?v= の後ろ、または youtu.be/ の後ろの文字列。' },
-  { question: '最大解像度のサムネイルを取得するには？', answer: 'maxresdefault.jpg を使う。1280×720 の最大サイズで取得できる。ただし古い動画や一部の動画では maxresdefault が存在せず、その場合は hqdefault.jpg（480×360）を使う。' },
-  { question: 'サムネイルを取得するのにアプリやサイトは必要？', answer: '不要。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。' },
+  { question: 'YouTubeのサムネイル画像を保存するには？', answer: '動画IDを使って https://img.youtube.com/vi/動画ID/maxresdefault.jpg にアクセスして、右クリックで保存する。動画IDは watch?v= の後ろ、または youtu.be/ の後ろの文字列。' },
+  { question: '最大解像度のサムネイルを取得するには？', answer: 'maxresdefault.jpg を使う。1280×720 の最大サイズで取得できる。ただ古い動画や一部の動画には maxresdefault がないので、そのときは hqdefault.jpg（480×360）を使う。' },
+  { question: 'サムネイルを取得するのにアプリやサイトは必要？', answer: 'いらない。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
 const currentTags = ['youtube'];
@@ -24,12 +24,12 @@ const currentTags = ['youtube'];
 
     <article class="article-body">
       <p>
-        YouTube のサムネイル画像は、動画ページから直接は保存できない。でも動画 ID を使えば、サムネイルの画像 URL に直接アクセスして保存できる。外部サービスは不要。
+        YouTube のサムネイル画像は、動画ページからそのままだと保存できない。でも動画 ID がわかれば、サムネイルの画像 URL を直接開いて保存できる。外部サービスもいらない。
       </p>
 
       <h2>どんなときに使うか</h2>
       <p>
-        よくあるのは、自分がアップロードした動画のサムネイルを後から確認したいときや、登壇資料やブログで動画を紹介する際にどのサムネイルが表示されるかを確かめたいとき。SNS でシェアしたときのプレビュー画像を事前に見ておきたい場面でも役立つ。<code>img.youtube.com</code> は YouTube が用意しているサムネイル配信用のドメインなので、特別なツールを通さずに画像へアクセスできる。
+        よくあるのは、自分がアップロードした動画のサムネイルをあとから確認したいときや、登壇資料やブログで動画を紹介する際にどのサムネイルが出るかを確かめたいとき。SNS でシェアしたときのプレビュー画像を先に見ておきたい場面でも使える。<code>img.youtube.com</code> は YouTube が用意しているサムネイル配信用のドメインなので、特別なツールを通さなくても画像を開ける。
       </p>
 
       <h2>動画IDを見つける</h2>
@@ -47,9 +47,9 @@ https://youtu.be/dQw4w9WgXcQ
         <code>watch?v=</code> の後ろ、または <code>youtu.be/</code> の後ろの 11 文字が動画 ID。後ろに <code>&amp;t=</code> などのパラメータが付いてる場合は、その手前までが ID。
       </p>
 
-      <h2>サムネイルのURLにアクセスする</h2>
+      <h2>サムネイルのURLを開く</h2>
       <p>
-        動画 ID を次の URL に当てはめてアクセスする。最大解像度のサムネイルが開く。
+        動画 ID を次の URL に当てはめて開く。最大解像度のサムネイルが表示される。
       </p>
       <pre><code class="language-text">https://img.youtube.com/vi/動画ID/maxresdefault.jpg
 
@@ -61,7 +61,7 @@ https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg</code></pre>
 
       <h2>解像度別のURL一覧</h2>
       <p>
-        ファイル名の部分を変えると、取得できる解像度が変わる。
+        ファイル名の部分を変えれば、ほかの解像度でも取れる。
       </p>
       <ul>
         <li><code>maxresdefault.jpg</code> - 最大（1280×720）</li>
@@ -74,26 +74,26 @@ https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg</code></pre>
         基本は <code>maxresdefault.jpg</code> でいい。
       </p>
 
-      <h2>maxresdefault が無い場合</h2>
+      <h2>maxresdefault がない動画もある</h2>
       <p>
-        <code>maxresdefault.jpg</code> は全ての動画にあるわけじゃない。古い動画や、アップロード時に高解像度のサムネイルが作られなかった動画では存在しない。その場合はグレーの仮画像が表示される。
+        <code>maxresdefault.jpg</code> はすべての動画にあるわけじゃない。古い動画や、アップロードしたときに高解像度のサムネイルが作られなかった動画にはない。そういう動画だとグレーの仮画像が出てくる。
       </p>
       <p>
-        表示されなかったら <code>hqdefault.jpg</code> に切り替える。<code>hqdefault.jpg</code> はどの動画にも必ずある。
+        うまく表示されなかったら <code>hqdefault.jpg</code> に切り替える。こっちはどの動画にも必ずある。
       </p>
 
       <h2>注意</h2>
       <ul>
-        <li>この URL 形式は YouTube の仕様変更で将来使えなくなる可能性がある。</li>
-        <li>サムネイル画像にも作成者の著作権がある。引用や私的な利用の範囲にとどめ、無断転載や再配布はしない。第三者の動画のサムネイルを商用で使う場合は、権利者の許諾が必要になる。</li>
-        <li>Shorts も同じ動画 ID 形式なので、同じ方法で取得できる。</li>
+        <li>この URL 形式は YouTube の仕様変更で将来使えなくなるかもしれない。</li>
+        <li>サムネイル画像にも作成者の著作権がある。引用や私的な利用の範囲にとどめて、無断転載や再配布はしない。第三者の動画のサムネイルを商用で使うときは、権利者の許諾が必要になる。</li>
+        <li>Shorts も動画 ID の形式は同じなので、同じやり方で取れる。</li>
       </ul>
 
-      <h2>うまく取得できないときは</h2>
+      <h2>うまく取れないとき</h2>
       <ul>
-        <li>グレーや真っ黒の仮画像が出るときは、その解像度のサムネイルが存在しない。<code>hqdefault.jpg</code> に変えると確実に表示される。</li>
+        <li>グレーや真っ黒の仮画像が出るときは、その解像度のサムネイルがない。<code>hqdefault.jpg</code> に変えれば確実に表示される。</li>
         <li>動画 ID の後ろに <code>&amp;list=</code> や <code>&amp;t=</code> などが残っていると正しく開けない。ID の 11 文字だけを使う。</li>
-        <li>限定公開や非公開の動画では、サムネイルも取得できないことがある。</li>
+        <li>限定公開や非公開の動画だと、サムネイルも取れないことがある。</li>
       </ul>
 
       <h2>関連記事</h2>
@@ -105,11 +105,11 @@ https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg</code></pre>
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>YouTubeのサムネイル画像を保存するには？</dt>
-        <dd>動画IDを使って https://img.youtube.com/vi/動画ID/maxresdefault.jpg にアクセスし、右クリックで保存する。動画IDは watch?v= の後ろ、または youtu.be/ の後ろの文字列。</dd>
+        <dd>動画IDを使って https://img.youtube.com/vi/動画ID/maxresdefault.jpg にアクセスして、右クリックで保存する。動画IDは watch?v= の後ろ、または youtu.be/ の後ろの文字列。</dd>
         <dt>最大解像度のサムネイルを取得するには？</dt>
-        <dd>maxresdefault.jpg を使う。1280×720 の最大サイズで取得できる。ただし古い動画や一部の動画では maxresdefault が存在せず、その場合は hqdefault.jpg（480×360）を使う。</dd>
+        <dd>maxresdefault.jpg を使う。1280×720 の最大サイズで取得できる。ただ古い動画や一部の動画には maxresdefault がないので、そのときは hqdefault.jpg（480×360）を使う。</dd>
         <dt>サムネイルを取得するのにアプリやサイトは必要？</dt>
-        <dd>不要。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。</dd>
+        <dd>いらない。img.youtube.com のURLにアクセスするだけで画像が直接開くので、外部サービスを使わずに保存できる。</dd>
       </dl>
 
     </article>
