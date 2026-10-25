@@ -42,6 +42,7 @@ const measureFPSRVFC = `function measureFPSWithRVFC(now, metadata) {
 
 const measureFPSRAF = `function measureFPSWithRAF() {
   const quality = video.getVideoPlaybackQuality?.();
+  const now = performance.now();
   const frames = quality?.totalVideoFrames ?? 0;
   const elapsed = (now - tracker.windowStartTime) / 1000;
   if (elapsed >= 1 && frames >= tracker.windowStartFrames) {
