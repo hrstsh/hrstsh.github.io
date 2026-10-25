@@ -437,7 +437,7 @@ const currentTags = ['macos', 'automation', 'cli'];
           <tr>
             <td><code>LaunchOnlyOnce</code></td>
             <td>真偽値</td>
-            <td><code>true</code> でロード中に一度だけ実行する。</td>
+            <td><code>true</code> で一度しか実行しない。マシンを再起動しないと安全に起動し直せないジョブ向け。</td>
           </tr>
           <tr>
             <td><code>ThrottleInterval</code></td>
@@ -447,7 +447,7 @@ const currentTags = ['macos', 'automation', 'cli'];
           <tr>
             <td><code>ExitTimeOut</code></td>
             <td>整数（秒）</td>
-            <td>停止シグナルを送ってから強制終了するまでの猶予。デフォルトは 20 秒。</td>
+            <td>停止シグナルを送ってから強制終了するまでの猶予。デフォルト値はシステム側で決まっていて、man に秒数は書かれていない。</td>
           </tr>
           <tr>
             <td><code>ProcessType</code></td>
@@ -518,7 +518,7 @@ const currentTags = ['macos', 'automation', 'cli'];
       </p>
       <CodeBlock code={scheduleExamples} language="xml" />
       <p class="note">
-        注意：Mac がスリープしている時刻に予定があった場合、その回は飛ばされる（cron と同じ）。ただ launchd には復帰後に「逃した実行」を 1 回だけまとめて走らせる挙動があるので、起きていなかった分が丸ごと消えるとは限らない。
+        注意：Mac がスリープしている時刻に予定があった場合、その回は飛ばされず次に起きたタイミングで実行される（スリープ中の回を飛ばす cron とはここが違う）。スリープ中に何回分も過ぎていたら、起きたときに 1 回だけまとめて走る。ちなみに <code>StartInterval</code> のほうはスリープ中の回が飛ばされる。
       </p>
 
       <h2 id="keepalive">常駐させたいなら KeepAlive</h2>
@@ -539,7 +539,7 @@ const currentTags = ['macos', 'automation', 'cli'];
           <tr>
             <td><code>SuccessfulExit</code></td>
             <td>真偽値</td>
-            <td><code>true</code> なら正常終了後も再起動、<code>false</code> なら異常終了したときだけ再起動。</td>
+            <td><code>true</code> なら正常終了（終了コード 0）したときだけ再起動、<code>false</code> なら異常終了したときだけ再起動。</td>
           </tr>
           <tr>
             <td><code>Crashed</code></td>
@@ -549,7 +549,7 @@ const currentTags = ['macos', 'automation', 'cli'];
           <tr>
             <td><code>NetworkState</code></td>
             <td>真偽値</td>
-            <td><code>true</code> でネットワークが有効なときだけ起動する。</td>
+            <td>今の launchd では実装されていない。指定しても効かない。</td>
           </tr>
           <tr>
             <td><code>PathState</code></td>
@@ -724,9 +724,11 @@ const currentTags = ['macos', 'automation', 'cli'];
           <tr><td><code>1</code></td><td>一般的なエラー</td></tr>
           <tr><td><code>78</code></td><td>設定エラー（plist の記述ミスが多い）</td></tr>
           <tr><td><code>127</code></td><td>コマンド・スクリプトが見つからない（パスの誤り）</td></tr>
-          <tr><td><code>Operation not permitted</code></td><td>権限エラー（TCC・Desktop 問題など）</td></tr>
         </tbody>
       </table>
+      <p>
+        TCC・Desktop 問題などの権限エラーは終了コードではなく、エラー出力の <code>Operation not permitted</code> というメッセージで出る（<a href="#desktop">前述</a>）。
+      </p>
 
       <h2 id="pitfalls">つまずきやすいところ</h2>
       <ul>
