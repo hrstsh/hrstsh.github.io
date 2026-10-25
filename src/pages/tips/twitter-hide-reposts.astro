@@ -109,11 +109,11 @@ const popupHtmlCode = `<!DOCTYPE html>
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute; cursor: pointer; inset: 0;
-      background: var(--color-border-strong); transition: 0.2s; border-radius: 24px;
+      background: #ccc; transition: 0.2s; border-radius: 24px;
     }
     .slider::before {
       position: absolute; content: ''; height: 16px; width: 16px;
-      left: 4px; bottom: 4px; background: var(--color-bg-card); transition: 0.2s; border-radius: 50%;
+      left: 4px; bottom: 4px; background: #fff; transition: 0.2s; border-radius: 50%;
     }
     input:checked + .slider { background: #1d9bf0; }
     input:checked + .slider::before { transform: translateX(16px); }
@@ -226,7 +226,7 @@ const currentTags = ['twitter', 'chrome-extension'];
       <ul>
         <li>リポストが消えないときは、判定に使う文字列が画面の表記と合っていないことがほとんど。表示言語に合わせて <code>detectRetweet</code> の文字列を足す。英語表示なら「Reposted by」、日本語表示なら「さんがリポスト」が目印になる。</li>
         <li>リポスト以外の投稿まで消えるときは、本文にたまたま <code>reposted</code> などの語が含まれているケース。判定を厳しくするなら、article 全体ではなくリポストの目印が入る先頭部分だけを見るように絞る。</li>
-        <li>切り替えてもすぐ反映されないのは、X を開いたままにしていた古いタブ。一度リロードすれば <code>onChanged</code> 経由で最新の状態にそろう。</li>
+        <li>切り替えてもすぐ反映されないのは、X を開いたままにしていた古いタブ。一度リロードすれば最新の状態にそろう。読み込むときに <code>chrome.storage.local.get</code> で設定を読み直すので。</li>
       </ul>
 
       <h2>補足・限界</h2>
