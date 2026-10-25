@@ -7,8 +7,8 @@ const title = 'Chromeのブックマークレットにアイコン（ファビ�
 const description = 'javascript: のブックマークレットはデフォルトでアイコンが表示されないので、ファビコンを付ける方法を紹介。';
 const path = '/tips/chrome-bookmarklet-favicon';
 const faqItems = [
-  { question: 'ブックマークレットにアイコンが付かない理由は？', answer: 'URLが javascript:... だから、普通のページのようにHTMLを読まない。Chromeはアイコンを取得できず、共通の📄のようなアイコンになる。' },
-  { question: 'ブックマークレットにファビコンを付ける方法は？', answer: 'エクスポート→編集→インポートの3ステップ。使いたいファビコンのページを1つブックマークし、ブックマークをエクスポートしてHTMLを編集。そのHTMLのICON属性をブックマークレットの行にコピーし、インポートする。' },
+  { question: 'ブックマークレットにアイコンが付かない理由は？', answer: 'URLが javascript:... なので、普通のページみたいにHTMLを読みにいかない。Chromeはアイコンを取れなくて、共通の📄みたいなアイコンになる。' },
+  { question: 'ブックマークレットにファビコンを付ける方法は？', answer: 'エクスポート→編集→インポートの3ステップ。使いたいファビコンのページを1つブックマークして、ブックマークをエクスポートしたHTMLを編集する。そのHTMLにあるICON属性をブックマークレットの行にコピーして、インポートする。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 const currentTags = ['chrome', 'bookmarklet'];
@@ -23,12 +23,12 @@ const currentTags = ['chrome', 'bookmarklet'];
 
     <article class="article-body">
       <p>
-        <code>javascript:</code> のブックマークレットは、Chrome のブックマークバーだとデフォルトの📄みたいなアイコンになる。そのままで好きなファビコンを付ける方法。
+        <code>javascript:</code> のブックマークレットは、Chrome のブックマークバーだとデフォルトの📄みたいなアイコンになる。これをブックマークレットのまま好きなファビコンに変える方法。
       </p>
 
       <h2>なぜアイコンが付かないか</h2>
       <p>
-        URL が <code>javascript:...</code> だから、普通のページみたいに HTML を読まない。Chrome はアイコンを取れず、共通アイコンになる。
+        URL が <code>javascript:...</code> なので、普通のページみたいに HTML を読みにいかない。だから Chrome はアイコンを取れなくて、共通のアイコンになる。
       </p>
 
       <h2>やり方（エクスポート → 編集 → インポート）</h2>
@@ -38,26 +38,26 @@ const currentTags = ['chrome', 'bookmarklet'];
 
       <h3>1. 使いたいファビコンのページをブックマークする</h3>
       <p>
-        アイコンに使いたいファビコンが出ているページを開いて、そのページをブックマークバーに追加する。これで「アイコン付きの普通のブックマーク」が1つできる。
+        アイコンに使いたいファビコンが出てるページを開いて、そのページをブックマークバーに追加する。これで「アイコン付きの普通のブックマーク」が1つできる。
       </p>
 
       <h3>2. ブックマークをエクスポートして HTML を編集する</h3>
       <p>
-        Chrome の <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> を開き、右上の ⋮ から <strong>ブックマークをエクスポート</strong> で HTML で保存する。
+        Chrome の <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> を開いて、右上の ⋮ から <strong>ブックマークをエクスポート</strong> を選んで HTML で保存する。
       </p>
       <p>
         その HTML をエディタで開くと、1行1ブックマークでこんな形になっている。
       </p>
       <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="https://example.com/page" ICON="data:image/png;base64,..."&gt;ページ名&lt;/A&gt;</code></pre>
       <p>
-        <strong>1で追加したブックマーク</strong>の行には <code>ICON="..."</code> がある。この <code>ICON="..."</code> を引用符ごとコピーする。
+        <strong>1で追加したブックマーク</strong>の行には <code>ICON="..."</code> がある。この <code>ICON="..."</code> を引用符ごとコピーしておく。
       </p>
       <p>
-        <strong>ブックマークレット</strong>の行を探す。<code>HREF="javascript:..."</code> だけで <code>ICON</code> が無い（かデフォルト）の行に、さっきコピーした <code>ICON="..."</code> をペーストする。
+        次に<strong>ブックマークレット</strong>の行を探す。<code>HREF="javascript:..."</code> だけで <code>ICON</code> がない（かデフォルト）の行に、さっきコピーした <code>ICON="..."</code> を貼り付ける。
       </p>
       <p>編集前のブックマークレットの行：</p>
       <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="javascript:alert(document.title)"&gt;タイトル表示&lt;/A&gt;</code></pre>
-      <p>1のブックマークから <code>ICON="data:image/png;base64,iVBORw0K..."</code> をコピーして付けた後：</p>
+      <p>1のブックマークから <code>ICON="data:image/png;base64,iVBORw0K..."</code> をコピーして付けたあと：</p>
       <pre><code class="language-html">&lt;DT&gt;&lt;A HREF="javascript:alert(document.title)" ICON="data:image/png;base64,iVBORw0K..."&gt;タイトル表示&lt;/A&gt;</code></pre>
       <p>
         編集したら HTML を保存する。
@@ -65,20 +65,20 @@ const currentTags = ['chrome', 'bookmarklet'];
 
       <h3>3. ブックマークをインポートする</h3>
       <p>
-        既存のブックマークを整理したいときは、事前に不要なのを消すか別フォルダに退避しておく。Chrome の <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> で ⋮ → <strong>ブックマークをインポート</strong> を選び、2で編集した HTML を指定してインポートする。これで <code>javascript:</code> のままファビコンが出る。
+        既存のブックマークを整理したいなら、先にいらないのを消すか別フォルダに移しておく。Chrome の <strong>ブックマーク</strong> → <strong>ブックマークマネージャ</strong> で ⋮ → <strong>ブックマークをインポート</strong> を選んで、2で編集した HTML を指定してインポートする。これで <code>javascript:</code> のままファビコンが出るようになる。
       </p>
 
       <h2>ポイント</h2>
       <ul>
         <li>ファビコンは「そのアイコンが出ているページを1つブックマークする」だけで足りる。画像を自分で用意しなくていい。</li>
         <li>エクスポートした HTML では、アイコンが <code>data:image/png;base64,...</code> や <code>https://...</code> で <code>ICON</code> に入っている。</li>
-        <li>ブックマークレットは <code>javascript:</code> のままなので、クリック時の動きは変わらない。</li>
-        <li>好きな画像をアイコンにしたいときは、その画像を <code>data:image/png;base64,...</code> 形式に変換し、同じように <code>ICON="..."</code> の値として貼り付ければいい。</li>
+        <li>ブックマークレットは <code>javascript:</code> のままなので、クリックしたときの動きは変わらない。</li>
+        <li>好きな画像をアイコンにしたいときは、その画像を <code>data:image/png;base64,...</code> 形式に変換して、同じように <code>ICON="..."</code> の値として貼り付ければいい。</li>
       </ul>
 
       <h2>注意</h2>
       <ul>
-        <li>インポートで既存と重なったりフォルダ構成が変わることがある。心配ならエクスポート前にバックアップか、テスト用フォルダで試すといい。</li>
+        <li>インポートで既存のブックマークと重なったりフォルダ構成が変わったりすることがある。心配ならエクスポートの前にバックアップを取るか、テスト用のフォルダで試しておくといい。</li>
       </ul>
 
       <h2>関連記事</h2>
@@ -90,9 +90,9 @@ const currentTags = ['chrome', 'bookmarklet'];
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>ブックマークレットにアイコンが付かない理由は？</dt>
-        <dd>URLが javascript:... だから、普通のページのようにHTMLを読まない。Chromeはアイコンを取得できず、共通の📄のようなアイコンになる。</dd>
+        <dd>URLが javascript:... なので、普通のページみたいにHTMLを読みにいかない。Chromeはアイコンを取れなくて、共通の📄みたいなアイコンになる。</dd>
         <dt>ブックマークレットにファビコンを付ける方法は？</dt>
-        <dd>エクスポート→編集→インポートの3ステップ。使いたいファビコンのページを1つブックマークし、ブックマークをエクスポートしてHTMLを編集。そのHTMLのICON属性をブックマークレットの行にコピーし、インポートする。</dd>
+        <dd>エクスポート→編集→インポートの3ステップ。使いたいファビコンのページを1つブックマークして、ブックマークをエクスポートしたHTMLを編集する。そのHTMLにあるICON属性をブックマークレットの行にコピーして、インポートする。</dd>
       </dl>
 
     </article>
