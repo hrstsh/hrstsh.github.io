@@ -103,7 +103,7 @@ const currentTags = ['automation', 'dev'];
         launchd は普通のシェルとは環境が違うので、ログインシェルで読んでる <code>.env</code> や <code>PATH</code> がそのままだと効かない。最初は手元だと動くのに自動実行だけ失敗して、原因を追うのに時間がかかった。結局、必要な環境変数は plist の <code>EnvironmentVariables</code> に明示して、<code>uv</code> や <code>python</code> は絶対パスで呼ぶようにしたら安定した。
       </p>
       <p>
-        うまく動かないときはまず <code>launchctl list</code> で、登録されているかと終了コードが 0 以外になっていないかを確認する。plist で <code>StandardOutPath</code> と <code>StandardErrorPath</code> を指定してログを残しておくと、自動実行のときのエラーを追いやすい。時刻指定の <code>StartCalendarInterval</code> はその時刻にマシンがスリープしていると実行されないので、確実に回したいなら起こす設定や別の仕組みと組み合わせることになる。
+        うまく動かないときはまず <code>launchctl list</code> で、登録されているかと終了コードが 0 以外になっていないかを確認する。plist で <code>StandardOutPath</code> と <code>StandardErrorPath</code> を指定してログを残しておくと、自動実行のときのエラーを追いやすい。時刻指定の <code>StartCalendarInterval</code> はその時刻にマシンがスリープしていても、次に起きたときに実行される（逃した回が何回あっても 1 回にまとめられる）。時刻どおりに回したいなら起こす設定や別の仕組みと組み合わせることになる。
       </p>
     </article>
 
