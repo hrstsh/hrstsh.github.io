@@ -14,8 +14,14 @@ const faqItems = [
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
 const applescriptCode = `on run {input, parameters}
-    set thePath to POSIX path of input
-    set the clipboard to thePath
+    -- 複数選んだときは1行に1つずつ並べる（同じパスは1回だけ）
+    set thePaths to {}
+    repeat with f in input
+        set p to POSIX path of f
+        if p is not in thePaths then set end of thePaths to p
+    end repeat
+    set AppleScript's text item delimiters to linefeed
+    set the clipboard to (thePaths as text)
     return input
 end run`;
 
@@ -112,14 +118,14 @@ const currentTags = ['macos'];
 
       <h2>方法5: ショートカット.app で自分用のショートカットを作る</h2>
       <p>
-        macOS Monterey 以降なら「ショートカット」アプリでも同じことができる。
+        macOS Monterey 以降なら「ショートカット」アプリでも同じことができる。アクションの名前は macOS 26 のもの（2026 年 10 月時点）。
       </p>
       <ol>
         <li><strong>ショートカット</strong> アプリを開く</li>
         <li>右上の <strong>+</strong> ボタンをクリック</li>
-        <li>「Finder で選択項目を取得」アクションを追加</li>
-        <li>「テキストをクリップボードにコピー」アクションを追加</li>
-        <li>上部の詳細ボタン（ℹ️）をクリックして、「Finder でクイックアクションとして使用」をオン</li>
+        <li>「Finderで選択されたファイルを取得」アクションを追加</li>
+        <li>「クリップボードにコピー」アクションを追加</li>
+        <li>上部の詳細ボタン（ℹ️）をクリックして、「クイックアクションとして使用」をオン</li>
         <li>名前を付けて完了</li>
       </ol>
 
