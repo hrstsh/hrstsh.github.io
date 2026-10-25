@@ -17,11 +17,11 @@ precmd () {
   print
 
   # 左: カレントディレクトリ
-  local left=' %{\e[38;5;2m%}(%~)%{\e[m%}'
+  local left=' %{\\e[38;5;2m%}(%~)%{\\e[m%}'
 
   # 右: Gitブランチ
   vcs_info
-  local right="%{\e[38;5;32m%}\${vcs_info_msg_0_}%{\e[m%}"
+  local right="%{\\e[38;5;32m%}\${vcs_info_msg_0_}%{\\e[m%}"
 
   # 左右の間をスペースで埋める
   local invisible='%([BSUbfksu]|([FK]|){*})'
@@ -36,7 +36,7 @@ precmd () {
 PROMPT="(⁎'~') < "
 
 # 右側に日時を表示
-RPROMPT=$'%{\e[38;5;251m%}%D{%b/%d} %*%{\e[m%}'
+RPROMPT=$'%{\\e[38;5;251m%}%D{%b/%d} %*%{\\e[m%}'
 
 # 1秒ごとにプロンプト再描画（RPROMPT更新）
 TMOUT=1
@@ -71,7 +71,7 @@ const currentTags = ['macos', 'cli'];
 
     <article class="article-body">
       <p>
-        macOS の Terminal は標準のままだと、プロンプトにユーザー名とホスト名が出るだけ。今どのディレクトリにいるのか・Git のどのブランチで作業してるのかが画面からわからない。ディレクトリを深く潜ったときやブランチを切り替えながら直しているときに、うっかり別の場所でコマンドを打っちゃう事故が起きやすい。
+        macOS の Terminal は標準のままだと、プロンプトにユーザー名・ホスト名・今いるディレクトリの名前（いちばん下の階層だけ）が出るくらい。そのディレクトリがどこにあるのか・Git のどのブランチで作業してるのかは画面からわからない。ディレクトリを深く潜ったときやブランチを切り替えながら直しているときに、うっかり別の場所でコマンドを打っちゃう事故が起きやすい。
       </p>
       <p>
         なので <code>~/.zshrc</code> を書き換えて、カレントディレクトリ・Git ブランチ・日時をプロンプトに常に出すようにした。テーマのフレームワークや外部ツールは入れず、zsh が元から持っている機能だけで済ませてる。Oh My Zsh みたいな仕組みを足さずに、できるだけ素の状態でいきたい人向けの設定。
@@ -123,7 +123,7 @@ const currentTags = ['macos', 'cli'];
       <h2>補足</h2>
       <ul>
         <li>Git ブランチ表示は <code>autoload -Uz vcs_info</code> と <code>vcs_info</code> がポイント。</li>
-        <li>色は ANSI エスケープ（<code>\\e[38;5;...m</code>）で指定している。</li>
+        <li>色は ANSI エスケープ（<code>\e[38;5;...m</code>）で指定している。</li>
         <li>表示が崩れたら <code>~/.zshrc.bak</code> を戻せば直る。</li>
       </ul>
 
