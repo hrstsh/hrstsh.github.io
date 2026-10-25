@@ -34,6 +34,7 @@ const bookmarkletCode = `javascript:(function(){const u=Array.from(document.quer
 
 const pythonScript = `import requests
 import os
+from urllib.parse import urlparse, parse_qs
 
 # urls.txt から URL を読み込んでダウンロード
 def download_images(url_file='urls.txt', output_dir='twitter_images'):
@@ -52,8 +53,9 @@ def download_images(url_file='urls.txt', output_dir='twitter_images'):
             response = requests.get(url, timeout=30)
             response.raise_for_status()
             
-            # ファイル名を生成
-            filename = f'twitter_image_{i:03d}.jpg'
+            # ファイル名を生成（拡張子は URL の format= に合わせる）
+            ext = parse_qs(urlparse(url).query).get('format', ['jpg'])[0]
+            filename = f'twitter_image_{i:03d}.{ext}'
             filepath = os.path.join(output_dir, filename)
             
             # 保存
@@ -219,7 +221,7 @@ const currentTags = ['twitter', 'bookmarklet'];
         <strong>💡 ブックマークレットがおすすめな理由</strong>
         <ul>
           <li>ワンクリックで実行できる</li>
-          <li>クリップボードに自動でコピーできる（コンソールだとできない）</li>
+          <li>クリップボードに自動でコピーできる（コンソール版は手で選ぶか <code>copy()</code> を書き足す）</li>
           <li>開発者ツールを開かなくていい</li>
         </ul>
       </div>
@@ -236,12 +238,12 @@ const currentTags = ['twitter', 'bookmarklet'];
       <h2>URLから画像をまとめてダウンロードする</h2>
       
       <div class="note-box">
-        <strong>⚠️ ブラウザから直接は保存できない</strong>
+        <strong>⚠️ リンクを作るだけでは保存できない</strong>
         <p>
-          Twitter の画像は別ドメイン（pbs.twimg.com）に置かれていて、JavaScriptからだとブラウザのセキュリティ制約（CORS）に引っかかるので。
+          Twitter の画像は別ドメイン（pbs.twimg.com）に置かれている。別ドメインの URL だとリンクの <code>download</code> 属性が効かないので、クリックしても画像が開くだけ。
         </p>
         <p>
-          ダウンロードは次のどれかの方法でやる。
+          JavaScript で <code>fetch</code> して Blob にすれば保存はできる（2026 年 10 月時点で pbs.twimg.com は CORS で読み込みを許可してる）。ただスクリプトが長くなるので、ここでは次のどれかの手軽な方法でやる。
         </p>
       </div>
       
@@ -322,7 +324,7 @@ const currentTags = ['twitter', 'bookmarklet'];
       </ol>
       <CodeBlock code="python3 download_twitter_images.py" language="bash" />
       <p>
-        <code>twitter_images/</code> フォルダに <code>twitter_image_001.jpg</code>、<code>twitter_image_002.jpg</code>... という連番で保存される。
+        <code>twitter_images/</code> フォルダに <code>twitter_image_001.jpg</code>、<code>twitter_image_002.jpg</code>... という連番で保存される。PNG の画像は URL の <code>format=png</code> に合わせて拡張子が <code>.png</code> になる。
       </p>
       
       <div class="note-box note-box-info">
