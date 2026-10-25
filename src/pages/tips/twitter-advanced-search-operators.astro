@@ -7,7 +7,7 @@ const title = 'X(Twitter)の検索演算子まとめ（from: / since: / until: /
 const description = 'X(Twitter)の検索で使える演算子のまとめ。特定アカウント・期間・メディア種別での絞り込みや、いいね数の下限指定まで。コピペで使える組み合わせ例も紹介。';
 const path = '/tips/twitter-advanced-search-operators';
 const faqItems = [
-  { question: 'X(Twitter)で特定アカウントの過去ツイートを検索するには？', answer: '検索欄に from:ユーザー名 を入力する。そこに since:2024-01-01 until:2024-12-31 のように日付を足せば、その期間のツイートだけに絞り込める。' },
+  { question: 'X(Twitter)で特定アカウントの過去ツイートを検索するには？', answer: '検索欄に from:ユーザー名 を入力する。そこに since:2024-01-01 until:2025-01-01 のように日付を足せば、その期間のツイートだけに絞り込める。この例なら 2024 年の 1 年分（until: の日付は含まれない）。' },
   { question: 'X(Twitter)で画像付きツイートだけを検索するには？', answer: 'キーワードに filter:images を足す。動画なら filter:videos、リンク付きなら filter:links を使う。' },
   { question: 'いいねが多いツイートだけを検索するには？', answer: 'min_faves:100 のように指定すれば、いいねが100以上のツイートだけが出てくる。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。' },
 ];
@@ -37,9 +37,9 @@ to:アカウント名      そのアカウント宛のリプライ
 
       <h2>期間で絞る</h2>
       <pre><code class="language-text">since:2024-01-01     その日以降のツイート
-until:2024-12-31     その日以前のツイート</code></pre>
+until:2024-12-31     その日より前のツイート（その日は含まない）</code></pre>
       <p>
-        日付は <code>YYYY-MM-DD</code> 形式。両方組み合わせれば特定の期間のツイートだけに絞れる。「あのアカウントが去年の夏に何か言ってた」を探すときに効く。
+        日付は <code>YYYY-MM-DD</code> 形式。両方組み合わせれば特定の期間のツイートだけに絞れる。「あのアカウントが去年の夏に何か言ってた」を探すときに効く。<code>until:</code> に書いた日そのものは入らないので注意。年末まで含めたいなら翌年の 1 月 1 日を指定する。
       </p>
 
       <h2>メディアの種類で絞る</h2>
@@ -79,7 +79,7 @@ url:example.com        特定ドメインへのリンクを含む</code></pre>
 from:アカウント名 filter:images
 
 去年バズったツイートを探す:
-キーワード min_faves:1000 since:2024-01-01 until:2024-12-31
+キーワード min_faves:1000 since:2024-01-01 until:2025-01-01
 
 リツイートとリプライを除いた本人の発言だけ:
 from:アカウント名 -filter:retweets -filter:replies</code></pre>
@@ -109,7 +109,7 @@ from:アカウント名 -filter:retweets -filter:replies</code></pre>
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>X(Twitter)で特定アカウントの過去ツイートを検索するには？</dt>
-        <dd>検索欄に from:ユーザー名 を入力する。そこに since:2024-01-01 until:2024-12-31 のように日付を足せば、その期間のツイートだけに絞り込める。</dd>
+        <dd>検索欄に from:ユーザー名 を入力する。そこに since:2024-01-01 until:2025-01-01 のように日付を足せば、その期間のツイートだけに絞り込める。この例なら 2024 年の 1 年分（until: の日付は含まれない）。</dd>
         <dt>X(Twitter)で画像付きツイートだけを検索するには？</dt>
         <dd>キーワードに filter:images を足す。動画なら filter:videos、リンク付きなら filter:links を使う。</dd>
         <dt>いいねが多いツイートだけを検索するには？</dt>
