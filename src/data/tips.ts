@@ -21,7 +21,6 @@ export const tipPosts: TipPost[] = [
   { title: 'HTMLの表をTSV/CSVとしてコピーするブックマークレット', href: '/tips/html-table-tsv-csv-copy-bookmarklet/', desc: 'ページ上の表をクリックで選んでTSV/CSVでコピー。Excel・スプレッドシートに崩れず貼り付けられる。', date: '2026.06', tags: ['bookmarklet', 'dev'] },
   { title: 'YouTubeでもっとも再生された部分の時刻を取り出すブックマークレット', href: '/tips/youtube-most-replayed-bookmarklet/', desc: 'シークバーのグラフのもとになっているデータから、もっとも再生された部分の時刻を数値で抽出する。', date: '2026.06', tags: ['youtube', 'bookmarklet'] },
   { title: 'YouTubeのコメントからタイムスタンプを抽出するブックマークレット', href: '/tips/youtube-timestamp-bookmarklet/', desc: 'コメント欄に埋もれたタイムスタンプを一覧取得。時刻とラベルをまとめてコピーできる。', date: '2026.06', tags: ['youtube', 'bookmarklet'] },
-  { title: 'Chromeで開いている全タブのURLを一括コピーする方法', href: '/tips/chrome-copy-all-tabs/', desc: 'タブを範囲選択して右クリック「リンクをコピー」で全URLをまとめて取得。拡張機能不要。', date: '2026.05', tags: ['chrome'] },
   { title: 'ページ内の画像を一覧表示・一括取得するブックマークレット', href: '/tips/page-images-bookmarklet/', desc: 'ページ内の画像URLをサムネイル付きで一覧表示。外部依存なしの素のJavaScriptで動作。', date: '2026.05', tags: ['bookmarklet'] },
   { title: 'macOSのスクリーンショットの保存先・形式・影を変更する', href: '/tips/macos-screenshot-settings/', desc: 'defaults write で保存先フォルダ・JPG/PNG・ウィンドウの影を変更する手順。', date: '2026.05', tags: ['macos'] },
   { title: 'X(Twitter)の検索演算子まとめ（from: / since: / until: / filter:）', href: '/tips/twitter-advanced-search-operators/', desc: 'アカウント・期間・メディア種別・いいね数で絞り込む検索演算子と組み合わせ例。', date: '2026.05', tags: ['twitter'] },

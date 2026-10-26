@@ -8,8 +8,8 @@ const title = 'ページのメタ情報を見やすく表示＆コピーする�
 const description = '表示中のページの title、description、OG タグ、Twitter カードなどのメタ情報を一覧表示し、各項目をワンクリックでコピーできるブックマークレットの作り方。';
 const path = '/tips/meta-info-viewer-bookmarklet';
 const faqItems = [
-  { question: 'メタ情報を確認する方法は？', answer: 'このページのブックマークレットを登録し、確認したいページでクリックする。title、description、OGタグ、Twitterカード、canonical、h1 などが一覧表示され、各項目をワンクリックでコピーできる。' },
-  { question: 'OGタグを一覧表示するには？', answer: 'ブックマークレット「メタ情報表示」を使う。任意のページでクリックすると、og:title、og:description、og:image、og:url などが画面上に表示され、コピーボタンでクリップボードに取得できる。' },
+  { question: 'メタ情報を確認する方法は？', answer: 'このページのブックマークレットを登録して、確認したいページでクリックする。title・description・OGタグ・Twitterカード・canonical・h1 などが一覧で表示されて、各項目をワンクリックでコピーできる。' },
+  { question: 'OGタグを一覧表示するには？', answer: 'ブックマークレット「メタ情報表示」を使う。見たいページでクリックすると og:title・og:description・og:image・og:url などが画面に表示されて、コピーボタンでクリップボードにコピーできる。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.02'), 'tips'), faqPage(faqItems, path)];
 
@@ -27,15 +27,14 @@ const currentTags = ['bookmarklet', 'dev'];
 
     <article class="article-body">
       <p>
-        表示中のページの title、description、OG タグ、Twitter カードなどのメタ情報を、
-        画面上に見やすく表示し、各項目をワンクリックでコピーできるブックマークレット。
+        表示中のページの title・description・OG タグ・Twitter カードなどのメタ情報を画面の上に見やすく並べて、項目ごとにワンクリックでコピーできるようにしたブックマークレット。
       </p>
 
-      <h2>こんな時に便利</h2>
+      <h2>こんなときに使える</h2>
       <ul>
         <li>SEO チェックでメタ情報を確認したい</li>
-        <li>SNS 投稿時のプレビュー内容を確認したい</li>
-        <li>他ページとメタ情報を比較したい</li>
+        <li>SNS に投稿したときのプレビューを確認したい</li>
+        <li>ほかのページとメタ情報を比べたい</li>
         <li>メタ情報をコピーして共有・記録したい</li>
       </ul>
 
@@ -59,55 +58,54 @@ const currentTags = ['bookmarklet', 'dev'];
         ブックマークバーを右クリック → 「ページを追加」。
       </p>
 
-      <h3>3. 以下を設定</h3>
+      <h3>3. 名前と URL を入れる</h3>
       <ul>
         <li>名前: <code>メタ情報表示</code>（任意）</li>
-        <li>URL: 以下のコードをコピーして貼り付け</li>
+        <li>URL: 下のコードをコピーして貼り付け</li>
       </ul>
 
       <CodeBlock code={bookmarkletCode} language="javascript" />
       <p>
-        上記のコードを<strong>最初から最後まで全て</strong>コピーして、URL 欄に貼り付けてください。
+        上のコードは<strong>最初から最後まですべて</strong>コピーして、URL 欄に貼り付ける。
       </p>
 
       <h2>使い方</h2>
       <ol>
         <li>メタ情報を確認したいページを開く</li>
         <li>ブックマークレットをクリック</li>
-        <li>オーバーレイが表示され、メタ情報が一覧表示される</li>
+        <li>オーバーレイが出て、メタ情報が一覧で表示される</li>
         <li>各項目の「コピー」ボタンでクリップボードにコピー</li>
         <li>「閉じる」ボタンでオーバーレイを閉じる</li>
       </ol>
 
-      <h2>再度クリックで閉じる</h2>
+      <h2>もう一度クリックすると閉じる</h2>
       <p>
-        同じブックマークレットをもう一度クリックすると、オーバーレイを閉じる。
-        トグル動作になっている。
+        同じブックマークレットをもう一度クリックしても、オーバーレイが閉じる。トグルで動くようにしてある。
       </p>
 
       <h2>どう動いているか</h2>
       <p>
-        ブックマークレットは <code>javascript:</code> で始まる短いコードを URL として登録したもので、クリックすると今開いているページの上でそのコードが動く。新しいページを開くわけではないので、表示中のページの中身をその場で調べられる。
+        ブックマークレットは <code>javascript:</code> で始まる短いコードを URL として登録したもの。クリックすると、今開いているページの上でそのコードが動く。新しいページを開くわけじゃないので、表示中のページの中身をその場で調べられる。
       </p>
       <p>
-        このコードがやっているのは、<code>document.querySelector</code> で <code>title</code> や各 <code>meta</code> タグ、<code>link[rel="canonical"]</code> などを順に拾い、値があるものだけを一覧にして画面の手前に重ねて表示することだけ。コピーボタンは <code>navigator.clipboard.writeText</code> で各項目の値をクリップボードに書き込んでいる。表示部分には固定の <code>id</code> を付けてあり、もう一度クリックすると同じ <code>id</code> の要素が見つかるので、それを取り除いて閉じるトグルになっている。
+        このコードがやっているのは、<code>document.querySelector</code> で <code>title</code> や各 <code>meta</code> タグ・<code>link[rel="canonical"]</code> などを順に拾って、値があるものだけを一覧にして画面の手前に重ねて表示することだけ。コピーボタンは <code>navigator.clipboard.writeText</code> で各項目の値をクリップボードに書き込んでいる。表示部分には固定の <code>id</code> を付けてあるので、もう一度クリックすると同じ <code>id</code> の要素が見つかる。それを取り除いて閉じるトグルになっている。
       </p>
 
-      <h2>注意事項</h2>
+      <h2>注意</h2>
       <ul>
-        <li>存在しない項目は表示されない</li>
-        <li>一部のサイトではクリップボードへのコピーに許可が必要な場合がある</li>
+        <li>ページにない項目は表示されない</li>
+        <li>サイトによってはクリップボードへのコピーで許可を求められることがある</li>
         <li>クリップボードへの書き込みは <code>https</code> のページなど安全なコンテキストでないと動かないことがある</li>
-        <li>iframe 内のページでは動作しない</li>
-        <li>コンテンツを後から差し込む作りのページでは、表示前のメタ情報を拾うことがある。読み込みが終わってからクリックする</li>
+        <li>コードはタブのいちばん外側のページで動くので、iframe で埋め込まれた中のページのメタ情報は拾えない</li>
+        <li>あとからコンテンツを差し込む作りのページだと、表示前のメタ情報を拾っちゃうことがある。読み込みが終わってからクリックする</li>
       </ul>
 
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>メタ情報を確認する方法は？</dt>
-        <dd>このページのブックマークレットを登録し、確認したいページでクリックする。title、description、OGタグ、Twitterカード、canonical、h1 などが一覧表示され、各項目をワンクリックでコピーできる。</dd>
+        <dd>このページのブックマークレットを登録して、確認したいページでクリックする。title・description・OGタグ・Twitterカード・canonical・h1 などが一覧で表示されて、各項目をワンクリックでコピーできる。</dd>
         <dt>OGタグを一覧表示するには？</dt>
-        <dd>ブックマークレット「メタ情報表示」を使う。任意のページでクリックすると、og:title、og:description、og:image、og:url などが画面上に表示され、コピーボタンでクリップボードに取得できる。</dd>
+        <dd>ブックマークレット「メタ情報表示」を使う。見たいページでクリックすると og:title・og:description・og:image・og:url などが画面に表示されて、コピーボタンでクリップボードにコピーできる。</dd>
       </dl>
     </article>
 

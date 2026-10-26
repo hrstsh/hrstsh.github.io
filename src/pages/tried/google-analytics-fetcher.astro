@@ -55,55 +55,55 @@ const currentTags = ['automation', 'dev'];
 
     <article class="article-body">
       <p>
-        サイトのアクセス解析を確認するたびに GA4 や Search Console の管理画面にログインするのが面倒で、データをローカルに蓄積してサイト改善に活用したくなりました。そこで Google Analytics Data API と Search Console API でデータを取得する Python スクリプトを作り、<strong>launchd で日次自動実行</strong>する形にしました。手動で実行しなくても日次でデータが溜まるので、必要なときに参照するだけで済みます。
+        サイトのアクセス解析を見るたびに GA4 や Search Console の管理画面にログインするのが面倒で、データをローカルに蓄積してサイト改善に使いたくなった。なので Google Analytics Data API と Search Console API でデータを取ってくる Python スクリプトを作って、<strong>launchd で日次自動実行</strong>する形にした。手動で実行しなくても毎日データが溜まっていくので、必要なときに見るだけで済む。
       </p>
 
       <h2>全体の流れ</h2>
       <p>
-        取得から保存までの流れは次のとおりです。
+        取得から保存までの流れはこんな感じ。
       </p>
       <CodeBlock code={dataFlow} language="text" />
 
       <p>
-        当初は GitHub Actions の cron で定期実行する案も検討しました。ただ、credentials などの秘密情報を Actions の Secrets に置く必要があり、データの永続化にも Artifact や別リポジトリへの push が必要になります。ローカルで launchd を使えば、秘密情報はマシン内に留められ、<code>data/</code> にそのまま蓄積できます。また、Markdown 形式にしたのは、Cursor などの AI が <code>@data/ga4/xxx.md</code> で参照してサイト改善の判断材料にしやすいためです。
+        最初は GitHub Actions の cron で定期実行する案も考えた。ただ credentials などの秘密情報を Actions の Secrets に置かないといけないし、データを永続化するにも Artifact や別リポジトリへの push が要る。ローカルで launchd を使えば秘密情報はマシンの中に留めておけて、<code>data/</code> にそのまま溜められる。あと Markdown 形式にしたのは、Cursor などの AI が <code>@data/ga4/xxx.md</code> で参照してサイト改善の判断材料にしやすいから。
       </p>
 
-      <h2>API を使う準備</h2>
+      <h2>サービスアカウントに閲覧権限をつけておく</h2>
       <p>
-        どちらの API も、Google Cloud でサービスアカウントを作り、その鍵ファイル（JSON）をスクリプトから読み込む形にしています。GA4 側はプロパティの管理画面で、Search Console 側は対象サイトの設定で、作成したサービスアカウントのメールアドレスに閲覧権限を与えておく必要があります。ここを忘れると、認証は通るのにデータが空で返ってくるので、最初に権限付与まで済ませておくとつまずきにくいです。
+        どちらの API も Google Cloud でサービスアカウントを作って、その鍵ファイル（JSON）をスクリプトから読み込む形。GA4 側はプロパティの管理画面で、Search Console 側は対象サイトの設定で、作ったサービスアカウントのメールアドレスに閲覧権限をつけておく必要がある。ここを忘れると認証は通るのにデータが空で返ってくるので、最初に権限の付与まで済ませておくとつまずきにくい。
       </p>
 
-      <h2>取得スクリプト</h2>
+      <h2>1 日分ずつ取ってきて Markdown にする</h2>
       <p>
-        GA4 は <code>BetaAnalyticsDataClient.from_service_account_file</code>、Search Console は <code>googleapiclient.discovery.build</code> でサービスアカウント認証。日別サマリー、ページ別 PV、参照元、デバイス（GA4）、クエリ別・ページ別の検索パフォーマンス（Search Console）を取得して Markdown を生成しています。
+        GA4 は <code>BetaAnalyticsDataClient.from_service_account_file</code>、Search Console は <code>googleapiclient.discovery.build</code> でサービスアカウント認証。GA4 からは日別サマリー・ページ別 PV・参照元・デバイス、Search Console からはクエリ別・ページ別の検索パフォーマンスを取得して Markdown にしている。
       </p>
       <CodeBlock code={mainFetch} language="python" />
 
       <p>
-        Search Console は GA4 と異なり 2〜3 日遅れでデータが反映されるため、日次実行では <code>--days 5</code> で毎日 5 日分を再取得する運用にしました。同じ日付は上書きされるので、遅れて反映された分も取り込めます。
+        Search Console は GA4 と違ってデータの反映が 2〜3 日遅れるので、日次実行では <code>--days 5</code> で毎日 5 日分を取り直すようにした。同じ日付は上書きされるから、遅れて反映された分も取り込める。
       </p>
 
-      <h2>定期実行（launchd）</h2>
+      <h2>定期実行は launchd で</h2>
       <p>
-        plist の <code>StartCalendarInterval</code> で実行時刻（Hour, Minute）を指定。launchd では <code>.env</code> が読まれないため、plist の <code>EnvironmentVariables</code> で必要な環境変数を渡しています。
+        実行時刻（Hour, Minute）は plist の <code>StartCalendarInterval</code> で指定する。launchd だと <code>.env</code> が読まれないので、必要な環境変数は plist の <code>EnvironmentVariables</code> で渡してる。
       </p>
       <CodeBlock code={plistInterval} language="xml" />
 
       <p>
-        登録用の <code>install-launchd.sh</code> で plist を生成し、<code>~/Library/LaunchAgents/</code> に配置。対話で有効化を確認して <code>launchctl load</code> します。
+        登録用の <code>install-launchd.sh</code> で plist を生成して <code>~/Library/LaunchAgents/</code> に置く。有効化するかどうかを対話で聞いてから <code>launchctl load</code> する。
       </p>
       <CodeBlock code={installScript} language="bash" />
 
       <p>
-        出力先は <code>data/ga4/YYYY-MM-DD.md</code> と <code>data/search-console/YYYY-MM-DD.md</code>。取得したデータを AI に参照させて、メタ情報の最適化や人気記事の把握に活用しています。
+        出力先は <code>data/ga4/YYYY-MM-DD.md</code> と <code>data/search-console/YYYY-MM-DD.md</code>。取得したデータは AI に読ませて、メタ情報の最適化や人気記事の把握に使ってる。
       </p>
 
       <h2>つまずいたところ</h2>
       <p>
-        launchd は通常のシェルとは環境が違い、ログインシェルで読んでいる <code>.env</code> や <code>PATH</code> がそのままでは効きません。最初は手元で動くのに自動実行だけ失敗して、原因を追うのに時間がかかりました。結局、必要な環境変数は plist の <code>EnvironmentVariables</code> に明示し、<code>uv</code> や <code>python</code> は絶対パスで呼ぶことで安定しました。
+        launchd は普通のシェルとは環境が違うので、ログインシェルで読んでる <code>.env</code> や <code>PATH</code> がそのままだと効かない。最初は手元だと動くのに自動実行だけ失敗して、原因を追うのに時間がかかった。結局、必要な環境変数は plist の <code>EnvironmentVariables</code> に明示して、<code>uv</code> や <code>python</code> は絶対パスで呼ぶようにしたら安定した。
       </p>
       <p>
-        うまく動かないときは、まず <code>launchctl list</code> で登録されているか、終了コードが 0 以外になっていないかを確認します。plist で <code>StandardOutPath</code> と <code>StandardErrorPath</code> を指定してログを残しておくと、自動実行時のエラーを追いやすくなります。時刻指定の <code>StartCalendarInterval</code> は、その時刻にマシンがスリープしていると実行されないので、確実に回したいなら起こす設定や別の仕組みと組み合わせます。
+        うまく動かないときはまず <code>launchctl list</code> で、登録されているかと終了コードが 0 以外になっていないかを確認する。plist で <code>StandardOutPath</code> と <code>StandardErrorPath</code> を指定してログを残しておくと、自動実行のときのエラーを追いやすい。時刻指定の <code>StartCalendarInterval</code> はその時刻にマシンがスリープしていても、次に起きたときに実行される（逃した回が何回あっても 1 回にまとめられる）。時刻どおりに回したいなら起こす設定や別の仕組みと組み合わせることになる。
       </p>
     </article>
 

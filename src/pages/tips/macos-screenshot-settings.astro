@@ -7,9 +7,9 @@ const title = 'macOSのスクリーンショットの保存先・形式・影を
 const description = 'macOSのスクリーンショットをデスクトップ以外に保存したり、PNGをJPGに変えたり、ウィンドウ撮影時の影を消す方法。defaults write コマンドで設定する手順をまとめた。';
 const path = '/tips/macos-screenshot-settings';
 const faqItems = [
-  { question: 'Macのスクリーンショットの保存先を変えるには？', answer: 'ターミナルで defaults write com.apple.screencapture location 保存先のパス を実行し、killall SystemUIServer で反映する。例: defaults write com.apple.screencapture location ~/Pictures/Screenshots' },
-  { question: 'MacのスクリーンショットをJPGで保存するには？', answer: 'defaults write com.apple.screencapture type jpg を実行し、killall SystemUIServer で反映する。png に戻すと元のPNG形式になる。' },
-  { question: 'Macのウィンドウ撮影で付く影を消すには？', answer: 'defaults write com.apple.screencapture disable-shadow -bool true を実行し、killall SystemUIServer で反映する。false に戻すと影が復活する。' },
+  { question: 'Macのスクリーンショットの保存先を変えるには？', answer: 'ターミナルで defaults write com.apple.screencapture location 保存先のパス を実行して、killall SystemUIServer で反映する。例: defaults write com.apple.screencapture location ~/Pictures/Screenshots' },
+  { question: 'MacのスクリーンショットをJPGで保存するには？', answer: 'defaults write com.apple.screencapture type jpg を実行して、killall SystemUIServer で反映する。png にすれば元のPNG形式に戻る。' },
+  { question: 'Macのウィンドウ撮影で付く影を消すには？', answer: 'defaults write com.apple.screencapture disable-shadow -bool true を実行して、killall SystemUIServer で反映する。false にすれば影が戻る。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
 const currentTags = ['macos'];
@@ -24,15 +24,15 @@ const currentTags = ['macos'];
 
     <article class="article-body">
       <p>
-        macOS のスクリーンショットは初期設定だとデスクトップに溜まっていく。<code>defaults write</code> コマンドで、保存先・ファイル形式・影の有無を変えられる。撮るたびにデスクトップが散らかる問題はこれで解決する。
+        macOS のスクリーンショットは初期設定のままだとデスクトップにどんどん溜まっていく。<code>defaults write</code> コマンドを使えば保存先・ファイル形式・影の有無を変えられる。撮るたびにデスクトップが散らかるのも、これでなくせる。
       </p>
       <p>
-        ここで使う <code>defaults</code> は、各アプリの設定を保存している macOS のデータベースを読み書きするコマンド。<code>com.apple.screencapture</code> はスクリーンショット機能の設定をまとめた識別子で、ここに値を書き込むと挙動が変わる。システム設定の画面には項目が用意されていない調整も、このコマンドからなら変えられる。
+        ここで使う <code>defaults</code> は、アプリごとの設定を保存している macOS のデータベースを読み書きするコマンド。<code>com.apple.screencapture</code> はスクリーンショット機能の設定をまとめた識別子で、ここに値を書き込むと挙動が変わる。システム設定の画面には項目が用意されていない調整も、このコマンドなら変えられる。
       </p>
 
-      <h2>保存先を変える</h2>
+      <h2>保存先をデスクトップ以外にする</h2>
       <p>
-        専用フォルダに保存するようにする。先にフォルダを作っておく。
+        専用のフォルダへ保存するようにする。フォルダは先に作っておく。
       </p>
       <pre><code class="language-bash">mkdir -p ~/Pictures/Screenshots
 defaults write com.apple.screencapture location ~/Pictures/Screenshots
@@ -43,27 +43,27 @@ killall SystemUIServer</code></pre>
 
       <h2>ファイル形式を変える</h2>
       <p>
-        初期設定は PNG。ファイルサイズを抑えたいなら JPG にする。
+        初期設定は PNG。ファイルサイズを小さくしたいなら JPG にする。
       </p>
       <pre><code class="language-bash">defaults write com.apple.screencapture type jpg
 killall SystemUIServer</code></pre>
       <p>
-        指定できる形式は <code>png</code> <code>jpg</code> <code>gif</code> <code>tiff</code> <code>pdf</code> など。PNG に戻すなら <code>type png</code> を実行する。
+        指定できる形式は <code>png</code> <code>jpg</code> <code>gif</code> <code>tiff</code> <code>pdf</code> など。PNG に戻すときは <code>type png</code> で。
       </p>
 
       <h2>ウィンドウ撮影の影を消す</h2>
       <p>
-        ウィンドウを撮ると周りに大きな影が付く。これを消すと余白のないスッキリした画像になる。
+        ウィンドウを撮ると周りに大きめの影が付いてくる。これを消せば余白のないスッキリした画像になる。
       </p>
       <pre><code class="language-bash">defaults write com.apple.screencapture disable-shadow -bool true
 killall SystemUIServer</code></pre>
       <p>
-        影を戻すなら <code>-bool false</code> にする。なお、ウィンドウ撮影のときに <kbd>option</kbd> を押しながらクリックすると、設定を変えなくてもその一回だけ影なしで撮れる。
+        影を戻すなら <code>-bool false</code> にする。ちなみにウィンドウ撮影のときに <kbd>option</kbd> を押しながらクリックすると、設定を変えなくてもその一回だけ影なしで撮れる。
       </p>
 
-      <h2>ファイル名のプレフィックスを変える</h2>
+      <h2>ファイル名の「スクリーンショット」を変える</h2>
       <p>
-        初期設定だと「スクリーンショット 2026-05-31 ...」のような名前になる。先頭の文字列を変えられる。
+        初期設定だと「スクリーンショット 2026-05-31 ...」みたいな名前になる。この先頭の部分は変えられる。
       </p>
       <pre><code class="language-bash">defaults write com.apple.screencapture name "shot"
 killall SystemUIServer</code></pre>
@@ -71,29 +71,29 @@ killall SystemUIServer</code></pre>
         これで「shot 2026-05-31 ...」のような名前になる。
       </p>
 
-      <h2>撮影後のサムネイルを出さない</h2>
+      <h2>撮ったあとのサムネイルを出さない</h2>
       <p>
-        撮影すると画面の右下に小さなサムネイルがしばらく残り、それが消えるまで保存が確定しない。これを切ると、撮った瞬間にファイルとして保存されるようになる。
+        撮影すると画面の右下に小さなサムネイルがしばらく残って、それが消えるまでは保存が確定しない。これを切れば撮った瞬間にファイルとして保存される。
       </p>
       <pre><code class="language-bash">defaults write com.apple.screencapture show-thumbnail -bool false
 killall SystemUIServer</code></pre>
       <p>
-        サムネイルを戻すなら <code>-bool true</code> にする。続けて何枚も撮るときは、切っておくとテンポよく保存できる。
+        サムネイルを戻すなら <code>-bool true</code> にする。続けて何枚も撮るときは切っておくとテンポよく保存できる。
       </p>
 
-      <h2>ファイル名から日時を消す</h2>
+      <h2>ファイル名に日時を入れない</h2>
       <p>
-        初期設定ではファイル名に撮影日時が入る。これを省くと、日時のない短い名前で保存できる。
+        初期設定ではファイル名に撮影日時が入る。これを省けば日時のない短い名前で保存できる。
       </p>
       <pre><code class="language-bash">defaults write com.apple.screencapture include-date -bool false
 killall SystemUIServer</code></pre>
       <p>
-        これで「スクリーンショット.png」のような名前になり、同名のファイルがあれば末尾に連番が付く。日時を戻すなら <code>-bool true</code> にする。
+        これで「スクリーンショット.png」のような名前になって、同じ名前のファイルがあれば末尾に連番が付く。日時を戻すなら <code>-bool true</code> にする。
       </p>
 
-      <h2>設定を元に戻す</h2>
+      <h2>元に戻したいとき</h2>
       <p>
-        変更した設定を初期状態に戻すには <code>delete</code> を使う。
+        変えた設定を初期状態に戻すには <code>delete</code> を使う。
       </p>
       <pre><code class="language-bash">defaults delete com.apple.screencapture location
 defaults delete com.apple.screencapture type
@@ -102,9 +102,9 @@ killall SystemUIServer</code></pre>
 
       <h2>うまく反映されないときは</h2>
       <ul>
-        <li>変更しても効かないときは <code>killall SystemUIServer</code> を実行し忘れていることがほとんど。設定は書き込んだだけでは反映されず、このコマンドで再読み込みして初めて効く。</li>
+        <li>変えても効かないときは <code>killall SystemUIServer</code> を実行し忘れてることがほとんど。設定は書き込んだだけだと反映されなくて、このコマンドで読み込み直して初めて効く。</li>
         <li>保存先には実在するフォルダを指定する。存在しないフォルダを指定すると、撮影してもファイルが見当たらなくなる。先に <code>mkdir -p</code> で作っておく。</li>
-        <li>挙動がおかしくなったら、<code>defaults delete</code> で該当のキーを消すと初期状態に戻せる。</li>
+        <li>挙動がおかしくなったら、<code>defaults delete</code> で該当のキーを消せば初期状態に戻せる。</li>
       </ul>
 
       <h2>関連記事</h2>
@@ -117,11 +117,11 @@ killall SystemUIServer</code></pre>
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>Macのスクリーンショットの保存先を変えるには？</dt>
-        <dd>ターミナルで defaults write com.apple.screencapture location 保存先のパス を実行し、killall SystemUIServer で反映する。例: defaults write com.apple.screencapture location ~/Pictures/Screenshots</dd>
+        <dd>ターミナルで defaults write com.apple.screencapture location 保存先のパス を実行して、killall SystemUIServer で反映する。例: defaults write com.apple.screencapture location ~/Pictures/Screenshots</dd>
         <dt>MacのスクリーンショットをJPGで保存するには？</dt>
-        <dd>defaults write com.apple.screencapture type jpg を実行し、killall SystemUIServer で反映する。png に戻すと元のPNG形式になる。</dd>
+        <dd>defaults write com.apple.screencapture type jpg を実行して、killall SystemUIServer で反映する。png にすれば元のPNG形式に戻る。</dd>
         <dt>Macのウィンドウ撮影で付く影を消すには？</dt>
-        <dd>defaults write com.apple.screencapture disable-shadow -bool true を実行し、killall SystemUIServer で反映する。false に戻すと影が復活する。</dd>
+        <dd>defaults write com.apple.screencapture disable-shadow -bool true を実行して、killall SystemUIServer で反映する。false にすれば影が戻る。</dd>
       </dl>
 
     </article>

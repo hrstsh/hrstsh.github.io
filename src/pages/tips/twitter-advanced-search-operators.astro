@@ -7,9 +7,9 @@ const title = 'X(Twitter)の検索演算子まとめ（from: / since: / until: /
 const description = 'X(Twitter)の検索で使える演算子のまとめ。特定アカウント・期間・メディア種別での絞り込みや、いいね数の下限指定まで。コピペで使える組み合わせ例も紹介。';
 const path = '/tips/twitter-advanced-search-operators';
 const faqItems = [
-  { question: 'X(Twitter)で特定アカウントの過去ツイートを検索するには？', answer: '検索欄に from:ユーザー名 を入力する。さらに since:2024-01-01 until:2024-12-31 のように日付を足すと、その期間内のツイートだけに絞り込める。' },
+  { question: 'X(Twitter)で特定アカウントの過去ツイートを検索するには？', answer: '検索欄に from:ユーザー名 を入力する。そこに since:2024-01-01 until:2025-01-01 のように日付を足せば、その期間のツイートだけに絞り込める。この例なら 2024 年の 1 年分（until: の日付は含まれない）。' },
   { question: 'X(Twitter)で画像付きツイートだけを検索するには？', answer: 'キーワードに filter:images を足す。動画なら filter:videos、リンク付きなら filter:links を使う。' },
-  { question: 'いいねが多いツイートだけを検索するには？', answer: 'min_faves:100 のように指定すると、いいねが100以上のツイートだけが表示される。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。' },
+  { question: 'いいねが多いツイートだけを検索するには？', answer: 'min_faves:100 のように指定すれば、いいねが100以上のツイートだけが出てくる。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。' },
 ];
 const jsonLd = [tipArticle(title.replace(/ - hrの備忘録$/, ''), description, path, toIsoDate('2026.05'), 'tips'), faqPage(faqItems, path)];
 const currentTags = ['twitter'];
@@ -24,7 +24,7 @@ const currentTags = ['twitter'];
 
     <article class="article-body">
       <p>
-        X(Twitter) でキーワードだけ入れて検索しても、目当てのツイートはなかなか出てこない。検索演算子を組み合わせると、アカウント・期間・メディア種別で一気に絞り込める。よく使うものをまとめた。
+        X(Twitter) でキーワードだけ入れて検索しても、目当てのツイートはなかなか出てこない。検索演算子を組み合わせれば、アカウント・期間・メディアの種類で一気に絞り込める。よく使うものをまとめておく。
       </p>
 
       <h2>アカウントで絞る</h2>
@@ -32,14 +32,14 @@ const currentTags = ['twitter'];
 to:アカウント名      そのアカウント宛のリプライ
 @アカウント名        そのアカウントへの言及を含むツイート</code></pre>
       <p>
-        <code>from:</code> は <code>@</code> を付けず、ユーザー名（@の後ろの部分）だけを書く。例: <code>from:elonmusk</code>。
+        <code>from:</code> には <code>@</code> を付けずに、ユーザー名（@の後ろの部分）だけを書く。例: <code>from:elonmusk</code>。
       </p>
 
       <h2>期間で絞る</h2>
       <pre><code class="language-text">since:2024-01-01     その日以降のツイート
-until:2024-12-31     その日以前のツイート</code></pre>
+until:2024-12-31     その日より前のツイート（その日は含まない）</code></pre>
       <p>
-        日付は <code>YYYY-MM-DD</code> 形式。両方を組み合わせると、特定期間のツイートだけに絞れる。「あのアカウントが去年の夏に何か言ってた」を探すときに効く。
+        日付は <code>YYYY-MM-DD</code> 形式。両方組み合わせれば特定の期間のツイートだけに絞れる。「あのアカウントが去年の夏に何か言ってた」を探すときに効く。<code>until:</code> に書いた日そのものは入らないので注意。年末まで含めたいなら翌年の 1 月 1 日を指定する。
       </p>
 
       <h2>メディアの種類で絞る</h2>
@@ -50,7 +50,7 @@ filter:media         画像・動画どちらか付き
 -filter:replies      リプライを除外
 -filter:retweets     リツイートを除外</code></pre>
       <p>
-        頭に <code>-</code> を付けると除外になる。<code>-filter:retweets</code> でリツイートを消すと、検索結果がかなり見やすくなる。
+        頭に <code>-</code> を付けると除外になる。<code>-filter:retweets</code> でリツイートを消すだけでも、検索結果はかなり見やすくなる。
       </p>
 
       <h2>エンゲージメントで絞る</h2>
@@ -58,7 +58,7 @@ filter:media         画像・動画どちらか付き
 min_retweets:50      リツイート50以上
 min_replies:10       リプライ10以上</code></pre>
       <p>
-        バズったツイートだけを探したいときに使う。数字を上げるほど結果が絞られる。
+        バズったツイートだけ探したいときに使う。数字を大きくするほど結果は絞られる。
       </p>
 
       <h2>キーワードと言語で絞る</h2>
@@ -68,18 +68,18 @@ min_replies:10       リプライ10以上</code></pre>
 lang:ja               日本語のツイートだけ
 url:example.com        特定ドメインへのリンクを含む</code></pre>
       <p>
-        引用符はフレーズを語順そのままで探したいときに使う。<code>OR</code> は大文字で書く必要があり、小文字だと普通の単語として扱われる。<code>lang:ja</code> は海外アカウントの英語ツイートを除いて日本語だけを読みたいときに効く。
+        引用符はフレーズを語順そのままで探したいときに使う。<code>OR</code> は大文字で書く。小文字だと普通の単語として扱われる。<code>lang:ja</code> は海外アカウントの英語ツイートを除いて日本語だけ読みたいときに便利。
       </p>
 
       <h2>組み合わせ例</h2>
       <p>
-        演算子はスペースで区切って並べるだけ。いくつか実用的な組み合わせを挙げる。
+        演算子はスペースで区切って並べるだけ。よく使う組み合わせをいくつか挙げておく。
       </p>
       <pre><code class="language-text">特定アカウントの画像付きツイートだけ:
 from:アカウント名 filter:images
 
 去年バズったツイートを探す:
-キーワード min_faves:1000 since:2024-01-01 until:2024-12-31
+キーワード min_faves:1000 since:2024-01-01 until:2025-01-01
 
 リツイートとリプライを除いた本人の発言だけ:
 from:アカウント名 -filter:retweets -filter:replies</code></pre>
@@ -95,9 +95,9 @@ from:アカウント名 -filter:retweets -filter:replies</code></pre>
       <h2>使うときのコツ</h2>
       <ul>
         <li>演算子のコロンやハイフンはすべて半角で書く。全角になっていると検索条件として認識されない。</li>
-        <li>条件はスペースで区切って並べるだけで、並べたすべてが同時に効く。順番は問わない。</li>
-        <li><code>min_faves:</code> などの数値系は、ログインした状態の検索でないと効かないことがある。</li>
-        <li>絞り込みすぎると結果がゼロになる。まず緩めの条件で試し、多すぎたら条件を少しずつ足していくと当てやすい。</li>
+        <li>条件はスペースで区切って並べるだけで、並べたものが全部同時に効く。順番は関係ない。</li>
+        <li><code>min_faves:</code> などの数値系は、ログインした状態で検索しないと効かないことがある。</li>
+        <li>絞り込みすぎると結果がゼロになる。まずは緩めの条件で試して、多すぎたら少しずつ条件を足していくと当てやすい。</li>
       </ul>
 
       <h2>関連記事</h2>
@@ -109,11 +109,11 @@ from:アカウント名 -filter:retweets -filter:replies</code></pre>
       <h2>よくある質問</h2>
       <dl class="faq-list">
         <dt>X(Twitter)で特定アカウントの過去ツイートを検索するには？</dt>
-        <dd>検索欄に from:ユーザー名 を入力する。さらに since:2024-01-01 until:2024-12-31 のように日付を足すと、その期間内のツイートだけに絞り込める。</dd>
+        <dd>検索欄に from:ユーザー名 を入力する。そこに since:2024-01-01 until:2025-01-01 のように日付を足せば、その期間のツイートだけに絞り込める。この例なら 2024 年の 1 年分（until: の日付は含まれない）。</dd>
         <dt>X(Twitter)で画像付きツイートだけを検索するには？</dt>
         <dd>キーワードに filter:images を足す。動画なら filter:videos、リンク付きなら filter:links を使う。</dd>
         <dt>いいねが多いツイートだけを検索するには？</dt>
-        <dd>min_faves:100 のように指定すると、いいねが100以上のツイートだけが表示される。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。</dd>
+        <dd>min_faves:100 のように指定すれば、いいねが100以上のツイートだけが出てくる。リツイート数なら min_retweets:、リプライ数なら min_replies: を使う。</dd>
       </dl>
 
     </article>

@@ -8,9 +8,9 @@ const title = 'X(Twitter)の画像をオリジナル画質で保存する方法 
 const description = 'X(Twitter) の画像が劣化する理由と、元の画質のまま保存する方法。URL の name=orig 指定、:orig、スマホアプリの「4Kを読み込む」、ブックマークレットを紹介。サイズ指定ごとの解像度も実測した。';
 const path = '/tips/twitter-image-original-quality';
 const faqItems = [
-  { question: 'Xの画像を保存する方法は？', answer: 'PC なら画像を右クリックして「名前を付けて画像を保存」で保存できる。ただしこの方法だと X が配信している縮小版が保存される。画質を落とさず保存したい場合は、画像を新しいタブで開き、URL の name= の部分を name=orig に書き換えてから保存する。スマホは X アプリで画像を長押しし、4K で読み込んでから保存する。' },
-  { question: 'Twitterの画像を高画質で保存するには？', answer: '画像 URL の name= を orig にする。例: https://pbs.twimg.com/media/xxx?format=jpg&name=small なら https://pbs.twimg.com/media/xxx?format=jpg&name=orig を開いて保存する。format=webp になっている場合は format=jpg にも書き換える。https://pbs.twimg.com/media/xxx.jpg のような古い形式の URL なら、末尾に :orig を付ける。' },
-  { question: 'スマホ（iPhone・Android）でXの画像を高画質で保存するには？', answer: 'X アプリで画像を全画面表示して長押しする。iPhone では「4Kを読み込む」を選んで高画質版に切り替えてから保存する。Android では「4K画像を保存」を選ぶ。項目が出ない場合は、投稿された画像がもともと大きくないか、データセーバーがオンになっている。' },
+  { question: 'Xの画像を保存する方法は？', answer: 'PC なら画像を右クリックして「名前を付けて画像を保存」で保存できる。ただこの方法だと X が配信している縮小版が保存される。画質を落とさず保存したいときは、画像を新しいタブで開いて URL の name= の部分を name=orig に書き換えてから保存する。スマホは X アプリで画像を長押しして、4K で読み込んでから保存する。' },
+  { question: 'Twitterの画像を高画質で保存するには？', answer: '画像 URL の name= を orig にする。例: https://pbs.twimg.com/media/xxx?format=jpg&name=small なら https://pbs.twimg.com/media/xxx?format=jpg&name=orig を開いて保存する。format=webp になっているときは format=jpg にも書き換える。https://pbs.twimg.com/media/xxx.jpg のような古い形式の URL なら、末尾に :orig を付ける。' },
+  { question: 'スマホ（iPhone・Android）でXの画像を高画質で保存するには？', answer: 'X アプリで画像を全画面表示して長押しする。iPhone では「4Kを読み込む」を選んで高画質版に切り替えてから保存する。Android では「4K画像を保存」を選ぶ。項目が出ないときは、投稿された画像がもともと大きくないか、データセーバーがオンになっている。' },
   { question: 'なぜTwitterの画像は劣化するのか？', answer: 'X(Twitter) は 1 枚の画像を複数のサイズで配信していて、タイムラインや投稿ページでは画面に合わせた縮小版を読み込んでいる。右クリックで保存すると、この縮小版が保存される。name=large でも長辺は 2048px までに縮小される。' },
   { question: ':orig とは？', answer: 'X(Twitter) の古い形式の画像 URL に付けるサイズ指定で、投稿された元の画質の画像を取得できる。今の形式の URL では name=orig が同じ役割になる。' },
 ];
@@ -92,7 +92,7 @@ const currentTags = ['twitter', 'bookmarklet'];
         </table>
       </div>
       <p>
-        名前に反して <code>large</code> でも長辺は 2048px までで、この写真だと画素数は元の 3 分の 1 もない。<code>name=</code> を付けずに開くと <code>medium</code> と同じ 1200px の画像が返ってきた。
+        名前のわりに <code>large</code> でも長辺は 2048px までで、この写真だと画素数は元の 3 分の 1 もない。<code>name=</code> を付けずに開くと <code>medium</code> と同じ 1200px の画像が返ってきた。
       </p>
       <p>
         <code>4096x4096</code> と <code>orig</code> はこの画像ではファイルの中身まで完全に同じだった。ほかに <code>900x900</code>・<code>360x360</code>・<code>240x240</code> も指定できる。<code>2048x2048</code> のような一覧にないサイズを指定すると 404 になる。
@@ -111,7 +111,7 @@ const currentTags = ['twitter', 'bookmarklet'];
         <li>開いた画像を右クリック → <strong>名前を付けて画像を保存</strong></li>
       </ol>
 
-      <p>例：</p>
+      <p>たとえばこう。</p>
       <pre><code class="language-text">元のURL:
 https://pbs.twimg.com/media/ABC123xyz?format=jpg&amp;name=small
 
@@ -119,7 +119,7 @@ https://pbs.twimg.com/media/ABC123xyz?format=jpg&amp;name=small
 https://pbs.twimg.com/media/ABC123xyz?format=jpg&amp;name=orig</code></pre>
 
       <p>
-        ひとつハマりどころがある。URL が <code>format=webp</code> になっていると、<code>name=orig</code> にしただけでは 404 で開けない。ログインせずに投稿ページを開いたときは、画像が <code>format=webp&amp;name=small</code> で読み込まれていた。この場合は <code>format=jpg</code> にも書き換える。
+        ひとつハマりどころがある。URL が <code>format=webp</code> になっていると、<code>name=orig</code> にしただけでは 404 で開けない。ログインせずに投稿ページを開いたときは、画像が <code>format=webp&amp;name=small</code> で読み込まれていた。そのときは <code>format=jpg</code> にも書き換える。
       </p>
 
       <h3>方法2: 古い形式の URL には :orig を付ける</h3>
@@ -135,16 +135,16 @@ https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
         <code>:large</code> や <code>:small</code> も同じように使えて、返ってくるサイズは <code>name=</code> の同名の指定と同じだった。
       </p>
 
-      <h2>ブックマークレットで1クリック化</h2>
+      <h2>ブックマークレットで1クリックにする</h2>
       <p>
-        毎回 URL を書き換えるのが面倒なら、ブックマークレットにしておくと楽。画像を新しいタブで開いた状態で実行すると、元の画質の URL に切り替わる。<code>format=webp</code> は <code>jpg</code> に直し、<code>.jpg:large</code> のような古い形式も新しい形式に変換してから <code>name=orig</code> を付ける。
+        毎回 URL を書き換えるのが面倒なら、ブックマークレットにしておくと楽。画像を新しいタブで開いてから実行すると、元の画質の URL に切り替わる。<code>format=webp</code> は <code>jpg</code> に直して、<code>.jpg:large</code> のような古い形式も新しい形式に変換してから <code>name=orig</code> を付ける。
       </p>
       <p>
-        以前このページに載せていた版は、古い形式の URL と <code>format=webp</code> の URL で正しく動いていなかった。登録済みの人は入れ替えてほしい。
+        以前このページに載せていた版は、古い形式の URL と <code>format=webp</code> の URL でちゃんと動いてなかった。登録済みの人は入れ替えてほしい。
       </p>
 
       <p>
-        次のコードを<strong>URL</strong>欄にしたブックマークを作る：
+        次のコードを<strong>URL</strong>欄に入れたブックマークを作る。
       </p>
       <CodeBlock code={bookmarkletCode} language="javascript" />
 
@@ -158,7 +158,7 @@ https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
 
       <h2>スマホ（iPhone・Android）で保存する</h2>
       <p>
-        スマホは X アプリから保存するのが早い。画像をタップして全画面で開き、長押しするとメニューが出る。iPhone のアプリなら「4Kを読み込む」を選び、高画質版に切り替わってから保存する。Android のアプリでは同じメニューに「4K画像を保存」がある。
+        スマホは X アプリから保存するのが早い。画像をタップして全画面で開き、長押しするとメニューが出る。iPhone のアプリなら「4Kを読み込む」を選んで、高画質版に切り替わってから保存する。Android のアプリでは同じメニューに「4K画像を保存」がある。
       </p>
       <p>
         4K の項目が出てこないときは、投稿された画像がもともと大きくないことが多い。自分の側でデータセーバーをオンにしていても出ないので、設定とプライバシー →「アクセシビリティ、表示、言語」→「データ利用の設定」を確認する。
@@ -180,15 +180,15 @@ https://pbs.twimg.com/media/ABC123xyz.jpg:orig</code></pre>
 
       <h2>注意</h2>
       <ul>
-        <li>URL のサイズ指定は<strong>非公式の仕様</strong>で、X の仕様変更で使えなくなる可能性がある。この記事の内容は 2026 年 9 月に確認した。</li>
-        <li><code>orig</code> で取れるのは投稿された時点の画像なので、元より高画質になるわけではない。</li>
+        <li>URL のサイズ指定は<strong>非公式の仕様</strong>なので、X 側の都合でいつ使えなくなってもおかしくない。この記事の内容は 2026 年 9 月に確認した。</li>
+        <li><code>orig</code> で取れるのは投稿された時点の画像なので、元より高画質になるわけじゃない。</li>
         <li>X では GIF も動画（MP4）として扱われるので、この方法は使えない。</li>
         <li>保存した画像を再投稿・加工するときは著作権に注意する。</li>
       </ul>
 
       <h2>まとめて保存したいとき</h2>
       <p>
-        1 枚ずつではなく、あるアカウントの画像をまとめて保存したいなら<a href="/tips/twitter-media-url-extractor/">メディア欄から画像 URL を一括で取り出す方法</a>がある。取り出した URL はそのまま <code>name=orig</code> になっている。タイムラインを見ながら条件に合う画像を元の画質で自動的に開く Chrome 拡張も<a href="/tried/twitter-image-opener/">作ってみた</a>。
+        1 枚ずつではなく、あるアカウントの画像をまとめて保存したいなら<a href="/tips/twitter-media-url-extractor/">メディア欄から画像 URL を一括で取り出す方法</a>がある。取り出した URL はそのまま <code>name=orig</code> になっている。タイムラインを見ながら条件に合う画像を元の画質のまま自動で開く Chrome 拡張も<a href="/tried/twitter-image-opener/">作ってみた</a>。
       </p>
 
       <h2>よくある質問</h2>

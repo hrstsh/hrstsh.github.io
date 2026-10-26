@@ -42,6 +42,7 @@ const measureFPSRVFC = `function measureFPSWithRVFC(now, metadata) {
 
 const measureFPSRAF = `function measureFPSWithRAF() {
   const quality = video.getVideoPlaybackQuality?.();
+  const now = performance.now();
   const frames = quality?.totalVideoFrames ?? 0;
   const elapsed = (now - tracker.windowStartTime) / 1000;
   if (elapsed >= 1 && frames >= tracker.windowStartFrames) {
@@ -75,16 +76,16 @@ const currentTags = ['chrome-extension'];
 
     <article class="article-body">
       <p>
-        Webページで再生中の動画の FPS と解像度をリアルタイムで確認したくて、Chrome 拡張機能を作りました。YouTube、ニコニコ動画、その他 HTML5 動画に対応しています。ソースコードは <a href="https://github.com/hrstsh/video-fps-checker" target="_blank" rel="noopener noreferrer">GitHub</a> で公開しています。
+        Webページで再生中の動画の FPS と解像度をリアルタイムで確認したくて、Chrome 拡張機能を作ってみた。対応しているのは YouTube・ニコニコ動画とその他の HTML5 動画。ソースコードは <a href="https://github.com/hrstsh/video-fps-checker" target="_blank" rel="noopener noreferrer">GitHub</a> で公開してる。
       </p>
 
       <p>
-        manifest.json の構成は次のとおりです。
+        manifest.json はこんな構成。
       </p>
       <CodeBlock code={manifestJson} language="json" />
 
       <p>
-        動画再生中、画面上にオーバーレイで FPS・解像度・ドロップフレーム数が表示されます。デフォルトは右上、緑色の文字です。
+        動画を再生していると、画面の上にオーバーレイで FPS・解像度・ドロップフレーム数が出る。デフォルトは右上に緑色の文字。
       </p>
       <figure class="article-image">
         <img src="/images/tried/video-fps-checker/display.png" alt="YouTubeで動画再生中、右上にFPS・解像度・ドロップフレーム数が表示されている様子" />
@@ -93,11 +94,11 @@ const currentTags = ['chrome-extension'];
 
       <h2>使い方</h2>
       <p>
-        インストールは、リポジトリをクローンまたは ZIP でダウンロードし、Chrome の <code>chrome://extensions/</code> で「デベロッパーモード」を ON にして「パッケージ化されていない拡張機能を読み込む」からフォルダを選択します。動画ページを開くと自動で表示され、アイコンクリックで ON/OFF を切り替えられます。「設定を開く」から表示位置（左上/右上/左下/右下）と文字色を変更できます。
+        インストールはリポジトリをクローンするか ZIP でダウンロードして、Chrome の <code>chrome://extensions/</code> で「デベロッパーモード」を ON にしてから「パッケージ化されていない拡張機能を読み込む」でフォルダを選ぶ。動画ページを開くと自動で表示されて、アイコンのクリックで ON/OFF を切り替えられる。「設定を開く」から表示位置（左上/右上/左下/右下）と文字色も変えられる。
       </p>
 
       <p>
-        ポップアップと設定画面の例です。表示位置は「左上」「右上」「左下」「右下」から選択でき、文字色はカラーピッカーまたは HEX コードで指定できます。
+        ポップアップと設定画面の例。表示位置は「左上」「右上」「左下」「右下」から選べて、文字色はカラーピッカーか HEX コードで指定できる。
       </p>
       <figure class="article-image">
         <img src="/images/tried/video-fps-checker/popup.png" alt="拡張機能のポップアップ。表示のトグルスイッチと「設定を開く」リンクがある" />
@@ -108,34 +109,34 @@ const currentTags = ['chrome-extension'];
         <figcaption>オプション画面（表示位置・文字色の設定）</figcaption>
       </figure>
 
-      <h2>仕組み</h2>
+      <h2>FPS は 1 秒ごとのフレーム数の差分で出す</h2>
       <p>
-        FPS 計測には <code>requestVideoFrameCallback</code>（Chrome 83+ で利用可能）を優先しています。動画の各フレーム描画時にコールバックが呼ばれ、<code>metadata.presentedFrames</code> から経過フレーム数を取得。1 秒窓で差分を取って FPS を算出します。
+        FPS の計測には <code>requestVideoFrameCallback</code>（Chrome 83+ で使える）を優先して使っている。動画のフレームが描画されるたびにコールバックが呼ばれるので、<code>metadata.presentedFrames</code> から経過フレーム数を取る。1 秒窓で差分を取って FPS を出す。
       </p>
       <CodeBlock code={measureFPSRVFC} language="javascript" />
 
       <p>
-        非対応環境では <code>getVideoPlaybackQuality</code> の <code>totalVideoFrames</code> を <code>requestAnimationFrame</code> でサンプリングし、同様に 1 秒窓の差分から FPS を算出してフォールバックしています。
+        非対応の環境では <code>getVideoPlaybackQuality</code> の <code>totalVideoFrames</code> を <code>requestAnimationFrame</code> でサンプリングして、同じように 1 秒窓の差分から FPS を出すフォールバックにしてる。
       </p>
       <CodeBlock code={measureFPSRAF} language="javascript" />
 
       <p>
-        起動時に API の有無を判定してどちらを使うか決め、<code>play</code> / <code>pause</code> / <code>ended</code> で計測の開始・停止を制御しています。解像度は <code>videoWidth</code> / <code>videoHeight</code> を参照。ドロップフレームは <code>droppedVideoFrames</code> の 1 秒間の増分を表示。MutationObserver で <code>document.body</code> を監視し、動的に追加される動画（SPA のページ遷移など）にも対応しています。
+        どっちを使うかは起動時に API があるかどうかで決めて、<code>play</code> / <code>pause</code> / <code>ended</code> で計測の開始・停止を制御している。解像度は <code>videoWidth</code> / <code>videoHeight</code> から。ドロップフレームは <code>droppedVideoFrames</code> の 1 秒間の増分を表示。MutationObserver で <code>document.body</code> を監視して、動的に追加される動画（SPA のページ遷移など）も拾えるようにしている。
       </p>
       <CodeBlock code={startTracking} language="javascript" />
 
       <p>
-        注意点として、動画が一時停止中は FPS 計測を停止し「停止」と表示します。一部のサイトでは動画の実装により正しく計測できない場合があります。Chrome（Chromium 系）での動作を想定しています。
+        注意点もいくつか。動画が一時停止している間は FPS の計測も止めて「停止」と表示する。サイトによっては動画の実装の都合で正しく計測できないこともある。動作は Chrome（Chromium 系）を想定してる。
       </p>
 
-      <h2>2つの計測方法の違い</h2>
+      <h2>2つの計測方法は精度が違う</h2>
       <p>
-        <code>requestVideoFrameCallback</code> は、動画の新しいフレームが実際に画面へ出たタイミングで呼ばれる仕組みです。表示されたフレーム数をそのまま数えられるので、計測がフレーム描画そのものに連動し、実際の再生フレームレートに近い値が出ます。一方の <code>requestAnimationFrame</code> はディスプレイの再描画に合わせて呼ばれるだけで、動画のフレームとは独立しています。そのため <code>getVideoPlaybackQuality</code> の累計フレーム数を一定間隔でサンプリングし、差分から求める近似値になります。新しい API が使えるならそちらを優先し、使えない環境でも数値が出るよう後者へ切り替えています。
+        <code>requestVideoFrameCallback</code> は動画の新しいフレームが実際に画面に出たタイミングで呼ばれる。表示されたフレーム数をそのまま数えられるので、計測がフレームの描画そのものに連動して実際の再生フレームレートに近い値が出る。<code>requestAnimationFrame</code> のほうはディスプレイの再描画に合わせて呼ばれるだけで、動画のフレームとは独立してる。なので <code>getVideoPlaybackQuality</code> の累計フレーム数を一定間隔でサンプリングして、差分から求める近似値になる。新しい API が使えるならそっちを優先して、使えない環境でも数値が出るように後者に切り替えている。
       </p>
 
-      <h2>どんなときに役立つか</h2>
+      <h2>こんなときに使える</h2>
       <p>
-        配信や録画の設定どおりにフレームレートが出ているかを確かめたいとき、再生がカクつく原因がドロップフレームなのかを切り分けたいときに使えます。解像度も同時に表示されるので、自動画質で実際にどの解像度が選ばれているかも一目で分かります。
+        配信や録画の設定どおりにフレームレートが出ているか確かめたいときとか、再生がカクつく原因がドロップフレームなのかを切り分けたいときに使える。解像度も一緒に出るので、自動画質で実際にどの解像度が選ばれているかもパッとわかる。
       </p>
     </article>
 
