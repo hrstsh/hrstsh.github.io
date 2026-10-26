@@ -31,7 +31,7 @@ export const tipPosts: TipPost[] = [
   { title: 'X(Twitter)の画像を一括保存する方法（メディア欄からまとめてダウンロード）', href: '/tips/twitter-media-url-extractor/', desc: 'X(Twitter) のメディア欄の画像をオリジナル画質でまとめて保存する方法。ブックマークレットでURL一括取得、wget・Pythonで一括ダウンロード。', date: '2026.02', tags: ['twitter', 'bookmarklet'] },
   { title: 'X(Twitter)のタイムラインを「画像のみ」表示に切り替える', href: '/tips/twitter-image-only-filter/', desc: 'テキストツイートを非表示にして、画像・動画だけを表示。ブックマークレットまたはChrome拡張で実現。', date: '2026.02', tags: ['twitter', 'bookmarklet', 'chrome-extension'] },
   { title: 'X(Twitter)で画像を非表示にする方法（タイムラインをテキストだけにする）', href: '/tips/twitter-text-only-filter/', desc: '画像・動画付きのツイートを非表示にしてテキストだけを表示するやり方。X の設定にはないので、ブックマークレットまたはChrome拡張で実現。', date: '2026.02', tags: ['twitter', 'bookmarklet', 'chrome-extension'] },
-  { title: 'macOSでファイルパスを一発でターミナルにコピーする', href: '/tips/macos-copy-file-path/', desc: 'Option+右クリックやドラッグ&ドロップで簡単コピー。5つの方法を紹介。', date: '2026.02', tags: ['macos'] },
+  { title: 'MacのFinderでファイルパスをコピーする方法（ターミナルへの貼り付けも）', href: '/tips/macos-copy-file-path/', desc: 'Finder の「パス名をコピー」や Cmd+Option+C、ドラッグ&ドロップなど5つの方法。', date: '2026.02', tags: ['macos'] },
   { title: 'Macで自作コマンドを作って登録する方法', href: '/tips/macos-custom-command/', desc: 'ファイル名一括変換コマンドを例に自作コマンドの作り方と PATH 設定を解説。', date: '2026.02', tags: ['macos', 'cli'] },
   { title: 'X(Twitter)の画像をオリジナル画質で保存する方法', href: '/tips/twitter-image-original-quality/', desc: 'URL の name=orig 指定でオリジナル画質を保存。スマホアプリの 4K 保存、サイズ指定ごとの実測、ブックマークレットも。', date: '2026.02', tags: ['twitter', 'bookmarklet'] },
   { title: 'YouTube動画の再生速度を自由に変更する方法（Chrome）', href: '/tips/youtube-playback-speed/', desc: 'Chromeのコンソールから3倍速・4倍速の高速再生、0.1倍速の超スロー再生も可能。Premium不要。', date: '2026.02', tags: ['youtube', 'chrome'] },
