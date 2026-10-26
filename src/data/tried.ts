@@ -11,6 +11,13 @@ export interface TriedPost {
 
 export const triedPosts: TriedPost[] = [
   {
+    title: 'マルウェアや脆弱性のあるパッケージを検出する仕組みを作ってみた',
+    href: '/tried/dependency-malware-check/',
+    desc: '手元の npm・PyPI のパッケージを毎朝 OSV.dev と照合して、マルウェアや重大な脆弱性が見つかったら Telegram に知らせる仕組みを作った記録。証明書の秘密鍵の漏えいと brotli の脆弱性を実際に検知して対応した例も。',
+    date: '2026.10',
+    tags: ['python', 'automation', 'dev'],
+  },
+  {
     title: 'YouTubeのコメントからタイムスタンプを抽出するChrome拡張機能を作ってみた',
     href: '/tried/youtube-timestamp-extension/',
     desc: 'YouTube動画のコメント欄からタイムスタンプを一覧抽出し、クリックでその時刻にジャンプできるChrome拡張機能を作った記録。SPA遷移の検知やチャプター情報取得の試行錯誤も。',
