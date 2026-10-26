@@ -56,12 +56,12 @@ function applyFilter() {
   // 新しいstyleを追加
   const style = document.createElement('style');
   style.id = 'twitter-image-only-filter';
-  style.textContent = \\\`
+  style.textContent = \`
     /* 画像・動画がないツイートを非表示 */
     div[data-testid="cellInnerDiv"]:has(article):not(:has(div[data-testid="tweetPhoto"])):not(:has(video)) {
       display: none !important;
     }
-  \\\`;
+  \`;
   document.head.appendChild(style);
 }
 
@@ -121,12 +121,12 @@ div[data-testid="cellInnerDiv"]:has([data-testid="socialContext"]) {
 
 const jsCustomCode = `// 特定ユーザーのツイート以外を非表示（画像なしのみ）
 const allowedUsers = ['username1', 'username2'];
-const userSelector = allowedUsers.map(u => \\\`:has([href*="/\${u}"])\\\`).join(',');
-const styleText = \\\`
+const userSelector = allowedUsers.map(u => \`:has([href*="/\${u}"])\`).join(',');
+const styleText = \`
   div[data-testid="cellInnerDiv"]:has(article):not(:has(div[data-testid="tweetPhoto"])):not(:has(video)):not(\${userSelector}) {
     display: none !important;
   }
-\\\`;`;
+\`;`;
 const currentTags = ['twitter', 'bookmarklet', 'chrome-extension'];
 ---
 
