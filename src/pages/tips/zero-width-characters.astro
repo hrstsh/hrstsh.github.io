@@ -6,8 +6,8 @@ import { tipArticle, toIsoDate, faqPage } from '../../utils/jsonLd';
 
 const currentTags = ['twitter', 'dev'];
 
-const title = 'ゼロ幅文字の仕組みと検出・除去方法まとめ - hrの備忘録';
-const description = 'X(Twitter)のリンク化回避にも使われる「ゼロ幅文字」の正体を解説。ZWS・ZWNJ・ZWJ・BOMの4種類の違い、コピペで混入する経路、JavaScript・ターミナルでの検出・除去方法をまとめた。';
+const title = 'ゼロ幅スペースとは？ゼロ幅文字の仕組みと検出・除去方法まとめ - hrの備忘録';
+const description = 'X(Twitter)のリンク化回避にも使われる「ゼロ幅スペース（U+200B）」などのゼロ幅文字の正体を解説。ZWS・ZWNJ・ZWJ・BOMの4種類の違い、コピペで混入する経路、JavaScript・ターミナルでの検出・除去方法をまとめた。';
 const path = '/tips/zero-width-characters';
 const faqItems = [
   { question: 'ゼロ幅文字はどこから混入する？', answer: 'Webページからのコピペ・テキストエディタの自動挿入・チャットアプリの変換処理などで混ざる。目に見えないので気づきにくい。' },
@@ -63,7 +63,7 @@ const breakExample = `// @ の直後にゼロ幅スペースを挿入
 <ArticleLayout title={title} description={description} jsonLd={jsonLd} currentTags={currentTags}>
     <header class="article-header">
       <a href="/tips/" class="back-link">&larr; Tips一覧</a>
-      <h1>ゼロ幅文字の仕組みと検出・除去方法まとめ</h1>
+      <h1>ゼロ幅スペースとは？ゼロ幅文字の仕組みと検出・除去方法まとめ</h1>
       <p class="article-date">2026.06</p>
     </header>
 
